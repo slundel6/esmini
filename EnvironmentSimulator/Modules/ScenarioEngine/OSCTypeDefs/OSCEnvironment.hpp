@@ -11,7 +11,7 @@
  */
 
 #include "OSCBoundingBox.hpp"
-
+#include "OSCProperties.hpp"
 
 namespace scenarioengine
 {
@@ -102,10 +102,38 @@ namespace scenarioengine
     } Wind;
 
     /*
+    Class TimeOfDay
+    Represents the state of the wind
+
+    animation 	    double      if an animation should be used
+    speed           dateTime  	NOT IMPLEMENTED YET
+    
+    */
+    typedef struct 
+    {
+        bool animation;
+        std::string datetime;
+    } TimeOfDay;
+
+
+    /*
+    Class RoadCondition
+    Represents the state of the wind
+
+    frictionscalefactor 	    double      the friction scale factor
+    properties                  Properties  additional properties of the RoadCondition
+    
+    */
+    typedef struct 
+    {
+        double frictionscalefactor;
+        OSCProperties properties;
+    } RoadCondition;
+
+
+    /*
     Class OSCEnvironment
     Defines the full environment of OpenSCENARIO
-
-    fog 	Fog     description of fog
     
     */
     class OSCEnvironment
@@ -136,6 +164,12 @@ namespace scenarioengine
             void SetSun(double azimuth, double elevation, double intensity) {sun_.azimuth = azimuth; sun_.elevation = elevation; sun_.intensity = intensity; sunset_ = true;}
             Sun *GetSun();
     
+            void SetTimeOfDay(double animation, std::string tod) {timeofday_.animation = animation; timeofday_.datetime = tod; timeofdayset_ = true;};
+            TimeOfDay *GetTimeOfDay();
+
+            void SetRoadCondition(double friction) {roadcondition_.frictionscalefactor = friction; roadconditionset_ = true;};
+            RoadCondition *GetRoadCondition();
+
         private:
             double atmosphericpressure_;
             bool pressureset_;
@@ -150,7 +184,12 @@ namespace scenarioengine
             Precipitation precipitation_;
             bool precipitationset_;
             Sun sun_;
-            bool sunset_;        
+            bool sunset_;
+            RoadCondition roadcondition_;
+            bool roadconditionset_;
+            TimeOfDay timeofday_;
+            bool timeofdayset_;
+
     };
     
 };
