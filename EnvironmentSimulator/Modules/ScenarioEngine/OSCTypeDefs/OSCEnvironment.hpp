@@ -121,7 +121,7 @@ namespace scenarioengine
             double GetTemperature();
 
             void SetCloudState(CloudState cloudstate) {cloudstate_ = cloudstate; cloudstateset_ = true;};
-            CloudState *GetCloudState();
+            CloudState GetCloudState();
 
             void SetFog(double visualrange) {fog_.visibility_range_ = visualrange; fogset_ = true;};
             void SetFog(double visualrange, OSCBoundingBox bb) {fog_.visibility_range_ = visualrange; fog_.boundingbox_ = bb; fogset_ = true;};
@@ -153,5 +153,4 @@ namespace scenarioengine
             bool sunset_;        
     };
     
-    // skapa klass, med pekare    
 };

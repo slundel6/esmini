@@ -20,41 +20,90 @@ OSCEnvironment::~OSCEnvironment(){}
 
 double OSCEnvironment::GetAtmosphericPressure()
 {
-
+    if (precipitationset_)
+    {
+        return atmosphericpressure_;
+    }
+    else
+    {
+        return -1;
+    }
 }
 
 
 double OSCEnvironment::GetTemperature()
 {
-
+    if (temperatureset_)
+    {
+        return temperature_;
+    }
+    else
+    {
+        return -1;
+    }
 }
 
 
-CloudState *OSCEnvironment::GetCloudState()
+CloudState OSCEnvironment::GetCloudState()
 {
-
+    if (cloudstateset_)
+    {
+        return cloudstate_;
+    }
+    else
+    {
+        return CloudState::SKY_NOT_VISIBLE;
+    }
 }
 
 
 Fog *OSCEnvironment::GetFog()
 {
-
+    if (fogset_)
+    {
+        return &fog_;
+    } 
+    else
+    {
+        return nullptr;
+    }
 }
 
 
 Wind *OSCEnvironment::GetWind()
 {
-
+    if (windset_)
+    {
+        return &wind_;
+    } 
+    else
+    {
+        return nullptr;
+    }
 }
 
-Precipitation *GetPrecipitation()
+Precipitation *OSCEnvironment::GetPrecipitation()
 {
-
+    if (precipitationset_)
+    {
+        return &precipitation_;
+    } 
+    else
+    {
+        return nullptr;
+    }
 }
 
-Sun *GetSun()
+Sun *OSCEnvironment::GetSun()
 {
-
+    if (sunset_)
+    {
+        return &sun_;
+    } 
+    else
+    {
+        return nullptr;
+    }
 }
         
 
