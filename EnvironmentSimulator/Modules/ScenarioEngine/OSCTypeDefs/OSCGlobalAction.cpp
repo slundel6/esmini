@@ -40,6 +40,19 @@ using std::vector;
 #define MAX_CARS 1000
 #define MAX_LANES 32
 
+void EnvironmentAction::Start(double simTime, double dt)
+{
+	// LOG("Set parameter %s = %s", name_.c_str(), value_.c_str());
+	environment_->UpdateEnvironment(&new_environment_);
+	OSCAction::Start(simTime, dt);
+}
+
+void EnvironmentAction::Step(double, double dt)
+{
+    OSCAction::Stop();
+}
+
+
 void ParameterSetAction::Start(double simTime, double dt)
 {
 	LOG("Set parameter %s = %s", name_.c_str(), value_.c_str());
@@ -51,6 +64,7 @@ void ParameterSetAction::Step(double, double dt)
 {
     OSCAction::Stop();
 }
+
 
 void print_triangles(BBoxVec &vec, char const filename[]) {
     std::ofstream file;

@@ -37,8 +37,8 @@ namespace scenarioengine
 	Parameters ScenarioReader::parameters;
 }
 
-ScenarioReader::ScenarioReader(Entities* entities, Catalogs* catalogs, bool disable_controllers) :
-	objectCnt_(0), entities_(entities), catalogs_(catalogs), disable_controllers_(disable_controllers)
+ScenarioReader::ScenarioReader(Entities* entities, Catalogs* catalogs, OSCEnvironment* environment, bool disable_controllers) :
+	objectCnt_(0), entities_(entities), catalogs_(catalogs), disable_controllers_(disable_controllers), environment_(environment)
 {
 	parameters.Clear();
 }

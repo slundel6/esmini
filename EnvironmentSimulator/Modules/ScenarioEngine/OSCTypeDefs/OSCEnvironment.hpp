@@ -9,7 +9,7 @@
  * Copyright (c) partners of Simulation Scenarios
  * https://sites.google.com/view/simulationscenarios
  */
-
+#pragma once
 #include "OSCBoundingBox.hpp"
 #include "OSCProperties.hpp"
 
@@ -142,34 +142,53 @@ namespace scenarioengine
             OSCEnvironment();
             ~OSCEnvironment();
 
-            void SetAtmosphericPressure(double atmosphericpressure) {atmosphericpressure_ = atmosphericpressure; pressureset_ = true;};
+            void SetAtmosphericPressure(double atmosphericpressure) {atmosphericpressure_ = atmosphericpressure; pressureset_ = true;}
+            bool IsAtmosphericPressure() {return pressureset_;}
             double GetAtmosphericPressure();
             
-            void SetTemperature(double temperature) {temperature_ = temperature; temperatureset_ = true;};
+            void SetTemperature(double temperature) {temperature_ = temperature; temperatureset_ = true;}
+            bool IsTemperature() {return temperatureset_;}
             double GetTemperature();
 
-            void SetCloudState(CloudState cloudstate) {cloudstate_ = cloudstate; cloudstateset_ = true;};
+            void SetCloudState(CloudState cloudstate) {cloudstate_ = cloudstate; cloudstateset_ = true;}
+            void SetCloudState(CloudState* new_cloudstate) {cloudstate_ = *new_cloudstate;}
+            bool IsCloudState() {return cloudstateset_;}
             CloudState GetCloudState();
 
-            void SetFog(double visualrange) {fog_.visibility_range_ = visualrange; fogset_ = true;};
-            void SetFog(double visualrange, OSCBoundingBox bb) {fog_.visibility_range_ = visualrange; fog_.boundingbox_ = bb; fogset_ = true;};
+            void SetFog(double visualrange) {fog_.visibility_range_ = visualrange; fogset_ = true;}
+            void SetFog(double visualrange, OSCBoundingBox bb) {fog_.visibility_range_ = visualrange; fog_.boundingbox_ = bb; fogset_ = true;}
+            void SetFog(Fog* new_fog) {fog_ = *new_fog;}
+            bool IsFog() {return fogset_;}
             Fog *GetFog();
 
             void SetWind(double direction, double speed) {wind_.direction = direction; wind_.speed = speed; windset_ = true; }
+            void SetWind(Wind* new_wind) {wind_ = *new_wind;}
+            bool IsWind() {return windset_;}
             Wind *GetWind();
 
-            void SetPrecipitation(double intensity, PrecipitationType type) {precipitation_.precipitationintensity = intensity; precipitation_.precipitationtype = type; precipitationset_ = true;};
+            void SetPrecipitation(double intensity, PrecipitationType type) {precipitation_.precipitationintensity = intensity; precipitation_.precipitationtype = type; precipitationset_ = true;}
+            void SetPrecipitation(Precipitation *new_precipitation) {precipitation_ = *new_precipitation;}
+            bool IsPrecipitation() {return precipitationset_;}
             Precipitation *GetPrecipitation();
 
             void SetSun(double azimuth, double elevation, double intensity) {sun_.azimuth = azimuth; sun_.elevation = elevation; sun_.intensity = intensity; sunset_ = true;}
+            void SetSun(Sun *new_sun) {sun_ = *new_sun; sunset_ = true;}
+            bool IsSun() {return sunset_;}
             Sun *GetSun();
     
-            void SetTimeOfDay(double animation, std::string tod) {timeofday_.animation = animation; timeofday_.datetime = tod; timeofdayset_ = true;};
+            void SetTimeOfDay(double animation, std::string tod) {timeofday_.animation = animation; timeofday_.datetime = tod; timeofdayset_ = true;}
+            void SetTimeOfDay(TimeOfDay *new_timeofday) {timeofday_ = *new_timeofday;timeofdayset_ = true;}
+            bool IsTimeOfDay() {return timeofdayset_;}
             TimeOfDay *GetTimeOfDay();
 
-            void SetRoadCondition(double friction) {roadcondition_.frictionscalefactor = friction; roadconditionset_ = true;};
+            void SetRoadCondition(double friction) {roadcondition_.frictionscalefactor = friction; roadconditionset_ = true;}
+            void SetRoadCondition(RoadCondition *new_roadcondition) {roadcondition_ = *new_roadcondition; roadconditionset_ = true;}
+            bool IsRoadCondition() {return roadconditionset_;}
             RoadCondition *GetRoadCondition();
 
+            void UpdateEnvironment(OSCEnvironment *new_environment);
+
+            
         private:
             double atmosphericpressure_;
             bool pressureset_;

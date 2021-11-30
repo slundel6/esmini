@@ -75,7 +75,7 @@ namespace scenarioengine
 	{
 	public:
 
-		ScenarioReader(Entities* entities, Catalogs* catalogs, bool disable_controllers = false);
+		ScenarioReader(Entities* entities, Catalogs* catalogs, OSCEnvironment* environment, bool disable_controllers = false);
 		~ScenarioReader();
 		int loadOSCFile(const char * path);
 		int loadOSCMem(const pugi::xml_document &xml_doch);
@@ -153,6 +153,7 @@ namespace scenarioengine
 		int objectCnt_;
 		std::string oscFilename_;
 		Entities *entities_;
+		OSCEnvironment *environment_;
 		Catalogs *catalogs_;
 		ScenarioGateway* gateway_;
 		bool disable_controllers_;

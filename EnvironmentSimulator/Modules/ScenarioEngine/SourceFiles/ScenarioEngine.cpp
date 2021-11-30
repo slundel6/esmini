@@ -50,7 +50,7 @@ void ScenarioEngine::InitScenario(std::string oscFilename, bool disable_controll
 	simulationTime_ = 0;
 	trueTime_ = 0;
 	initialized_ = false;
-	scenarioReader = new ScenarioReader(&entities, &catalogs, disable_controllers);
+	scenarioReader = new ScenarioReader(&entities, &catalogs, &environment, disable_controllers);
 
 	std::vector<std::string> file_name_candidates;
 	// absolute path or relative to current directory
@@ -100,7 +100,7 @@ void ScenarioEngine::InitScenario(const pugi::xml_document &xml_doc, bool disabl
 	simulationTime_ = 0;
 	trueTime_ = 0;
 	initialized_ = false;
-	scenarioReader = new ScenarioReader(&entities, &catalogs, disable_controllers);
+	scenarioReader = new ScenarioReader(&entities, &catalogs, &environment, disable_controllers);
 	if (scenarioReader->loadOSCMem(xml_doc) != 0)
 	{
 		throw std::invalid_argument("Failed to load OpenSCENARIO from XML string");

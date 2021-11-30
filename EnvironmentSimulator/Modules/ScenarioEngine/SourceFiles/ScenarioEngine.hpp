@@ -24,6 +24,7 @@
 #include "ScenarioGateway.hpp"
 #include "ScenarioReader.hpp"
 #include "RoadNetwork.hpp"
+#include "OSCEnvironment.hpp"
 
 namespace scenarioengine
 {
@@ -41,6 +42,7 @@ namespace scenarioengine
 	{
 	public:
 		Entities entities;
+		OSCEnvironment environment;
 
 		ScenarioEngine(std::string oscFilename, bool disable_controllers = false);
 		ScenarioEngine(const pugi::xml_document &xml_doc, bool disable_controllers = false);

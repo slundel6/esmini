@@ -86,12 +86,13 @@ Wind *OSCEnvironment::GetWind()
     if (windset_)
     {
         return &wind_;
-    } 
+    }
     else
     {
         return nullptr;
     }
 }
+
 
 Precipitation *OSCEnvironment::GetPrecipitation()
 {
@@ -118,5 +119,73 @@ Sun *OSCEnvironment::GetSun()
 }
         
 
-    
+
+TimeOfDay *OSCEnvironment::GetTimeOfDay()
+{
+    if (timeofdayset_)
+    {
+        return &timeofday_;
+    } 
+    else
+    {
+        return nullptr;
+    }
+}
+
+RoadCondition *OSCEnvironment::GetRoadCondition()
+{
+    if (roadconditionset_)
+    {
+        return &roadcondition_;
+    } 
+    else
+    {
+        return nullptr;
+    }
+}
+
+void OSCEnvironment::UpdateEnvironment(OSCEnvironment* new_environment)
+{
+    if (new_environment != nullptr)
+    {
+        if (new_environment->IsAtmosphericPressure())
+        {
+            SetAtmosphericPressure(new_environment->GetAtmosphericPressure());
+        }
+        if (new_environment->IsTemperature())
+        {
+            SetTemperature(new_environment->GetTemperature());
+        }
+        if (new_environment->IsCloudState())
+        {
+            SetCloudState(new_environment->GetCloudState());
+        }
+        if (new_environment->IsFog())
+        {
+            SetFog(new_environment->GetFog());
+        }
+        if (new_environment->IsWind())
+        {
+            SetWind(new_environment->GetWind());
+        }
+        if (new_environment->IsPrecipitation())
+        {
+            SetPrecipitation(new_environment->GetPrecipitation());
+        }
+        if (new_environment->IsSun())
+        {
+            SetSun(new_environment->GetSun());
+        }
+        if (new_environment->IsRoadCondition())
+        {
+            SetRoadCondition(new_environment->GetRoadCondition());
+        }
+        if (new_environment->IsTimeOfDay())
+        {
+            SetTimeOfDay(new_environment->GetTimeOfDay());
+        }
+
+    }
+
+}
 
