@@ -63,6 +63,7 @@ double color_black[3] = { 0.2, 0.2, 0.2 };
 double color_blue[3] = { 0.25, 0.38, 0.7 };
 double color_yellow[3] = { 0.75, 0.7, 0.4 };
 double color_white[3] = { 0.90, 0.90, 0.85 };
+double color_background[3] = { 0.5f, 0.75f, 1.0f };
 
 //USE_OSGPLUGIN(fbx)
 //USE_OSGPLUGIN(obj)
@@ -1370,7 +1371,7 @@ Viewer::Viewer(roadmanager::OpenDrive* odrManager, const char* modelFilename, co
 	if (!clear_color)
 	{
 		// Default background color
-		osgViewer_->getCamera()->setClearColor(osg::Vec4(0.5f, 0.75f, 1.0f, 0.0f));
+		osgViewer_->getCamera()->setClearColor(osg::Vec4(color_background[0], color_background[1], color_background[2], 0.0f));
 	}
 
 	// add the window size toggle handler
@@ -1412,12 +1413,12 @@ Viewer::Viewer(roadmanager::OpenDrive* odrManager, const char* modelFilename, co
 
 	// Light
 	osgViewer_->setLightingMode(osg::View::LightingMode::SKY_LIGHT);
-	osg::Light *light = osgViewer_->getLight();
-	light->setPosition(osg::Vec4(-7500., 5000., 10000., 1.0));
-	light->setDirection(osg::Vec3(7.5, -5., -10.));
+	light_ = osgViewer_->getLight();
+	light_->setPosition(osg::Vec4(-7500., 5000., 10000., 1.0));
+	light_->setDirection(osg::Vec3(7.5, -5., -10.));
 	float ambient = 0.4;
-	light->setAmbient(osg::Vec4(ambient, ambient, 0.9*ambient, 1));
-	light->setDiffuse(osg::Vec4(0.8, 0.8, 0.7, 1));
+	light_->setAmbient(osg::Vec4(ambient, ambient, 0.9*ambient, 1));
+	light_->setDiffuse(osg::Vec4(0.2, 0.8, 0.7, 1));
 
 	osgViewer_->realize();
 
@@ -2242,6 +2243,18 @@ int Viewer::CreateFogBoundingBox(osg::PositionAttitudeTransform* parent)
 	stateset->setDataVariance(osg::Object::DYNAMIC);
 
 	parent->addChild(fogBoundingBox_.get());
+
+	return 0;
+}
+
+int Viewer::UpdateTimeOfDay(double intensity)
+{
+	osgViewer_->getCamera()->setClearColor(osg::Vec4(intensity * color_background[0], intensity * color_background[1], intensity * color_background[2], 0.0f));
+
+	light_->setAmbient(osg::Vec4(0.4, 0.4, 0.9 * 0.4, 1));
+	light_->setDiffuse(osg::Vec4(0.2, 0.8, 0.7, 1));
+
+	osgViewer_->getCamera()->setClearColor(osg::Vec4(0.5f, 0.1f, 1.0f, 0.0f));
 
 	return 0;
 }
