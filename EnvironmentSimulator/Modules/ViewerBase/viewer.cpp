@@ -1313,6 +1313,8 @@ Viewer::Viewer(roadmanager::OpenDrive* odrManager, const char* modelFilename, co
 		}
 	}
 
+	CreateWeatherGroup();
+
 #if 0
 	osgViewer_->setSceneData(shadowedScene);
 #else
@@ -2214,6 +2216,44 @@ bool Viewer::CreateRoadLines(roadmanager::OpenDrive* od)
 	delete pos;
 
 	return true;
+}
+
+int Viewer::CreateFogBoundingBox(osg::PositionAttitudeTransform* parent)
+{
+	fogBoundingBox_ = new osg::PositionAttitudeTransform;
+	fogBoundingBox_->getOrCreateStateSet()->setMode(GL_RESCALE_NORMAL, osg::StateAttribute::ON);
+
+	osg::ref_ptr<osg::ShapeDrawable> box = new osg::ShapeDrawable;
+//	box->setShape(new osg::Box(osg::Vec3(0, 0, 0), 20, 30, 40));   // center(x, y, z), x, y, z
+	box->setShape(new osg::Box());
+	box->setColor(osg::Vec4(0.0f, 0.0f, 1.0f, 1.0f));
+
+	osg::ref_ptr<osg::Geode> boxGeode = new osg::Geode;
+	boxGeode->addDrawable(box.get());
+	fogBoundingBox_->addChild(boxGeode.get());
+	fogBoundingBox_->setScale(osg::Vec3(10, 20, 30));
+	fogBoundingBox_->setPosition(osg::Vec3(0, 0, 15));
+
+	// Draw wireframe
+	osg::PolygonMode* polygonMode = new osg::PolygonMode;
+	polygonMode->setMode(osg::PolygonMode::FRONT_AND_BACK, osg::PolygonMode::LINE);
+	osg::ref_ptr<osg::StateSet> stateset = fogBoundingBox_->getOrCreateStateSet(); // Get the StateSet of the group
+	stateset->setAttributeAndModes(polygonMode, osg::StateAttribute::OVERRIDE | osg::StateAttribute::ON);
+	stateset->setDataVariance(osg::Object::DYNAMIC);
+
+	parent->addChild(fogBoundingBox_.get());
+
+	return 0;
+}
+
+int Viewer::CreateWeatherGroup()
+{
+	weatherGroup_ = new osg::PositionAttitudeTransform;
+	CreateFogBoundingBox(weatherGroup_);
+
+	rootnode_->addChild(weatherGroup_);
+
+	return 0;
 }
 
 int Viewer::CreateOutlineObject(roadmanager::Outline *outline)

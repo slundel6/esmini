@@ -257,6 +257,10 @@ void ScenarioPlayer::ViewerFrame()
 {
 	static double last_dot_time = scenarioEngine->getSimulationTime();
 
+	// Ask Environment for fog pos and dim
+	// Tell viewer to move and scale fog bounding box
+	// viewer_->UpdateFog(scenarioEngine->environment_->GetFogCenter...)
+
 	mutex.Lock();
 
 	// remove deleted cars

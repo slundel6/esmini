@@ -60,6 +60,7 @@ namespace viewer
 		NODE_MASK_INFO =             (1 << 9),
 		NODE_MASK_ROAD_SENSORS =     (1 << 10),
 		NODE_MASK_TRAJECTORY_LINES = (1 << 11),
+		NODE_MASK_WEATHER =          (1 << 12),
 	} NodeMask;
 
 	class PolyLine
@@ -363,6 +364,10 @@ namespace viewer
 		bool showInfoText;
 		RoadGeom* roadGeom;
 
+		// Weather stuff
+		osg::ref_ptr<osg::PositionAttitudeTransform> weatherGroup_;  // parent for all OSC Environment related stuff
+		osg::ref_ptr<osg::PositionAttitudeTransform> fogBoundingBox_;
+
 		std::string exe_path_;
 		std::vector<KeyEventCallback> callback_;
 
@@ -431,6 +436,8 @@ namespace viewer
 		bool CreateRoadLines(roadmanager::OpenDrive* od);
 		bool CreateRoadMarkLines(roadmanager::OpenDrive* od);
 		int CreateOutlineObject(roadmanager::Outline* outline);
+		int CreateFogBoundingBox(osg::PositionAttitudeTransform* parent);
+		int CreateWeatherGroup();
 		osg::ref_ptr<osg::PositionAttitudeTransform> LoadRoadFeature(roadmanager::Road* road, std::string filename);
 		int CreateRoadSignsAndObjects(roadmanager::OpenDrive* od);
 		bool keyUp_;

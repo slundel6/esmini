@@ -225,8 +225,8 @@ include(CheckCXXCompilerFlag)
     optimized osgdb_osg debug osgdb_osgd
     optimized osgdb_jpeg debug osgdb_jpegd
     optimized osgAnimation debug osgAnimationd
-    optimized osgText debug osgTextd
     optimized osgSim debug osgSimd
+    optimized osgText debug osgTextd
     optimized osgViewer debug osgViewerd
     optimized osgUtil debug osgUtild
     optimized osgDB debug osgDBd
