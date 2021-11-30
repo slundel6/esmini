@@ -21,6 +21,7 @@
 #include "pugixml.hpp"
 #include "OSCGlobalAction.hpp"
 #include "OSCBoundingBox.hpp"
+#include "OSCEnvironment.hpp"
 #include "Parameters.hpp"
 #include "Controller.hpp"
 #include "ScenarioGateway.hpp"
@@ -165,6 +166,9 @@ namespace scenarioengine
 		int ParseTransitionDynamics(pugi::xml_node node, OSCPrivateAction::TransitionDynamics& td);
 		ConditionGroup* ParseConditionGroup(pugi::xml_node node);
 		Object* ResolveObjectReference(std::string name);
+
+		// Environment
+		OSCEnvironment* ParseOSCEnvironment(const pugi::xml_node &xml_node);
 	};
 
 }
