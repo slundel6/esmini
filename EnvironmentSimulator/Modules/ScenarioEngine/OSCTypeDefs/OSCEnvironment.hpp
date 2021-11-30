@@ -54,8 +54,8 @@ namespace scenarioengine
     */
     typedef struct
     {
-        float visibility_range_;
-        OSCBoundingBox boundingbox_;
+        float visibility_range;
+        OSCBoundingBox boundingbox;
     } Fog;
 
     /*
@@ -155,8 +155,8 @@ namespace scenarioengine
             bool IsCloudState() {return cloudstateset_;}
             CloudState GetCloudState();
 
-            void SetFog(double visualrange) {fog_.visibility_range_ = visualrange; fogset_ = true;}
-            void SetFog(double visualrange, OSCBoundingBox bb) {fog_.visibility_range_ = visualrange; fog_.boundingbox_ = bb; fogset_ = true;}
+            void SetFog(double visualrange) {fog_.visibility_range = visualrange; fogset_ = true;}
+            void SetFog(double visualrange, OSCBoundingBox bb) {fog_.visibility_range = visualrange; fog_.boundingbox = bb; fogset_ = true;}
             void SetFog(Fog* new_fog) {fog_ = *new_fog;}
             bool IsFog() {return fogset_;}
             Fog *GetFog();
