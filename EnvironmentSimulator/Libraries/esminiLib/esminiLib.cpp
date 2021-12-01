@@ -1158,7 +1158,7 @@ extern "C"
 		if (player != nullptr)
 		{
 #ifdef _USE_OSI
-			return player->osiReporter->UpdateOSIGroundTruth(player->scenarioGateway->objectState_);
+			return player->osiReporter->UpdateOSIGroundTruth(player->scenarioGateway->objectState_, &player->scenarioEngine->environment);
 #endif  // USE_OSI
 		}
 
@@ -1182,7 +1182,7 @@ extern "C"
 		if (player != nullptr)
 		{
 #ifdef _USE_OSI
-			return player->osiReporter->UpdateOSIDynamicGroundTruth(player->scenarioGateway->objectState_, reportGhost);
+			return player->osiReporter->UpdateOSIDynamicGroundTruth(player->scenarioGateway->objectState_, &player->scenarioEngine->environment, reportGhost);
 #endif  // USE_OSI
 		}
 

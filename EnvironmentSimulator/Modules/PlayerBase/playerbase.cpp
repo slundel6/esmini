@@ -218,7 +218,7 @@ void ScenarioPlayer::ScenarioFrame(double timestep_s)
 			{
 				if (osi_counter % osi_freq_ == 0)
 				{
-					osiReporter->UpdateOSIGroundTruth(scenarioGateway->objectState_);
+					osiReporter->UpdateOSIGroundTruth(scenarioGateway->objectState_,&scenarioEngine->environment);
 					if (osi_counter == 0)
 					{
 						// Clear the static data now when it has been reported once

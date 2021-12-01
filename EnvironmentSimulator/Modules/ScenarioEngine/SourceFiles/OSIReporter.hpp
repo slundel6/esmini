@@ -79,7 +79,7 @@ public:
 	/**
 	Calls UpdateOSIStaticGroundTruth and UpdateOSIDynamicGroundTruth
 	*/
-	int UpdateOSIGroundTruth(std::vector<ObjectState*> objectState);
+	int UpdateOSIGroundTruth(std::vector<ObjectState*> objectState, OSCEnvironment* environment);
 	/**
 	Fills up the osi message with  static GroundTruth
 	*/
@@ -87,7 +87,7 @@ public:
 	/**
 	Fills up the osi message with dynamic GroundTruth
 	*/
-	int UpdateOSIDynamicGroundTruth(std::vector<ObjectState*> objectState, bool reportGhost = true);
+	int UpdateOSIDynamicGroundTruth(std::vector<ObjectState*> objectState, OSCEnvironment* environment, bool reportGhost = true);
 	/**
 	Fills up the osi message with Stationary Object
 	*/
@@ -116,7 +116,10 @@ public:
 	Fills the Traffic Signals
 	*/
 	int UpdateTrafficSignals();
-
+	/**
+	Fills the Environment_condition
+	*/
+	int UpdateEnvironment(OSCEnvironment* environment);
 	/**
 	 Creates a SensorView from SensorData for plotting
 	*/
