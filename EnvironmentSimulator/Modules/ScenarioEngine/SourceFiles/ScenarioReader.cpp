@@ -2562,7 +2562,7 @@ void ScenarioReader::parseInit(Init &init)
 	for (pugi::xml_node actionsChild = actionsNode.first_child(); actionsChild; actionsChild = actionsChild.next_sibling())
 	{
 		std::string actionsChildName(actionsChild.name());
-	
+
 		if (actionsChildName == "GlobalAction")
 		{
 			LOG("Parsing global action %s", parameters.ReadAttribute(actionsChild, "name").c_str());
@@ -3527,7 +3527,7 @@ void ScenarioReader::ParseOSCEnvironment(const pugi::xml_node &xml_node, OSCEnvi
 	{
 		std::string envChildName(envChild.name());
 		if (envChildName == "TimeOfDay")
-		{	
+		{
 			bool animation = (parameters.ReadAttribute(envChild, "animation") == "True") ? true : false;
 			std::string tod = parameters.ReadAttribute(envChild, "dateTime");
 			env->SetTimeOfDay(animation, tod);
@@ -3591,7 +3591,7 @@ void ScenarioReader::ParseOSCEnvironment(const pugi::xml_node &xml_node, OSCEnvi
 				{
 					std::string precipIntensity = parameters.ReadAttribute(weatherChild, "precipitationIntensity");
 					std::string precipTypeStr = parameters.ReadAttribute(weatherChild, "precipitationType");
-					scenarioengine::PrecipitationType precipType;
+					scenarioengine::PrecipitationType precipType = scenarioengine::PrecipitationType::DRY;
 					if(precipTypeStr == "dry")
 					{
 						precipType = scenarioengine::PrecipitationType::DRY;
