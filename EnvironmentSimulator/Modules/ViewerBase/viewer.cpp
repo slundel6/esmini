@@ -1419,7 +1419,7 @@ Viewer::Viewer(roadmanager::OpenDrive* odrManager, const char* modelFilename, co
 	light_->setDirection(osg::Vec3(7.5, -5., -10.));
 	float ambient = 0.4;
 	light_->setAmbient(osg::Vec4(ambient, ambient, 0.9*ambient, 1));
-	light_->setDiffuse(osg::Vec4(0.2, 0.8, 0.7, 1));
+	light_->setDiffuse(osg::Vec4(0.8, 0.8, 0.7, 1));
 
 	osgViewer_->realize();
 
@@ -2272,6 +2272,19 @@ int Viewer::UpdateTimeOfDay(double intensity)
 	return 0;
 }
 
+void Viewer::SetSunLight(float sunIntensity)
+{
+	sunIntensity = sunIntensity/10000;
+	
+	light_->setDiffuse(osg::Vec4(0.9 * sunIntensity - 0.1, 0.9 * sunIntensity - 0.1, 0.8 * sunIntensity - 0.1, 1));
+
+	float r = 0.5 * sunIntensity;
+	float g = 0.75 * sunIntensity;
+	float b = 0.8 * sunIntensity + 0.2;
+
+	osgViewer_->getCamera()->setClearColor(osg::Vec4(r, g, b, 0.0f));
+}
+
 int Viewer::CreateWeatherGroup(scenarioengine::OSCEnvironment* environment)
 {
 	weatherGroup_ = new osg::PositionAttitudeTransform;
@@ -2280,6 +2293,12 @@ int Viewer::CreateWeatherGroup(scenarioengine::OSCEnvironment* environment)
 	{
 		scenarioengine::Fog * fog = environment->GetFog();
 		CreateFog(fog->visibility_range);
+	}
+
+	if(environment->IsSun())
+	{
+		scenarioengine::Sun * sun = environment->GetSun();
+		SetSunLight(sun->intensity);
 	}
 
 	rootnode_->addChild(weatherGroup_);
