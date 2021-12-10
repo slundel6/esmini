@@ -101,7 +101,6 @@ namespace scenarioengine
 
 	};
 
-
 	class EnvironmentAction : public OSCGlobalAction
 	{
 	public:
@@ -137,9 +136,7 @@ namespace scenarioengine
 
 	};
 
-
-
-	class ScenarioReader;
+	class ScenarioReader;  // Forward declaration
 
 	class SwarmTrafficAction : public OSCGlobalAction
 	{
