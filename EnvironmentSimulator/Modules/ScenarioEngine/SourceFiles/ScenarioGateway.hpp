@@ -14,6 +14,7 @@
 #include "RoadManager.hpp"
 #include "OSCBoundingBox.hpp"
 #include "Entities.hpp"
+#include "DatLogger.hpp"
 
 #define DAT_FILE_FORMAT_VERSION 2
 #define DAT_FILENAME_SIZE       512
@@ -70,17 +71,17 @@ namespace scenarioengine
 
     struct ObjectPositionStructDat
     {
-        float x;
-        float y;
-        float z;
-        float h;
-        float p;
-        float r;
-        int   roadId;
-        int   laneId;
-        float offset;
-        float t;
-        float s;
+        double x;
+        double y;
+        double z;
+        double h;
+        double p;
+        double r;
+        int    roadId;
+        int    laneId;
+        double offset;
+        float  t;
+        float  s;
     };
 
     struct ObjectStateStructDat
@@ -362,14 +363,14 @@ namespace scenarioengine
         }
         ObjectState *getObjectStatePtrById(int id);
         int          getObjectStateById(int idx, ObjectState &objState);
-        void         WriteStatesToFile();
+        int          WriteStatesToFile();
         int          RecordToFile(std::string filename, std::string odr_filename, std::string model_filename);
 
         std::vector<std::unique_ptr<ObjectState>> objectState_;
 
     private:
         int updateObjectInfo(ObjectState *obj_state, double timestamp, int visibilityMask, double speed, double wheel_angle, double wheel_rot);
-        std::ofstream data_file_;
+        datLogger::DatLogger *datLogger = nullptr;
     };
 
 }  // namespace scenarioengine

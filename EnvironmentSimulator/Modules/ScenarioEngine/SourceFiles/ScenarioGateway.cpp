@@ -240,9 +240,7 @@ ScenarioGateway::ScenarioGateway()
 ScenarioGateway::~ScenarioGateway()
 {
     objectState_.clear();
-
-    data_file_.flush();
-    data_file_.close();
+    delete datLogger;
 }
 
 ObjectState* ScenarioGateway::getObjectStatePtrById(int id)
@@ -1006,63 +1004,73 @@ void ScenarioGateway::removeObject(std::string name)
     }
 }
 
-void ScenarioGateway::WriteStatesToFile()
+int ScenarioGateway::WriteStatesToFile()
 {
-    if (data_file_.is_open())
+    // std::cout << "Inside write-->" << std::endl;
+    if (datLogger != nullptr && datLogger->IsFileOpen())
     {
         // Write status to file - for later replay
         for (size_t i = 0; i < objectState_.size(); i++)
         {
-            struct ObjectStateStructDat datState;
-
-            datState.info.boundingbox = objectState_[i]->state_.info.boundingbox;
-            datState.info.ctrl_type   = objectState_[i]->state_.info.ctrl_type;
-            datState.info.ctrl_type   = objectState_[i]->state_.info.ctrl_type;
-            datState.info.id          = objectState_[i]->state_.info.id;
-            datState.info.model_id    = objectState_[i]->state_.info.model_id;
-            memcpy(datState.info.name, objectState_[i]->state_.info.name, sizeof(datState.info.name));
-            datState.info.obj_category   = objectState_[i]->state_.info.obj_category;
-            datState.info.obj_type       = objectState_[i]->state_.info.ctrl_type;
-            datState.info.scaleMode      = objectState_[i]->state_.info.scaleMode;
-            datState.info.speed          = static_cast<float>(objectState_[i]->state_.info.speed);
-            datState.info.timeStamp      = static_cast<float>(objectState_[i]->state_.info.timeStamp);
-            datState.info.visibilityMask = objectState_[i]->state_.info.visibilityMask;
-            datState.info.wheel_angle    = static_cast<float>(objectState_[i]->state_.info.wheel_angle);
-            datState.info.wheel_rot      = static_cast<float>(objectState_[i]->state_.info.wheel_rot);
-
-            datState.pos.x      = static_cast<float>(objectState_[i]->state_.pos.GetX());
-            datState.pos.y      = static_cast<float>(objectState_[i]->state_.pos.GetY());
-            datState.pos.z      = static_cast<float>(objectState_[i]->state_.pos.GetZ());
-            datState.pos.h      = static_cast<float>(objectState_[i]->state_.pos.GetH());
-            datState.pos.p      = static_cast<float>(objectState_[i]->state_.pos.GetP());
-            datState.pos.r      = static_cast<float>(objectState_[i]->state_.pos.GetR());
-            datState.pos.roadId = objectState_[i]->state_.pos.GetTrackId();
-            datState.pos.laneId = objectState_[i]->state_.pos.GetLaneId();
-            datState.pos.offset = static_cast<float>(objectState_[i]->state_.pos.GetOffset());
-            datState.pos.t      = static_cast<float>(objectState_[i]->state_.pos.GetT());
-            datState.pos.s      = static_cast<float>(objectState_[i]->state_.pos.GetS());
-            data_file_.write(reinterpret_cast<char*>(&datState), sizeof(datState));
+            int objId              = objectState_[i]->state_.info.id;
+            datLogger->simTimeTemp = objectState_[i]->state_.info.timeStamp;
+            datLogger->AddObject(objId);
+            datLogger->WriteModelId(objId, objectState_[i]->state_.info.model_id);
+            datLogger->WriteObjPos(objId,
+                                   objectState_[i]->state_.pos.GetX(),
+                                   objectState_[i]->state_.pos.GetY(),
+                                   objectState_[i]->state_.pos.GetZ(),
+                                   objectState_[i]->state_.pos.GetH(),
+                                   objectState_[i]->state_.pos.GetP(),
+                                   objectState_[i]->state_.pos.GetR());
+            datLogger->WriteObjSpeed(objectState_[i]->state_.info.id, objectState_[i]->state_.info.speed);
+            datLogger->WriteObjCategory(objId, objectState_[i]->state_.info.obj_category);
+            datLogger->WriteObjType(objId, objectState_[i]->state_.info.obj_type);
+            datLogger->WriteCtrlType(objId, objectState_[i]->state_.info.ctrl_type);
+            datLogger->WriteWheelAngle(objId, objectState_[i]->state_.info.wheel_angle);
+            datLogger->WriteWheelRot(objId, objectState_[i]->state_.info.wheel_rot);
+            datLogger->WriteBB(objId,
+                               objectState_[i]->state_.info.boundingbox.center_.x_,
+                               objectState_[i]->state_.info.boundingbox.center_.y_,
+                               objectState_[i]->state_.info.boundingbox.center_.z_,
+                               objectState_[i]->state_.info.boundingbox.dimensions_.length_,
+                               objectState_[i]->state_.info.boundingbox.dimensions_.width_,
+                               objectState_[i]->state_.info.boundingbox.dimensions_.height_);
+            datLogger->WriteScaleMode(objId, objectState_[i]->state_.info.scaleMode);
+            datLogger->WriteVisiblityMask(objId, objectState_[i]->state_.info.visibilityMask);
+            datLogger->WriteName(objId, objectState_[i]->state_.info.name);
+            datLogger->WriteRoadId(objId, objectState_[i]->state_.pos.GetTrackId());
+            datLogger->WriteLaneId(objId, objectState_[i]->state_.pos.GetLaneId());
+            datLogger->WritePosOffset(objId, objectState_[i]->state_.pos.GetOffset());
+            datLogger->WritePosT(objId, objectState_[i]->state_.pos.GetT());
+            datLogger->WritePosS(objId, objectState_[i]->state_.pos.GetS());
+            datLogger->ObjIdPkgAdded = false;
         }
+        datLogger->deleteObject();
+        datLogger->TimePkgAdded = false;
     }
+    return 0;
 }
 
 int ScenarioGateway::RecordToFile(std::string filename, std::string odr_filename, std::string model_filename)
 {
     if (!filename.empty())
     {
-        data_file_.open(filename, std::ofstream::binary);
-        if (data_file_.fail())
+        int ver = DAT_FILE_FORMAT_VERSION;
+        if (datLogger == nullptr)
         {
-            LOG("Cannot open file: %s", filename.c_str());
-            return -1;
+            if ((datLogger = new datLogger::DatLogger()) == nullptr)
+            {
+                return -1;
+            }
+
+            if (datLogger->init(filename, ver, odr_filename, model_filename) != 0)
+            {
+                delete datLogger;
+                datLogger = nullptr;
+                return -1;
+            }
         }
-        DatHeader header;
-        header.version = DAT_FILE_FORMAT_VERSION;
-        StrCopy(header.odr_filename, odr_filename.c_str(), MIN(odr_filename.length() + 1, DAT_FILENAME_SIZE));
-        StrCopy(header.model_filename, model_filename.c_str(), MIN(model_filename.length() + 1, DAT_FILENAME_SIZE));
-
-        data_file_.write(reinterpret_cast<char*>(&header), sizeof(header));
     }
-
     return 0;
 }

@@ -2135,30 +2135,6 @@ TEST(OSILaneParing, Signs)
     SE_Close();
 }
 
-static void ReadDat(std::string filename, std::vector<scenarioengine::ReplayEntry>& entries)
-{
-    std::ifstream             file;
-    scenarioengine::DatHeader header;
-
-    file.open(filename, std::ofstream::binary);
-    ASSERT_EQ(file.fail(), false);
-
-    file.read(reinterpret_cast<char*>(&header), sizeof(header));
-
-    scenarioengine::ReplayEntry entry;
-
-    while (!file.eof())
-    {
-        file.read(reinterpret_cast<char*>(&entry.state), sizeof(entry.state));
-
-        if (!file.eof())
-        {
-            entries.push_back(entry);
-        }
-    }
-    file.close();
-}
-
 TEST(ExternalControlTest, TestTimings)
 {
     // This test case imitates a custom application controlling the Ego vehicle
@@ -2224,242 +2200,255 @@ TEST(ExternalControlTest, TestTimings)
 
         SE_Close();
 
-        // Check .dat file
-        std::vector<scenarioengine::ReplayEntry> entries;
-        ReadDat("sim.dat", entries);
+        scenarioengine::Replay* replay = new scenarioengine::Replay("sim.dat");
+        replay->SetShowRestart(true);
 
-        // Check first timestep (-3.0)
-        size_t i = 0;
-        EXPECT_NEAR(entries[i].state.info.timeStamp, -3.0, 1E-3);
-        EXPECT_STREQ(entries[i].state.info.name, "Ego");
-        EXPECT_NEAR(entries[i].state.pos.x, 10.0, 1E-3);
-        EXPECT_NEAR(entries[i].state.pos.y, -1.5, 1E-3);
-        i++;
-        EXPECT_NEAR(entries[i].state.info.timeStamp, -3.0, 1E-3);
-        EXPECT_STREQ(entries[i].state.info.name, "Target");
-        EXPECT_NEAR(entries[i].state.pos.x, 10.0, 1E-3);
-        EXPECT_NEAR(entries[i].state.pos.y, -4.5, 1E-3);
-        i++;
-        EXPECT_NEAR(entries[i].state.info.timeStamp, -3.0, 1E-3);
-        EXPECT_STREQ(entries[i].state.info.name, "Ego_ghost");
-        EXPECT_NEAR(entries[i].state.pos.x, 10.0, 1E-3);
-        EXPECT_NEAR(entries[i].state.pos.y, -1.5, 1E-3);
+        EXPECT_NEAR(replay->scenarioState.sim_time, -3.0, 1E-3);
+        std::string name;
+        replay->GetName(replay->scenarioState.obj_states[0].id, name);
+        EXPECT_EQ(name, "Ego");
+        EXPECT_NEAR(replay->GetX(replay->scenarioState.obj_states[0].id), 10.0, 1E-3);
+        EXPECT_NEAR(replay->GetY(replay->scenarioState.obj_states[0].id), -1.5, 1E-3);
+
+        std::string name1;
+        replay->GetName(replay->scenarioState.obj_states[1].id, name1);
+        EXPECT_EQ(name1, "Target");
+        EXPECT_NEAR(replay->GetX(replay->scenarioState.obj_states[1].id), 10.0, 1E-3);
+        EXPECT_NEAR(replay->GetY(replay->scenarioState.obj_states[1].id), -4.5, 1E-3);
+
+        std::string name2;
+        replay->GetName(replay->scenarioState.obj_states[2].id, name2);
+        EXPECT_EQ(name2, "Ego_ghost");
+        EXPECT_NEAR(replay->GetX(replay->scenarioState.obj_states[2].id), 10.0, 1E-3);
+        EXPECT_NEAR(replay->GetY(replay->scenarioState.obj_states[2].id), -1.5, 1E-3);
 
         // Check timestep before 0.0
-        while (i < entries.size() - 1 && entries[i].state.info.timeStamp < static_cast<float>(-SMALL_NUMBER))
-            i++;
-        i -= 3;
-        EXPECT_NEAR(entries[i].state.info.timeStamp, -0.05f, 1E-3);
-        EXPECT_STREQ(entries[i].state.info.name, "Ego");
-        EXPECT_NEAR(entries[i].state.pos.x, 10.0, 1E-3);
-        EXPECT_NEAR(entries[i].state.pos.y, -1.5, 1E-3);
-        i++;
-        EXPECT_NEAR(entries[i].state.info.timeStamp, -0.05f, 1E-3);
-        EXPECT_STREQ(entries[i].state.info.name, "Target");
-        EXPECT_NEAR(entries[i].state.pos.x, 10.0, 1E-3);
-        EXPECT_NEAR(entries[i].state.pos.y, -4.5, 1E-3);
-        i++;
-        EXPECT_NEAR(entries[i].state.info.timeStamp, -0.05f, 1E-3);
-        EXPECT_STREQ(entries[i].state.info.name, "Ego_ghost");
-        EXPECT_NEAR(entries[i].state.pos.x, 39.5, 1E-3);
-        EXPECT_NEAR(entries[i].state.pos.y, -1.5, 1E-3);
+        replay->MoveToTime(-0.05);
+        EXPECT_NEAR(replay->scenarioState.sim_time, -0.05, 1E-3);
+        replay->GetName(replay->scenarioState.obj_states[0].id, name);
+        EXPECT_EQ(name, "Ego");
+        EXPECT_NEAR(replay->GetX(replay->scenarioState.obj_states[0].id), 10.0, 1E-3);
+        EXPECT_NEAR(replay->GetY(replay->scenarioState.obj_states[0].id), -1.5, 1E-3);
+
+        replay->GetName(replay->scenarioState.obj_states[1].id, name);
+        EXPECT_EQ(name, "Target");
+        EXPECT_NEAR(replay->GetX(replay->scenarioState.obj_states[1].id), 10.0, 1E-3);
+        EXPECT_NEAR(replay->GetY(replay->scenarioState.obj_states[1].id), -4.5, 1E-3);
+
+        replay->GetName(replay->scenarioState.obj_states[2].id, name);
+        EXPECT_EQ(name, "Ego_ghost");
+        EXPECT_NEAR(replay->GetX(replay->scenarioState.obj_states[2].id), 39.5, 1E-3);
+        EXPECT_NEAR(replay->GetY(replay->scenarioState.obj_states[2].id), -1.5, 1E-3);
 
         // Check timestep 0.0
-        i++;
-        EXPECT_NEAR(entries[i].state.info.timeStamp, 0.0, 1E-3);
-        EXPECT_STREQ(entries[i].state.info.name, "Ego");
-        EXPECT_NEAR(entries[i].state.pos.x, 10.0, 1E-3);
-        EXPECT_NEAR(entries[i].state.pos.y, -1.5, 1E-3);
-        i++;
-        EXPECT_NEAR(entries[i].state.info.timeStamp, 0.0, 1E-3);
-        EXPECT_STREQ(entries[i].state.info.name, "Target");
-        EXPECT_NEAR(entries[i].state.pos.x, 10.0, 1E-3);
-        EXPECT_NEAR(entries[i].state.pos.y, -4.5, 1E-3);
-        i++;
-        EXPECT_NEAR(entries[i].state.info.timeStamp, 0.0, 1E-3);
-        EXPECT_STREQ(entries[i].state.info.name, "Ego_ghost");
-        EXPECT_NEAR(entries[i].state.pos.x, 40.0, 1E-3);
-        EXPECT_NEAR(entries[i].state.pos.y, -1.5, 1E-3);
+        replay->MoveToTime(0.0);
+        EXPECT_NEAR(replay->scenarioState.sim_time, 0.0, 1E-3);
+        replay->GetName(replay->scenarioState.obj_states[0].id, name);
+        EXPECT_EQ(name, "Ego");
+        EXPECT_NEAR(replay->GetX(replay->scenarioState.obj_states[0].id), 10.0, 1E-3);
+        EXPECT_NEAR(replay->GetY(replay->scenarioState.obj_states[0].id), -1.5, 1E-3);
+
+        replay->GetName(replay->scenarioState.obj_states[1].id, name);
+        EXPECT_EQ(name, "Target");
+        EXPECT_NEAR(replay->GetX(replay->scenarioState.obj_states[1].id), 10.0, 1E-3);
+        EXPECT_NEAR(replay->GetY(replay->scenarioState.obj_states[1].id), -4.5, 1E-3);
+
+        replay->GetName(replay->scenarioState.obj_states[2].id, name);
+        EXPECT_EQ(name, "Ego_ghost");
+        EXPECT_NEAR(replay->GetX(replay->scenarioState.obj_states[2].id), 40.0, 1E-3);
+        EXPECT_NEAR(replay->GetY(replay->scenarioState.obj_states[2].id), -1.5, 1E-3);
 
         // Check timestep after 0.0
-        i++;
-        EXPECT_NEAR(entries[i].state.info.timeStamp, dt, 1E-3);
-        EXPECT_STREQ(entries[i].state.info.name, "Ego");
-        EXPECT_NEAR(entries[i].state.pos.x, 111.0, 1E-3);
-        EXPECT_NEAR(entries[i].state.pos.y, -1.5, 1E-3);
-        i++;
-        EXPECT_NEAR(entries[i].state.info.timeStamp, dt, 1E-3);
-        EXPECT_STREQ(entries[i].state.info.name, "Target");
-        EXPECT_NEAR(entries[i].state.pos.x, 12.0, 1E-3);
-        EXPECT_NEAR(entries[i].state.pos.y, -4.5, 1E-3);
-        i++;
-        EXPECT_NEAR(entries[i].state.info.timeStamp, dt, 1E-3);
-        EXPECT_STREQ(entries[i].state.info.name, "Ego_ghost");
-        EXPECT_NEAR(entries[i].state.pos.x, 41.0, 1E-3);
-        EXPECT_NEAR(entries[i].state.pos.y, -1.5, 1E-3);
+        replay->MoveToTime(dt);
+        EXPECT_NEAR(replay->scenarioState.sim_time, dt, 1E-3);
+        replay->GetName(replay->scenarioState.obj_states[0].id, name);
+        EXPECT_EQ(name, "Ego");
+        EXPECT_NEAR(replay->GetX(replay->scenarioState.obj_states[0].id), 111.0, 1E-3);
+        EXPECT_NEAR(replay->GetY(replay->scenarioState.obj_states[0].id), -1.5, 1E-3);
+
+        replay->GetName(replay->scenarioState.obj_states[1].id, name);
+        EXPECT_EQ(name, "Target");
+        EXPECT_NEAR(replay->GetX(replay->scenarioState.obj_states[1].id), 12.0, 1E-3);
+        EXPECT_NEAR(replay->GetY(replay->scenarioState.obj_states[1].id), -4.5, 1E-3);
+
+        replay->GetName(replay->scenarioState.obj_states[2].id, name);
+        EXPECT_EQ(name, "Ego_ghost");
+        EXPECT_NEAR(replay->GetX(replay->scenarioState.obj_states[2].id), 41.0, 1E-3);
+        EXPECT_NEAR(replay->GetY(replay->scenarioState.obj_states[2].id), -1.5, 1E-3);
 
         if (j == 1)  // additional restart tests
         {
-            // Check first restart
-            i = 243;
-            EXPECT_NEAR(entries[i].state.info.timeStamp, 2.1, 1E-3);
-            EXPECT_STREQ(entries[i].state.info.name, "Ego");
-            EXPECT_NEAR(entries[i].state.pos.x, 131.0, 1E-3);
-            EXPECT_NEAR(entries[i].state.pos.y, -1.5, 1E-3);
-            i++;
-            EXPECT_NEAR(entries[i].state.info.timeStamp, 2.1, 1E-3);
-            EXPECT_STREQ(entries[i].state.info.name, "Target");
-            EXPECT_NEAR(entries[i].state.pos.x, 52.0, 1E-3);
-            EXPECT_NEAR(entries[i].state.pos.y, -4.5, 1E-3);
-            i++;
-            EXPECT_NEAR(entries[i].state.info.timeStamp, 2.1, 1E-3);
-            EXPECT_STREQ(entries[i].state.info.name, "Ego_ghost");
-            EXPECT_NEAR(entries[i].state.pos.x, 61.0, 1E-3);
-            EXPECT_NEAR(entries[i].state.pos.y, -1.5, 1E-3);
+            replay->MoveToTime(2.1);
+            EXPECT_NEAR(replay->scenarioState.sim_time, 2.1, 1E-3);
+            replay->GetName(replay->scenarioState.obj_states[0].id, name);
+            EXPECT_EQ(name, "Ego");
+            EXPECT_NEAR(replay->GetX(replay->scenarioState.obj_states[0].id), 131.0, 1E-3);
+            EXPECT_NEAR(replay->GetY(replay->scenarioState.obj_states[0].id), -1.5, 1E-3);
 
-            i++;
-            EXPECT_NEAR(entries[i].state.info.timeStamp, -0.75, 1E-3);
-            EXPECT_STREQ(entries[i].state.info.name, "Ego");
-            EXPECT_NEAR(entries[i].state.pos.x, 132.0, 1E-3);
-            EXPECT_NEAR(entries[i].state.pos.y, -1.5, 1E-3);
-            i++;
-            EXPECT_NEAR(entries[i].state.info.timeStamp, -0.75, 1E-3);
-            EXPECT_STREQ(entries[i].state.info.name, "Target");
-            EXPECT_NEAR(entries[i].state.pos.x, 54.0, 1E-3);
-            EXPECT_NEAR(entries[i].state.pos.y, -4.5, 1E-3);
-            i++;
-            EXPECT_NEAR(entries[i].state.info.timeStamp, -0.75, 1E-3);
-            EXPECT_STREQ(entries[i].state.info.name, "Ego_ghost");
-            EXPECT_NEAR(entries[i].state.pos.x, 131.502, 1E-3);
-            EXPECT_NEAR(entries[i].state.pos.y, -1.5, 1E-3);
+            replay->GetName(replay->scenarioState.obj_states[1].id, name);
+            EXPECT_EQ(name, "Target");
+            EXPECT_NEAR(replay->GetX(replay->scenarioState.obj_states[1].id), 52.0, 1E-3);
+            EXPECT_NEAR(replay->GetY(replay->scenarioState.obj_states[1].id), -4.5, 1E-3);
 
-            i++;
-            EXPECT_NEAR(entries[i].state.info.timeStamp, -0.70, 1E-3);
-            EXPECT_STREQ(entries[i].state.info.name, "Ego");
-            EXPECT_NEAR(entries[i].state.pos.x, 132.0, 1E-3);
-            EXPECT_NEAR(entries[i].state.pos.y, -1.5, 1E-3);
-            i++;
-            EXPECT_NEAR(entries[i].state.info.timeStamp, -0.70, 1E-3);
-            EXPECT_STREQ(entries[i].state.info.name, "Target");
-            EXPECT_NEAR(entries[i].state.pos.x, 54.0, 1E-3);
-            EXPECT_NEAR(entries[i].state.pos.y, -4.5, 1E-3);
-            i++;
-            EXPECT_NEAR(entries[i].state.info.timeStamp, -0.70, 1E-3);
-            EXPECT_STREQ(entries[i].state.info.name, "Ego_ghost");
-            EXPECT_NEAR(entries[i].state.pos.x, 132.005, 1E-3);
-            EXPECT_NEAR(entries[i].state.pos.y, -1.5, 1E-3);
+            replay->GetName(replay->scenarioState.obj_states[2].id, name);
+            EXPECT_EQ(name, "Ego_ghost");
+            EXPECT_NEAR(replay->GetX(replay->scenarioState.obj_states[2].id), 61.0, 1E-3);
+            EXPECT_NEAR(replay->GetY(replay->scenarioState.obj_states[2].id), -1.5, 1E-3);
 
-            i = 423;
-            EXPECT_NEAR(entries[i].state.info.timeStamp, 2.2, 1E-3);
-            EXPECT_STREQ(entries[i].state.info.name, "Ego");
-            EXPECT_NEAR(entries[i].state.pos.x, 132.0, 1E-3);
-            EXPECT_NEAR(entries[i].state.pos.y, -1.5, 1E-3);
-            i++;
-            EXPECT_NEAR(entries[i].state.info.timeStamp, 2.2, 1E-3);
-            EXPECT_STREQ(entries[i].state.info.name, "Target");
-            EXPECT_NEAR(entries[i].state.pos.x, 54.0, 1E-3);
-            EXPECT_NEAR(entries[i].state.pos.y, -4.5, 1E-3);
-            i++;
-            EXPECT_NEAR(entries[i].state.info.timeStamp, 2.2, 1E-3);
-            EXPECT_STREQ(entries[i].state.info.name, "Ego_ghost");
-            EXPECT_NEAR(entries[i].state.pos.x, 169.124, 1E-3);
-            EXPECT_NEAR(entries[i].state.pos.y, -1.5, 1E-3);
+            replay->MoveToTime(2.3);  // show restart time
+            EXPECT_NEAR(replay->scenarioState.sim_time, -0.75, 1E-3);
+            replay->GetName(replay->scenarioState.obj_states[0].id, name);
+            EXPECT_EQ(name, "Ego");
+            EXPECT_NEAR(replay->GetX(replay->scenarioState.obj_states[0].id), 132.0, 1E-3);
+            EXPECT_NEAR(replay->GetY(replay->scenarioState.obj_states[0].id), -1.5, 1E-3);
 
-            i++;
-            EXPECT_NEAR(entries[i].state.info.timeStamp, 2.3, 1E-3);
-            EXPECT_STREQ(entries[i].state.info.name, "Ego");
-            EXPECT_NEAR(entries[i].state.pos.x, 232.008, 1E-3);
-            EXPECT_NEAR(entries[i].state.pos.y, -1.5, 1E-3);
-            i++;
-            EXPECT_NEAR(entries[i].state.info.timeStamp, 2.3, 1E-3);
-            EXPECT_STREQ(entries[i].state.info.name, "Target");
-            EXPECT_NEAR(entries[i].state.pos.x, 56.0, 1E-3);
-            EXPECT_NEAR(entries[i].state.pos.y, -4.5, 1E-3);
-            i++;
-            EXPECT_NEAR(entries[i].state.info.timeStamp, 2.3, 1E-3);
-            EXPECT_STREQ(entries[i].state.info.name, "Ego_ghost");
-            EXPECT_NEAR(entries[i].state.pos.x, 170.624, 1E-3);
-            EXPECT_NEAR(entries[i].state.pos.y, -1.5, 1E-3);
+            replay->GetName(replay->scenarioState.obj_states[1].id, name);
+            EXPECT_EQ(name, "Target");
+            EXPECT_NEAR(replay->GetX(replay->scenarioState.obj_states[1].id), 54.0, 1E-3);
+            EXPECT_NEAR(replay->GetY(replay->scenarioState.obj_states[1].id), -4.5, 1E-3);
 
-            i = 600;
-            EXPECT_NEAR(entries[i].state.info.timeStamp, 8.1, 1E-3);
-            EXPECT_STREQ(entries[i].state.info.name, "Ego");
-            EXPECT_NEAR(entries[i].state.pos.x, 312.624, 1E-3);
-            EXPECT_NEAR(entries[i].state.pos.y, -1.5, 1E-3);
-            i++;
-            EXPECT_NEAR(entries[i].state.info.timeStamp, 8.1, 1E-3);
-            EXPECT_STREQ(entries[i].state.info.name, "Target");
-            EXPECT_NEAR(entries[i].state.pos.x, 172.000, 1E-3);
-            EXPECT_NEAR(entries[i].state.pos.y, -4.5, 1E-3);
-            i++;
-            EXPECT_NEAR(entries[i].state.info.timeStamp, 8.1, 1E-3);
-            EXPECT_STREQ(entries[i].state.info.name, "Ego_ghost");
-            EXPECT_NEAR(entries[i].state.pos.x, 257.624, 1E-3);
-            EXPECT_NEAR(entries[i].state.pos.y, -1.5, 1E-3);
+            replay->GetName(replay->scenarioState.obj_states[2].id, name);
+            EXPECT_EQ(name, "Ego_ghost");
+            EXPECT_NEAR(replay->GetX(replay->scenarioState.obj_states[2].id), 131.502, 1E-3);
+            EXPECT_NEAR(replay->GetY(replay->scenarioState.obj_states[2].id), -1.5, 1E-3);
 
-            i++;
-            EXPECT_NEAR(entries[i].state.info.timeStamp, 5.25, 1E-3);
-            EXPECT_STREQ(entries[i].state.info.name, "Ego");
-            EXPECT_NEAR(entries[i].state.pos.x, 314.124, 1E-3);
-            EXPECT_NEAR(entries[i].state.pos.y, -1.5, 1E-3);
-            i++;
-            EXPECT_NEAR(entries[i].state.info.timeStamp, 5.25, 1E-3);
-            EXPECT_STREQ(entries[i].state.info.name, "Target");
-            EXPECT_NEAR(entries[i].state.pos.x, 174.000, 1E-3);
-            EXPECT_NEAR(entries[i].state.pos.y, -4.5, 1E-3);
-            i++;
-            EXPECT_NEAR(entries[i].state.info.timeStamp, 5.25, 1E-3);
-            EXPECT_STREQ(entries[i].state.info.name, "Ego_ghost");
-            EXPECT_NEAR(entries[i].state.pos.x, 313.376, 1E-3);
-            EXPECT_NEAR(entries[i].state.pos.y, -1.5, 1E-3);
+            replay->MoveToTime(-0.70);
+            EXPECT_NEAR(replay->scenarioState.sim_time, -0.70, 1E-3);
+            replay->GetName(replay->scenarioState.obj_states[0].id, name);
+            EXPECT_EQ(name, "Ego");
+            EXPECT_NEAR(replay->GetX(replay->scenarioState.obj_states[0].id), 132.0, 1E-3);
+            EXPECT_NEAR(replay->GetY(replay->scenarioState.obj_states[0].id), -1.5, 1E-3);
 
-            i = 774;
-            EXPECT_NEAR(entries[i].state.info.timeStamp, 8.1, 1E-3);
-            EXPECT_STREQ(entries[i].state.info.name, "Ego");
-            EXPECT_NEAR(entries[i].state.pos.x, 314.124, 1E-3);
-            EXPECT_NEAR(entries[i].state.pos.y, -1.5, 1E-3);
-            i++;
-            EXPECT_NEAR(entries[i].state.info.timeStamp, 8.1, 1E-3);
-            EXPECT_STREQ(entries[i].state.info.name, "Target");
-            EXPECT_NEAR(entries[i].state.pos.x, 174.000, 1E-3);
-            EXPECT_NEAR(entries[i].state.pos.y, -4.5, 1E-3);
-            i++;
-            EXPECT_NEAR(entries[i].state.info.timeStamp, 8.1, 1E-3);
-            EXPECT_STREQ(entries[i].state.info.name, "Ego_ghost");
-            EXPECT_NEAR(entries[i].state.pos.x, 363.748, 1E-3);
-            EXPECT_NEAR(entries[i].state.pos.y, -1.5, 1E-3);
+            replay->GetName(replay->scenarioState.obj_states[1].id, name);
+            EXPECT_EQ(name, "Target");
+            EXPECT_NEAR(replay->GetX(replay->scenarioState.obj_states[1].id), 54.0, 1E-3);
+            EXPECT_NEAR(replay->GetY(replay->scenarioState.obj_states[1].id), -4.5, 1E-3);
 
-            i = 780;
-            EXPECT_NEAR(entries[i].state.info.timeStamp, 8.2, 1E-3);
-            EXPECT_STREQ(entries[i].state.info.name, "Ego");
-            EXPECT_NEAR(entries[i].state.pos.x, 314.124, 1E-3);
-            EXPECT_NEAR(entries[i].state.pos.y, -1.5, 1E-3);
-            i++;
-            EXPECT_NEAR(entries[i].state.info.timeStamp, 8.2, 1E-3);
-            EXPECT_STREQ(entries[i].state.info.name, "Target");
-            EXPECT_NEAR(entries[i].state.pos.x, 174.000, 1E-3);
-            EXPECT_NEAR(entries[i].state.pos.y, -4.5, 1E-3);
-            i++;
-            EXPECT_NEAR(entries[i].state.info.timeStamp, 8.2, 1E-3);
-            EXPECT_STREQ(entries[i].state.info.name, "Ego_ghost");
-            EXPECT_NEAR(entries[i].state.pos.x, 365.748, 1E-3);
-            EXPECT_NEAR(entries[i].state.pos.y, -1.5, 1E-3);
+            replay->GetName(replay->scenarioState.obj_states[2].id, name);
+            EXPECT_EQ(name, "Ego_ghost");
+            EXPECT_NEAR(replay->GetX(replay->scenarioState.obj_states[2].id), 132.005, 1E-3);
+            EXPECT_NEAR(replay->GetY(replay->scenarioState.obj_states[2].id), -1.5, 1E-3);
 
-            i++;
-            EXPECT_NEAR(entries[i].state.info.timeStamp, 8.3, 1E-3);
-            EXPECT_STREQ(entries[i].state.info.name, "Ego");
-            EXPECT_NEAR(entries[i].state.pos.x, 414.133, 1E-3);
-            EXPECT_NEAR(entries[i].state.pos.y, -1.5, 1E-3);
-            i++;
-            EXPECT_NEAR(entries[i].state.info.timeStamp, 8.3, 1E-3);
-            EXPECT_STREQ(entries[i].state.info.name, "Target");
-            EXPECT_NEAR(entries[i].state.pos.x, 176.000, 1E-3);
-            EXPECT_NEAR(entries[i].state.pos.y, -4.5, 1E-3);
-            i++;
-            EXPECT_NEAR(entries[i].state.info.timeStamp, 8.3, 1E-3);
-            EXPECT_STREQ(entries[i].state.info.name, "Ego_ghost");
-            EXPECT_NEAR(entries[i].state.pos.x, 367.748, 1E-3);
-            EXPECT_NEAR(entries[i].state.pos.y, -1.5, 1E-3);
+            replay->MoveToTime(2.2);
+            EXPECT_NEAR(replay->scenarioState.sim_time, 2.2, 1E-3);
+            replay->GetName(replay->scenarioState.obj_states[0].id, name);
+            EXPECT_EQ(name, "Ego");
+            EXPECT_NEAR(replay->GetX(replay->scenarioState.obj_states[0].id), 132.0, 1E-3);
+            EXPECT_NEAR(replay->GetY(replay->scenarioState.obj_states[0].id), -1.5, 1E-3);
+
+            replay->GetName(replay->scenarioState.obj_states[1].id, name);
+            EXPECT_EQ(name, "Target");
+            EXPECT_NEAR(replay->GetX(replay->scenarioState.obj_states[1].id), 54.0, 1E-3);
+            EXPECT_NEAR(replay->GetY(replay->scenarioState.obj_states[1].id), -4.5, 1E-3);
+
+            replay->GetName(replay->scenarioState.obj_states[2].id, name);
+            EXPECT_EQ(name, "Ego_ghost");
+            EXPECT_NEAR(replay->GetX(replay->scenarioState.obj_states[2].id), 169.124, 1E-3);
+            EXPECT_NEAR(replay->GetY(replay->scenarioState.obj_states[2].id), -1.5, 1E-3);
+
+            replay->MoveToTime(2.3);
+            EXPECT_NEAR(replay->scenarioState.sim_time, 2.3, 1E-3);
+            replay->GetName(replay->scenarioState.obj_states[0].id, name);
+            EXPECT_EQ(name, "Ego");
+            EXPECT_NEAR(replay->GetX(replay->scenarioState.obj_states[0].id), 232.008, 1E-3);
+            EXPECT_NEAR(replay->GetY(replay->scenarioState.obj_states[0].id), -1.5, 1E-3);
+
+            replay->GetName(replay->scenarioState.obj_states[1].id, name);
+            EXPECT_EQ(name, "Target");
+            EXPECT_NEAR(replay->GetX(replay->scenarioState.obj_states[1].id), 56.0, 1E-3);
+            EXPECT_NEAR(replay->GetY(replay->scenarioState.obj_states[1].id), -4.5, 1E-3);
+
+            replay->GetName(replay->scenarioState.obj_states[2].id, name);
+            EXPECT_EQ(name, "Ego_ghost");
+            EXPECT_NEAR(replay->GetX(replay->scenarioState.obj_states[2].id), 170.624, 1E-3);
+            EXPECT_NEAR(replay->GetY(replay->scenarioState.obj_states[2].id), -1.5, 1E-3);
+
+            replay->MoveToTime(8.1);
+            EXPECT_NEAR(replay->scenarioState.sim_time, 8.1, 1E-3);
+            replay->GetName(replay->scenarioState.obj_states[0].id, name);
+            EXPECT_EQ(name, "Ego");
+            EXPECT_NEAR(replay->GetX(replay->scenarioState.obj_states[0].id), 312.624, 1E-3);
+            EXPECT_NEAR(replay->GetY(replay->scenarioState.obj_states[0].id), -1.5, 1E-3);
+
+            replay->GetName(replay->scenarioState.obj_states[1].id, name);
+            EXPECT_EQ(name, "Target");
+            EXPECT_NEAR(replay->GetX(replay->scenarioState.obj_states[1].id), 172.0, 1E-3);
+            EXPECT_NEAR(replay->GetY(replay->scenarioState.obj_states[1].id), -4.5, 1E-3);
+
+            replay->GetName(replay->scenarioState.obj_states[2].id, name);
+            EXPECT_EQ(name, "Ego_ghost");
+            EXPECT_NEAR(replay->GetX(replay->scenarioState.obj_states[2].id), 257.624, 1E-3);
+            EXPECT_NEAR(replay->GetY(replay->scenarioState.obj_states[2].id), -1.5, 1E-3);
+
+            replay->MoveToTime(8.2);  // shall be in secound restart
+            EXPECT_NEAR(replay->scenarioState.sim_time, 5.25, 1E-3);
+            replay->GetName(replay->scenarioState.obj_states[0].id, name);
+            EXPECT_EQ(name, "Ego");
+            EXPECT_NEAR(replay->GetX(replay->scenarioState.obj_states[0].id), 314.124, 1E-3);
+            EXPECT_NEAR(replay->GetY(replay->scenarioState.obj_states[0].id), -1.5, 1E-3);
+
+            replay->GetName(replay->scenarioState.obj_states[1].id, name);
+            EXPECT_EQ(name, "Target");
+            EXPECT_NEAR(replay->GetX(replay->scenarioState.obj_states[1].id), 174.0, 1E-3);
+            EXPECT_NEAR(replay->GetY(replay->scenarioState.obj_states[1].id), -4.5, 1E-3);
+
+            replay->GetName(replay->scenarioState.obj_states[2].id, name);
+            EXPECT_EQ(name, "Ego_ghost");
+            EXPECT_NEAR(replay->GetX(replay->scenarioState.obj_states[2].id), 313.376, 1E-3);
+            EXPECT_NEAR(replay->GetY(replay->scenarioState.obj_states[2].id), -1.5, 1E-3);
+
+            replay->MoveToTime(8.1);
+            EXPECT_NEAR(replay->scenarioState.sim_time, 8.1, 1E-3);
+            replay->GetName(replay->scenarioState.obj_states[0].id, name);
+            EXPECT_EQ(name, "Ego");
+            EXPECT_NEAR(replay->GetX(replay->scenarioState.obj_states[0].id), 314.124, 1E-3);
+            EXPECT_NEAR(replay->GetY(replay->scenarioState.obj_states[0].id), -1.5, 1E-3);
+
+            replay->GetName(replay->scenarioState.obj_states[1].id, name);
+            EXPECT_EQ(name, "Target");
+            EXPECT_NEAR(replay->GetX(replay->scenarioState.obj_states[1].id), 174.0, 1E-3);
+            EXPECT_NEAR(replay->GetY(replay->scenarioState.obj_states[1].id), -4.5, 1E-3);
+
+            replay->GetName(replay->scenarioState.obj_states[2].id, name);
+            EXPECT_EQ(name, "Ego_ghost");
+            EXPECT_NEAR(replay->GetX(replay->scenarioState.obj_states[2].id), 363.748, 1E-3);
+            EXPECT_NEAR(replay->GetY(replay->scenarioState.obj_states[2].id), -1.5, 1E-3);
+
+            replay->MoveToTime(8.2);
+            EXPECT_NEAR(replay->scenarioState.sim_time, 8.2, 1E-3);
+            replay->GetName(replay->scenarioState.obj_states[0].id, name);
+            EXPECT_EQ(name, "Ego");
+            EXPECT_NEAR(replay->GetX(replay->scenarioState.obj_states[0].id), 314.124, 1E-3);
+            EXPECT_NEAR(replay->GetY(replay->scenarioState.obj_states[0].id), -1.5, 1E-3);
+
+            replay->GetName(replay->scenarioState.obj_states[1].id, name);
+            EXPECT_EQ(name, "Target");
+            EXPECT_NEAR(replay->GetX(replay->scenarioState.obj_states[1].id), 174.0, 1E-3);
+            EXPECT_NEAR(replay->GetY(replay->scenarioState.obj_states[1].id), -4.5, 1E-3);
+
+            replay->GetName(replay->scenarioState.obj_states[2].id, name);
+            EXPECT_EQ(name, "Ego_ghost");
+            EXPECT_NEAR(replay->GetX(replay->scenarioState.obj_states[2].id), 365.748, 1E-3);
+            EXPECT_NEAR(replay->GetY(replay->scenarioState.obj_states[2].id), -1.5, 1E-3);
+
+            replay->MoveToTime(8.3);
+            EXPECT_NEAR(replay->scenarioState.sim_time, 8.3, 1E-3);
+            replay->GetName(replay->scenarioState.obj_states[0].id, name);
+            EXPECT_EQ(name, "Ego");
+            EXPECT_NEAR(replay->GetX(replay->scenarioState.obj_states[0].id), 414.133, 1E-3);
+            EXPECT_NEAR(replay->GetY(replay->scenarioState.obj_states[0].id), -1.5, 1E-3);
+
+            replay->GetName(replay->scenarioState.obj_states[1].id, name);
+            EXPECT_EQ(name, "Target");
+            EXPECT_NEAR(replay->GetX(replay->scenarioState.obj_states[1].id), 176.0, 1E-3);
+            EXPECT_NEAR(replay->GetY(replay->scenarioState.obj_states[1].id), -4.5, 1E-3);
+
+            replay->GetName(replay->scenarioState.obj_states[2].id, name);
+            EXPECT_EQ(name, "Ego_ghost");
+            EXPECT_NEAR(replay->GetX(replay->scenarioState.obj_states[2].id), 367.748, 1E-3);
+            EXPECT_NEAR(replay->GetY(replay->scenarioState.obj_states[2].id), -1.5, 1E-3);
+
+            delete replay;
 
             // Also check a few entries in the csv log file, focus on scenario controlled entity "Target"
             std::vector<std::vector<std::string>> csv;
@@ -3742,13 +3731,13 @@ TEST(ReplayTest, TestMultiReplayDifferentTimeSteps)
 {
     const char* args[2][2][6] = {
         // First run with smaller timsteps in first scenario
-        {{"--osc", "../../../resources/xosc/follow_ghost.xosc", "--record", "multirep_test1.dat", "--fixed_timestep", "0.01"},
-         {"--osc", "../../../resources/xosc/left-hand-traffic_using_road_rule.xosc", "--record", "multirep_test2.dat", "--fixed_timestep", "0.1"}},
+        {{"--osc", "../../resources/xosc/follow_ghost.xosc", "--record", "multirep_test1.dat", "--fixed_timestep", "0.01"},
+         {"--osc", "../../resources/xosc/left-hand-traffic_using_road_rule.xosc", "--record", "multirep_test2.dat", "--fixed_timestep", "0.1"}},
         // Then run with smaller timsteps in second scenario
-        {{"--osc", "../../../resources/xosc/follow_ghost.xosc", "--record", "multirep_test1.dat", "--fixed_timestep", "0.1"},
-         {"--osc", "../../../resources/xosc/left-hand-traffic_using_road_rule.xosc", "--record", "multirep_test2.dat", "--fixed_timestep", "0.01"}}};
+        {{"--osc", "../../resources/xosc/follow_ghost.xosc", "--record", "multirep_test1.dat", "--fixed_timestep", "0.1"},
+         {"--osc", "../../resources/xosc/left-hand-traffic_using_road_rule.xosc", "--record", "multirep_test2.dat", "--fixed_timestep", "0.01"}}};
 
-    SE_AddPath("../../../resources/models");
+    SE_AddPath("../../resources/models");
 
     for (int k = 0; k < 2; k++)
     {
@@ -3776,50 +3765,68 @@ TEST(ReplayTest, TestMultiReplayDifferentTimeSteps)
         scenarioengine::Replay* replay = new scenarioengine::Replay(".", "multirep_test", "");
         EXPECT_EQ(replay->GetNumberOfScenarios(), 2);
 
-        EXPECT_NEAR(replay->data_[0].state.info.timeStamp, -2.5, 1E-3);
-        EXPECT_STREQ(replay->data_[0].state.info.name, "Ego");
-        EXPECT_STREQ(replay->data_[1].state.info.name, "Ego_ghost");
-        EXPECT_STREQ(replay->data_[2].state.info.name, "Ego");
-        EXPECT_NEAR(replay->data_[2].state.info.timeStamp, -2.45, 1E-3);
-        EXPECT_NEAR(replay->data_[4].state.info.timeStamp, -2.40, 1E-3);
-        EXPECT_NEAR(replay->data_[100].state.info.timeStamp, 0.0, 1E-3);
-        EXPECT_NEAR(replay->data_[100].state.info.id, 0, 1E-3);
-        EXPECT_NEAR(replay->data_[101].state.info.timeStamp, 0.0, 1E-3);
-        EXPECT_NEAR(replay->data_[101].state.info.id, 1, 1E-3);
-        EXPECT_NEAR(replay->data_[102].state.info.timeStamp, 0.0, 1E-3);
-        EXPECT_NEAR(replay->data_[102].state.info.id, 100, 1E-3);
-        EXPECT_NEAR(replay->data_[103].state.info.timeStamp, 0.0, 1E-3);
-        EXPECT_NEAR(replay->data_[103].state.info.id, 101, 1E-3);
-        EXPECT_NEAR(replay->data_[104].state.info.timeStamp, 0.01, 1E-3);
-        EXPECT_NEAR(replay->data_[104].state.info.id, 0, 1E-3);
-        EXPECT_NEAR(replay->data_[108].state.info.timeStamp, 0.02, 1E-3);
-        EXPECT_NEAR(replay->data_[108].state.info.id, 0, 1E-3);
-        EXPECT_NEAR(replay->data_[139].state.info.timeStamp, 0.09, 1E-3);
-        EXPECT_NEAR(replay->data_[139].state.info.id, 101, 1E-3);
-        EXPECT_NEAR(replay->data_[140].state.info.timeStamp, 0.1, 1E-3);
-        EXPECT_NEAR(replay->data_[140].state.info.id, 0, 1E-3);
+        replay->MoveToTime(-2.5);
+        EXPECT_NEAR(replay->scenarioState.sim_time, -2.5, 1E-3);
+        std::string name;
+        replay->GetName(replay->scenarioState.obj_states[0].id, name);
+        EXPECT_EQ(name, "Ego");
+        std::string name1;
+        replay->GetName(replay->scenarioState.obj_states[1].id, name1);
+        EXPECT_EQ(name1, "Ego_ghost");
 
-        EXPECT_NEAR(replay->data_[2012].state.info.timeStamp, 4.78, 1E-3);
-        EXPECT_NEAR(replay->data_[2012].state.info.id, 0, 1E-3);
-        EXPECT_NEAR(replay->data_[2015].state.info.timeStamp, 4.78, 1E-3);
-        EXPECT_NEAR(replay->data_[2015].state.info.id, 101, 1E-3);
+        replay->MoveToTime(-2.45);
+        EXPECT_NEAR(replay->scenarioState.sim_time, -2.45, 1E-3);
+        std::string name2;
+        replay->GetName(replay->scenarioState.obj_states[0].id, name2);
+        EXPECT_EQ(name2, "Ego");
+
+        replay->MoveToTime(-2.40);
+        EXPECT_NEAR(replay->scenarioState.sim_time, -2.40, 1E-3);
+
+        replay->MoveToTime(0.0);
+        EXPECT_NEAR(replay->scenarioState.sim_time, 0.0, 1E-3);
+        EXPECT_NEAR(replay->scenarioState.obj_states[0].id, 0, 1E-3);
+        EXPECT_NEAR(replay->scenarioState.obj_states[1].id, 1, 1E-3);
+        EXPECT_NEAR(replay->scenarioState.obj_states[2].id, 10, 1E-3);
+        EXPECT_NEAR(replay->scenarioState.obj_states[3].id, 11, 1E-3);
+
+        replay->MoveToTime(0.01);
+        EXPECT_NEAR(replay->scenarioState.sim_time, 0.01, 1E-3);
+        EXPECT_NEAR(replay->scenarioState.obj_states[0].id, 0, 1E-3);
+
+        replay->MoveToTime(0.02);
+        EXPECT_NEAR(replay->scenarioState.sim_time, 0.02, 1E-3);
+        EXPECT_NEAR(replay->scenarioState.obj_states[0].id, 0, 1E-3);
+
+        replay->MoveToTime(0.09);
+        EXPECT_NEAR(replay->scenarioState.sim_time, 0.09, 1E-3);
+        EXPECT_NEAR(replay->scenarioState.obj_states[3].id, 11, 1E-3);
+
+        replay->MoveToTime(0.1);
+        EXPECT_NEAR(replay->scenarioState.sim_time, 0.1, 1E-3);
+        EXPECT_NEAR(replay->scenarioState.obj_states[0].id, 0, 1E-3);
+
+        replay->MoveToTime(4.78);
+        EXPECT_NEAR(replay->scenarioState.sim_time, 4.78, 1E-3);
+        EXPECT_NEAR(replay->scenarioState.obj_states[0].id, 0, 1E-3);
+        EXPECT_NEAR(replay->scenarioState.obj_states[3].id, 11, 1E-3);
 
         if (k == 0)
         {
-            EXPECT_NEAR(replay->data_[2012].state.pos.y, 130.994, 1E-3);
-            EXPECT_NEAR(replay->data_[2015].state.pos.y, 207.387, 1E-3);
-            EXPECT_NEAR(replay->data_[5965].state.info.timeStamp, 19.51, 1E-3);
-            EXPECT_NEAR(replay->data_[5965].state.info.id, 1, 1E-3);
+            EXPECT_NEAR(replay->GetY(replay->scenarioState.obj_states[0].id), 130.994, 1E-3);
+            EXPECT_NEAR(replay->GetY(replay->scenarioState.obj_states[3].id), 207.387, 1E-3);
+            replay->MoveToTime(19.51);
+            EXPECT_NEAR(replay->scenarioState.sim_time, 19.51, 1E-3);
+            EXPECT_NEAR(replay->scenarioState.obj_states[1].id, 1, 1E-3);
         }
         else
         {
-            EXPECT_NEAR(replay->data_[2012].state.pos.y, 130.913, 1E-3);
-            EXPECT_NEAR(replay->data_[2015].state.pos.y, 210.738, 1E-3);
-            EXPECT_NEAR(replay->data_[4201].state.info.timeStamp, 19.6, 1E-3);
-            EXPECT_NEAR(replay->data_[4201].state.info.id, 1, 1E-3);
+            EXPECT_NEAR(replay->GetY(replay->scenarioState.obj_states[0].id), 130.913, 1E-3);
+            EXPECT_NEAR(replay->GetY(replay->scenarioState.obj_states[3].id), 210.738, 1E-3);
+            replay->MoveToTime(19.6);
+            EXPECT_NEAR(replay->scenarioState.sim_time, 19.6, 1E-3);
+            EXPECT_NEAR(replay->scenarioState.obj_states[1].id, 1, 1E-3);
         }
-
-        delete replay;
     }
 }
 

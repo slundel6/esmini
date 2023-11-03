@@ -567,6 +567,11 @@ void RotateVec3d(const double h0,
 */
 void SwapByteOrder(unsigned char* buf, int data_type_size, int buf_size);
 
+/**
+       check two double values are equal with small margin
+*/
+bool isEqualDouble(double val1, double val2);
+
 #if (defined WINVER && WINVER == _WIN32_WINNT_WIN7)
 #else
 #include <thread>

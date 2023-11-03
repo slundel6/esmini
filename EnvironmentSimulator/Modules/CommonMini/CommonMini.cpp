@@ -618,6 +618,11 @@ void StrCopy(char* dest, const char* src, size_t size, bool terminate)
     }
 }
 
+bool isEqualDouble(double val1, double val2)
+{
+    return ((std::signbit(val1) == std::signbit(val2)) && (fabs(val1 - val2) < SMALL_NUMBER));
+}
+
 #if (defined WINVER && WINVER == _WIN32_WINNT_WIN7 || __MINGW32__)
 
 #include <windows.h>

@@ -9,13 +9,13 @@ skipOpenGLTests=false
 if ! [[ -z "$arg1" ]]; then
     if [[ "$arg1" = "Debug" ]]; then
         buildConfiguration="Debug"
-    fi 
+    fi
 fi
 
 if ! [[ -z "$arg2" ]]; then
     if [[ "$arg2" = true ]]; then
         skipOpenGLTests=true
-    fi 
+    fi
 fi
 
 echo "$buildConfiguration - Skip OpenGL tests: $skipOpenGLTests"
@@ -107,6 +107,12 @@ if [[ "$OSTYPE" == "msys" ]] || [[ "$OSTYPE" == "linux-gnu"* ]]; then
     if ! ${EXE_FOLDER}/FollowRouteController_test; then
         exit_with_msg "FollowRouteController_test failed"
     fi
+
+    echo $'\n'Replayer_test:
+    if ! ${EXE_FOLDER}/Replayer_test; then
+        exit_with_msg "Replayer_test failed"
+    fi
+
 fi
 
 cd $SMOKE_TEST_FOLDER
