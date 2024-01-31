@@ -7,7 +7,7 @@ if __name__ == "__main__":
     parser.add_argument('filename', help='dat filename')
     parser.add_argument('--extended', '-e', action='store_true', help='add road coordinates')
     parser.add_argument('--file_refs', '-r', action='store_true', help='include odr and model file references')
-    parser.add_argument("--time_mode", "-m", choices=["original", "min_step", "min_step_mixed", "time_step", "time_step_mixed"], default="original", help="control timestamps in the csv.")
+    parser.add_argument("--time_mode", "-m", choices=["original", "min_step", "min_step_mixed", "custom_time_step", "custom_time_step_mixed"], default="original", help="control timestamps in the csv.")
     parser.add_argument(
         "-t",
         "--time_step",

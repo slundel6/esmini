@@ -5,6 +5,7 @@
 #include <dirent.h>
 
 #include "ScenarioEngine.hpp"
+#include "ScenarioReader.hpp"
 #include "esminiLib.hpp"
 #include "CommonMini.hpp"
 #include "DatLogger.hpp"
@@ -12,6 +13,7 @@
 #include "Replay.hpp"
 
 using namespace datLogger;
+using namespace scenarioengine;
 
 TEST(TestReplayer, WithOneObject)
 {
@@ -195,11 +197,6 @@ TEST(TestReplayer, WithTwoObjectAndAddAndDelete)
 
     int no_of_obj  = 3;
     int total_time = 6;
-
-    // calc
-    //  3obj- one obj deleted so 1 pos + speed pkg less
-    //  1 hdr, 6 time, 18 obj id, 17 pos, 17 speed, 1 dele pkg, 3 obj added  = 63 pkg  received
-    //  1 hdr, 6 time, 18 obj id, 7 pos, 14 speed, 1 dele pkg, 4 obj added  = 50 pkg
 
     for (int i = 0; i < total_time; i++)
     {
@@ -428,36 +425,38 @@ TEST(TestReplayer, SpeedChangeScenario)
     ASSERT_DOUBLE_EQ(replayer_->scenarioState.obj_states[0].pkgs[4].time_, 0);
 }
 
+static void SimpleScenarioParamDeclCallback(void*)
+{
+    static int counter  = 0;
+    double     value[2] = {10, 490};
+
+    if (counter < 2)
+    {
+        ScenarioReader::parameters.setParameterValue("StartPosition", value[counter]);
+    }
+
+    counter++;
+}
+
 TEST(TestReplayer, TwoSimpleScenarioMerge)
 {
-    const char* args[] =
-        {"--osc", "../../../EnvironmentSimulator/Unittest/xosc/simple_scenario.xosc", "--record", "simple_scenario_.dat", "--fixed_timestep", "0.5"};
-
-    SE_AddPath("../../../resources/models");
-    ASSERT_EQ(SE_InitWithArgs(sizeof(args) / sizeof(char*), args), 0);
-
-    while (SE_GetQuitFlag() == 0)
+    RegisterParameterDeclarationCallback(SimpleScenarioParamDeclCallback, 0);
+    for (int i = 0; i < 2; i++)
     {
-        SE_StepDT(0.05f);
+        std::string dat_filename  = "simple_scenario_" + std::to_string(i) + ".dat";
+        const char* args_filename = dat_filename.c_str();
+        const char* args[] = {"--osc", "../../../EnvironmentSimulator/Unittest/xosc/simple_scenario.xosc", args_filename, "--fixed_timestep", "0.5"};
+
+        SE_AddPath("../../../resources/models");
+        ASSERT_EQ(SE_InitWithArgs(sizeof(args) / sizeof(char*), args), 0);
+
+        while (SE_GetQuitFlag() == 0)
+        {
+            SE_StepDT(0.05f);
+        }
+        SE_Close();
     }
-
-    SE_Close();
-
-    const char* args1[] = {"--osc",
-                           "../../../EnvironmentSimulator/Unittest/xosc/simple_scenario_reversed.xosc",
-                           "--record",
-                           "simple_scenario_reversed.dat",
-                           "--fixed_timestep",
-                           "0.5"};
-
-    SE_AddPath("../../../resources/models");
-    ASSERT_EQ(SE_InitWithArgs(sizeof(args1) / sizeof(char*), args1), 0);
-
-    while (SE_GetQuitFlag() == 0)
-    {
-        SE_StepDT(0.05f);
-    }
-    SE_Close();
+    RegisterParameterDeclarationCallback(nullptr, 0);
 
     std::unique_ptr<scenarioengine::Replay> replayer_ = std::make_unique<scenarioengine::Replay>(".", "simple_scenario_", "");
     ASSERT_EQ(replayer_->pkgs_.size(), 5737);
@@ -768,7 +767,7 @@ TEST(TestDat2Csv, TimeModes)
     std::unique_ptr<Dat2csv> dat_to_csv3;
     dat_to_csv3 = std::make_unique<Dat2csv>("sim.dat");
 
-    dat_to_csv3->SetLogMode(Dat2csv::log_mode::TIME_STEP);
+    dat_to_csv3->SetLogMode(Dat2csv::log_mode::CUSTOM_TIME_STEP);
     dat_to_csv3->SetStepTime(1);
     dat_to_csv3->CreateCSV();
 
@@ -813,7 +812,7 @@ TEST(TestDat2Csv, TimeModes)
     std::unique_ptr<Dat2csv> dat_to_csv4;
     dat_to_csv4 = std::make_unique<Dat2csv>("sim.dat");
 
-    dat_to_csv4->SetLogMode(Dat2csv::log_mode::TIME_STEP_MIXED);
+    dat_to_csv4->SetLogMode(Dat2csv::log_mode::CUSTOM_TIME_STEP_MIXED);
     dat_to_csv4->SetStepTime(1);
     dat_to_csv4->CreateCSV();
 

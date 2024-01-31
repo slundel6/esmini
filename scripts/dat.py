@@ -146,8 +146,8 @@ class Mode(Enum):
     ORIGINAL = 0
     MIN_STEP = 1
     MIN_STEP_MIXED = 2
-    TIME_STEP = 3
-    TIME_STEP_MIXED = 4
+    CUSTOM_TIME_STEP = 3
+    CUSTOM_TIME_STEP_MIXED = 4
 
 
 class ObjectStateStructDat(ctypes.Structure):
@@ -502,9 +502,9 @@ class DATFile():
         elif mode == "min_step_mixed":
             mode_ = Mode.MIN_STEP_MIXED
         elif mode == "time_step":
-            mode_ = Mode.TIME_STEP
+            mode_ = Mode.CUSTOM_TIME_STEP
         elif mode == "time_step_mixed":
-            mode_ = Mode.TIME_STEP_MIXED
+            mode_ = Mode.CUSTOM_TIME_STEP_MIXED
 
         if( mode_ == Mode.ORIGINAL):
             while(True):
@@ -562,7 +562,7 @@ class DATFile():
                 if timeToMove > self.stop_time: # set last time stamp
                     timeToMove = self.stop_time
 
-                if mode_ == Mode.TIME_STEP_MIXED or mode_ == Mode.MIN_STEP_MIXED:
+                if mode_ == Mode.CUSTOM_TIME_STEP_MIXED or mode_ == Mode.MIN_STEP_MIXED:
                     stopAtEachFrame = True
                     if ((self.IsEqual(perviousTimeToMove, self.CompleteObjectState_.time)) is not True and self.IsEqual(self.CompleteObjectState_.time, self.start_time) is not True): # use pervious time till it reaches, ignore start time
                         timeToMove = perviousTimeToMove
@@ -706,7 +706,7 @@ if __name__ == "__main__":
     parser.add_argument('filename', help='dat filename')
     parser.add_argument('--extended', '-e', action='store_true', help='add road coordinates')
     parser.add_argument('--file_refs', '-r', action='store_true', help='include odr and model file references')
-    parser.add_argument("--time_mode", "-m", choices=["original", "min_step", "min_step_mixed", "time_step", "time_step_mixed"], default="original", help="control timestamps in the csv.")
+    parser.add_argument("--time_mode", "-m", choices=["original", "min_step", "min_step_mixed", "custom_time_step", "custom_time_step_mixed"], default="original", help="control timestamps in the csv.")
     parser.add_argument(
         "-t",
         "--time_step",

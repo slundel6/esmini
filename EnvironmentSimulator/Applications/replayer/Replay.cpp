@@ -1686,7 +1686,7 @@ void Replay::BuildData()
                 if ((timeFound && pkgId != datLogger::PackageId::TIME_SERIES) ||
                     (timeFound && pkgId == datLogger::PackageId::TIME_SERIES && !timePkgWritten))
                 {
-                    if (pkgId == datLogger::PackageId::END_OF_SCENARIO)  // store time pkg only once
+                    if (pkgId == datLogger::PackageId::END_OF_SCENARIO)
                     {
                         scenarioData[j].first.second = false;  // indicate already file merged
                         endOfScenarioCount += 1;

@@ -409,21 +409,21 @@ Below options shall control the dat to csv converter. Default mode is original a
   or +
   ``python ./scripts/dat2csv.py sim.dat -m min_step_mixed``
 
-. Time Step Mode:
+. Custom Time Step Mode:
     ** Specify the desired time step for the csv file.
     ** Reconstruct the frame sequence for specified step time.
     ** Write the reconstructed frame sequence to the csv file at the specified time step rate.
 
-  ``./bin/dat2csv --file sim.dat --time_mode time_step --time_step 0.1`` +
+  ``./bin/dat2csv --file sim.dat --time_mode custom_time_step --time_step 0.1`` +
   or +
   ``python ./scripts/dat2csv.py sim.dat -m time_step --time_step 0.1``
 
-. Time Step Mixed Mode:
+. Custom Time Step Mixed Mode:
     ** Perform the Time Step Mode conversion to create a time step csv file.
     ** Read the original dat file and identify frames that were skipped during Time Step conversion.
     ** Insert these skipped frames into the time step csv file, preserving the original frame order.
 
-  ``./bin/dat2csv --file sim.dat --time_mode time_step_mixed --time_step 0.1`` +
+  ``./bin/dat2csv --file sim.dat --time_mode custom_time_step_mixed --time_step 0.1`` +
   or +
   ``python ./scripts/dat2csv.py sim.dat -m time_step --time_step_mixed 0.1``
 

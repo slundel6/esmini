@@ -27,11 +27,11 @@ public:
 
     enum class log_mode
     {
-        ORIGINAL        = 0,  // default
-        MIN_STEP        = 1,
-        MIN_STEP_MIXED  = 2,
-        TIME_STEP       = 3,  // 0.05 default step time.
-        TIME_STEP_MIXED = 4   // 0.05 default step time
+        ORIGINAL               = 0,  // default
+        MIN_STEP               = 1,
+        MIN_STEP_MIXED         = 2,
+        CUSTOM_TIME_STEP       = 3,  // 0.05 default step time.
+        CUSTOM_TIME_STEP_MIXED = 4   // 0.05 default step time
 
     };
 

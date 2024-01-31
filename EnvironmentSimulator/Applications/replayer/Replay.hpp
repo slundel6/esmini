@@ -203,7 +203,6 @@ namespace scenarioengine
         unsigned int             stopIndex_;
         unsigned int             index_;
         bool                     repeat_;
-        bool                     clean_;
         std::string              create_datfile_;
         bool                     show_restart_;
         bool                     IsRestart     = false;

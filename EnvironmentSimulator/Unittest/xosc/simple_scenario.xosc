@@ -1,9 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!-- Excercise speed action with dynamics dimension = distance -->
+<!-- Excercise very simple scenario -->
 <OpenSCENARIO>
-    <FileHeader revMajor="1" revMinor="1" date="2021-12-29T10:00:00" description="Test soeed action with distance" author="esmini-team"/>
+    <FileHeader revMajor="1" revMinor="1" date="2021-12-29T10:00:00" description="Test dat logger with very simple sceanrio" author="esmini-team"/>
     <ParameterDeclarations>
         <ParameterDeclaration name="Tolerance" parameterType="double" value="1.0"/>
+        <ParameterDeclaration name="StartPositon" parameterType="double" value="false"/>
     </ParameterDeclarations>
     <CatalogLocations>
         <VehicleCatalog>
@@ -25,7 +26,7 @@
                     <PrivateAction>
                         <TeleportAction>
                             <Position>
-                                <LanePosition roadId="1" laneId="-1" offset="0" s="10"/>
+                                <LanePosition roadId="1" laneId="-1" offset="0" s="$StartPositon"/>
                             </Position>
                         </TeleportAction>
                     </PrivateAction>

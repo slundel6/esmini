@@ -10,10 +10,6 @@
  * https://sites.google.com/view/simulationscenarios
  */
 
-/*
- * This application uses the Replay class to read and binary recordings and print content in ascii format to stdout
- */
-
 #include "Dat2csv.hpp"
 #include "CommonMini.hpp"
 #include "DatLogger.hpp"
@@ -77,11 +73,12 @@ Dat2csv::~Dat2csv()
 void Dat2csv::CreateCSV()
 {
     static char line[MAX_LINE_LEN];
-    if (log_mode_ == log_mode::MIN_STEP || log_mode_ == log_mode::TIME_STEP || log_mode_ == log_mode::TIME_STEP_MIXED)
+    if (log_mode_ == log_mode::MIN_STEP || log_mode_ == log_mode::MIN_STEP_MIXED || log_mode_ == log_mode::CUSTOM_TIME_STEP ||
+        log_mode_ == log_mode::CUSTOM_TIME_STEP_MIXED)
     {  // delta time setting, write for each delta time+sim time. Will skips original time frame
         double requestedTime = SMALL_NUMBER;
         double delta_time    = SMALL_NUMBER;
-        if (log_mode_ == log_mode::MIN_STEP)
+        if (log_mode_ == log_mode::MIN_STEP || log_mode_ == log_mode::MIN_STEP_MIXED)
         {
             delta_time = player->deltaTime_;
         }
@@ -155,7 +152,7 @@ void Dat2csv::CreateCSV()
             }
             else
             {
-                if (log_mode_ == log_mode::MIN_STEP || log_mode_ == log_mode::TIME_STEP)
+                if (log_mode_ == log_mode::MIN_STEP || log_mode_ == log_mode::CUSTOM_TIME_STEP)
                 {
                     player->MoveToTime(player->GetTime() + delta_time);  // continue
                 }
@@ -170,87 +167,6 @@ void Dat2csv::CreateCSV()
                     {
                         player->MoveToTime(requestedTime, false, true);  // continue
                     }
-                }
-            }
-        }
-    }
-    else if (log_mode_ == log_mode::MIN_STEP_MIXED)
-    {  // write for each delta time+sim time and also original time frame if available in between. Dont skip original time frame.
-        double requestedTime = SMALL_NUMBER;
-        while (true)
-        {
-            for (size_t i = 0; i < player->scenarioState.obj_states.size(); i++)
-            {
-                if (player->scenarioState.obj_states[i].active == true)  // only for active members may be its deleted
-                {
-                    int         obj_id = player->scenarioState.obj_states[i].id;
-                    std::string name;
-                    player->GetName(player->scenarioState.obj_states[i].id, name);
-                    if (!extended)
-                    {
-                        snprintf(line,
-                                 MAX_LINE_LEN,
-                                 "%.3f, %d, %s, %.3f, %.3f, %.3f, %.3f, %.3f, %.3f, %.3f, %.3f, %.3f\n",
-                                 player->scenarioState.sim_time,
-                                 obj_id,
-                                 name.c_str(),
-                                 player->GetX(player->scenarioState.obj_states[i].id),
-                                 player->GetY(player->scenarioState.obj_states[i].id),
-                                 player->GetZ(player->scenarioState.obj_states[i].id),
-                                 player->GetH(player->scenarioState.obj_states[i].id),
-                                 player->GetP(player->scenarioState.obj_states[i].id),
-                                 player->GetR(player->scenarioState.obj_states[i].id),
-                                 player->GetSpeed(player->scenarioState.obj_states[i].id),
-                                 player->GetWheelAngle(player->scenarioState.obj_states[i].id),
-                                 player->GetWheelRot(player->scenarioState.obj_states[i].id));
-                        file << line;
-                    }
-                    else
-                    {
-                        snprintf(line,
-                                 MAX_LINE_LEN,
-                                 "%.3f, %d, %s, %.3f, %.3f, %.3f, %.3f, %.3f, %.3f, %d, %d, %.3f, %.3f, %.3f, %.3f, %.3f, %.3f\n",
-                                 player->scenarioState.sim_time,
-                                 obj_id,
-                                 name.c_str(),
-                                 player->GetX(player->scenarioState.obj_states[i].id),
-                                 player->GetY(player->scenarioState.obj_states[i].id),
-                                 player->GetZ(player->scenarioState.obj_states[i].id),
-                                 player->GetH(player->scenarioState.obj_states[i].id),
-                                 player->GetP(player->scenarioState.obj_states[i].id),
-                                 player->GetR(player->scenarioState.obj_states[i].id),
-                                 player->GetRoadId(player->scenarioState.obj_states[i].id),
-                                 player->GetLaneId(player->scenarioState.obj_states[i].id),
-                                 player->GetPosOffset(player->scenarioState.obj_states[i].id),
-                                 static_cast<double>(player->GetPosT(player->scenarioState.obj_states[i].id)),
-                                 static_cast<double>(player->GetPosS(player->scenarioState.obj_states[i].id)),
-                                 player->GetSpeed(player->scenarioState.obj_states[i].id),
-                                 player->GetWheelAngle(player->scenarioState.obj_states[i].id),
-                                 player->GetWheelRot(player->scenarioState.obj_states[i].id));
-                        file << line;
-                    }
-                }
-            }
-
-            if (player->GetTime() > player->GetStopTime() - SMALL_NUMBER)
-            {
-                break;  // reached end of file
-            }
-            else if (player->deltaTime_ < SMALL_NUMBER)
-            {
-                LOG("Warning: Unexpected delta time zero found! Can't process remaining part of the file");
-                break;
-            }
-            else
-            {
-                if (isEqualDouble(player->GetTime(), requestedTime) || isEqualDouble(player->GetTime(), player->GetStartTime()))
-                {  // first time frame or until reach requested time frame reached, dont move to next time frame
-                    requestedTime = player->GetTime() + player->deltaTime_;
-                    player->MoveToTime(player->GetTime() + player->deltaTime_, false, true);  // continue
-                }
-                else
-                {
-                    player->MoveToTime(requestedTime, false, true);  // continue
                 }
             }
         }

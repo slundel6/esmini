@@ -1,3 +1,19 @@
+/*
+ * esmini - Environment Simulator Minimalistic
+ * https://github.com/esmini/esmini
+ *
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at https://mozilla.org/MPL/2.0/.
+ *
+ * Copyright (c) partners of Simulation Scenarios
+ * https://sites.google.com/view/simulationscenarios
+ */
+
+/*
+ * This application uses the Dat2csv class to convert to dat to csv format of previously executed scenarios stored in dat format
+ */
+
 #include <clocale>
 
 #include <string>
@@ -12,7 +28,10 @@ int main(int argc, char** argv)
     opt.AddOption("file", "Simulation recording data file (.dat)", "filename");
     opt.AddOption("extended", "add road coordinates");
     opt.AddOption("file_refs", "include odr and model file references");
-    opt.AddOption("time_mode", "control timestamps in the csv (original, min_step, min_step_mixed, time_step, time_step_mixed)", "mode", "original");
+    opt.AddOption("time_mode",
+                  "control timestamps in the csv (original, min_step, min_step_mixed, custom_time_step, custom_time_step_mixed)",
+                  "mode",
+                  "original");
     opt.AddOption("time_step", "use fixed time step (ms) - overrides time_mode", "time_step", "0.05");
 
     std::setlocale(LC_ALL, "C.UTF-8");
@@ -82,13 +101,13 @@ int main(int argc, char** argv)
             {
                 logMode = Dat2csv::log_mode::MIN_STEP_MIXED;
             }
-            else if (time_mode_str == "time_step")
+            else if (time_mode_str == "custom_time_step")
             {
-                logMode = Dat2csv::log_mode::TIME_STEP;
+                logMode = Dat2csv::log_mode::CUSTOM_TIME_STEP;
             }
-            else if (time_mode_str == "time_step_mixed")
+            else if (time_mode_str == "custom_time_step_mixed")
             {
-                logMode = Dat2csv::log_mode::TIME_STEP_MIXED;
+                logMode = Dat2csv::log_mode::CUSTOM_TIME_STEP_MIXED;
             }
             else
             {

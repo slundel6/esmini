@@ -11,11 +11,6 @@
 
 using namespace datLogger;
 
-bool isEqual(double val1, double val2)
-{
-    return ((std::signbit(val1) == std::signbit(val2)) && (fabs(val1 - val2) < SMALL_NUMBER));
-}
-
 void DatLogger::WriteManPkg(int obj_id)
 {
     if (!TimePkgAdded)
@@ -38,7 +33,7 @@ int DatLogger::WriteObjSpeed(int obj_id, double speed)
             continue;
         }
         completeObjectState.obj_states[i].active = true;
-        if (!isEqual(completeObjectState.obj_states[i].speed_.speed_, speed))
+        if (!isEqualDouble(completeObjectState.obj_states[i].speed_.speed_, speed))
         {
             WriteManPkg(obj_id);
 
@@ -178,7 +173,7 @@ int DatLogger::WriteWheelAngle(int obj_id, double angle)
                 continue;
             }
             completeObjectState.obj_states[i].active = true;
-            if (!isEqual(completeObjectState.obj_states[i].wheelAngle_.wheel_angle, angle))
+            if (!isEqualDouble(completeObjectState.obj_states[i].wheelAngle_.wheel_angle, angle))
             {
                 WriteManPkg(obj_id);
                 // create pkg
@@ -206,7 +201,7 @@ int DatLogger::WriteWheelRot(int obj_id, double rot)
                 continue;
             }
             completeObjectState.obj_states[i].active = true;
-            if (!isEqual(completeObjectState.obj_states[i].wheelRot_.wheel_rot, rot))
+            if (!isEqualDouble(completeObjectState.obj_states[i].wheelRot_.wheel_rot, rot))
             {
                 WriteManPkg(obj_id);
                 // create pkg
@@ -320,7 +315,7 @@ int DatLogger::WriteTime(double t)
 {
     if (data_file_.is_open())
     {
-        if (!isEqual(completeObjectState.time.time, t))
+        if (!isEqualDouble(completeObjectState.time.time, t))
         {
             // create pkg
             CommonPkg pkg;
@@ -598,7 +593,7 @@ int DatLogger::WritePosOffset(int obj_id, double offset)
                 continue;
             }
             completeObjectState.obj_states[i].active = true;
-            if (!isEqual(completeObjectState.obj_states[i].posOffset_.offset, offset))
+            if (!isEqualDouble(completeObjectState.obj_states[i].posOffset_.offset, offset))
             {
                 WriteManPkg(obj_id);
                 // create pkg
@@ -626,7 +621,7 @@ int DatLogger::WritePosT(int obj_id, double t)
                 continue;
             }
             completeObjectState.obj_states[i].active = true;
-            if (!isEqual(completeObjectState.obj_states[i].posT.t, t))
+            if (!isEqualDouble(completeObjectState.obj_states[i].posT.t, t))
             {
                 WriteManPkg(obj_id);
                 // create pkg
@@ -654,7 +649,7 @@ int DatLogger::WritePosS(int obj_id, double s)
                 continue;
             }
             completeObjectState.obj_states[i].active = true;
-            if (!isEqual(completeObjectState.obj_states[i].posS.s, s))
+            if (!isEqualDouble(completeObjectState.obj_states[i].posS.s, s))
             {
                 WriteManPkg(obj_id);
                 // create pkg

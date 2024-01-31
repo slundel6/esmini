@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!-- Excercise speed action with dynamics dimension = distance -->
+<!-- Excercise speed action with teleport -->
 <OpenSCENARIO>
-    <FileHeader revMajor="1" revMinor="1" date="2021-12-29T10:00:00" description="Test soeed action with distance" author="esmini-team"/>
+    <FileHeader revMajor="1" revMinor="1" date="2021-12-29T10:00:00" description="Test dat2csv converter different mode with one frame speed change" author="esmini-team"/>
     <ParameterDeclarations>
         <ParameterDeclaration name="Tolerance" parameterType="double" value="1.0"/>
     </ParameterDeclarations>
