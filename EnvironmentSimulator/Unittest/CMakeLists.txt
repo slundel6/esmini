@@ -122,6 +122,6 @@ set(Replayer_sources
 unittest(
     Replayer_test
     "${Replayer_sources}"
-    ScenarioEngine
     esminiLib
-    CommonMini)
+    CommonMini
+    ScenarioEngine)
