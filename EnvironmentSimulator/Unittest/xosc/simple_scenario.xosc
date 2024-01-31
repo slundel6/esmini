@@ -4,7 +4,7 @@
     <FileHeader revMajor="1" revMinor="1" date="2021-12-29T10:00:00" description="Test dat logger with very simple sceanrio" author="esmini-team"/>
     <ParameterDeclarations>
         <ParameterDeclaration name="Tolerance" parameterType="double" value="1.0"/>
-        <ParameterDeclaration name="StartPositon" parameterType="double" value="false"/>
+        <ParameterDeclaration name="StartPositon" parameterType="double" value="10"/>
     </ParameterDeclarations>
     <CatalogLocations>
         <VehicleCatalog>

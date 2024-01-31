@@ -123,5 +123,4 @@ unittest(
     Replayer_test
     "${Replayer_sources}"
     esminiLib
-    CommonMini
-    ScenarioEngine)
+    CommonMini)

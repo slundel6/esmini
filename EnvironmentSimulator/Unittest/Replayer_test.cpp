@@ -5,7 +5,6 @@
 #include <dirent.h>
 
 #include "ScenarioEngine.hpp"
-#include "ScenarioReader.hpp"
 #include "esminiLib.hpp"
 #include "CommonMini.hpp"
 #include "DatLogger.hpp"
@@ -425,42 +424,35 @@ TEST(TestReplayer, SpeedChangeScenario)
     ASSERT_DOUBLE_EQ(replayer_->scenarioState.obj_states[0].pkgs[4].time_, 0);
 }
 
-static void SimpleScenarioParamDeclCallback(void*)
-{
-    static int counter  = 0;
-    double     value[2] = {10, 490};
-
-    if (counter < 2)
-    {
-        ScenarioReader::parameters.setParameterValue("StartPosition", value[counter]);
-    }
-
-    counter++;
-}
-
 TEST(TestReplayer, TwoSimpleScenarioMerge)
 {
-    RegisterParameterDeclarationCallback(SimpleScenarioParamDeclCallback, 0);
-    for (int i = 0; i < 2; i++)
+    const char* args[] =
+        {"--osc", "../../../EnvironmentSimulator/Unittest/xosc/simple_scenario.xosc", "--record", "simple_scenario_0.dat", "--fixed_timestep", "0.5"};
+
+    SE_AddPath("../../../resources/models");
+    ASSERT_EQ(SE_InitWithArgs(sizeof(args) / sizeof(char*), args), 0);
+
+    while (SE_GetQuitFlag() == 0)
     {
-        std::string dat_filename  = "simple_scenario_" + std::to_string(i) + ".dat";
-        const char* args_filename = dat_filename.c_str();
-        const char* args[] =
-            {"--osc", "../../../EnvironmentSimulator/Unittest/xosc/simple_scenario.xosc", "--record", args_filename, "--fixed_timestep", "0.5"};
-
-        SE_AddPath("../../../resources/models");
-        ASSERT_EQ(SE_InitWithArgs(sizeof(args) / sizeof(char*), args), 0);
-
-        while (SE_GetQuitFlag() == 0)
-        {
-            SE_StepDT(0.05f);
-        }
-        SE_Close();
+        SE_StepDT(0.05f);
     }
-    RegisterParameterDeclarationCallback(nullptr, 0);
+
+    SE_Close();
+
+    const char* args1[] =
+        {"--osc", "../../../EnvironmentSimulator/Unittest/xosc/speed_change.xosc", "--record", "simple_scenario_1.dat", "--fixed_timestep", "0.5"};
+
+    SE_AddPath("../../../resources/models");
+    ASSERT_EQ(SE_InitWithArgs(sizeof(args1) / sizeof(char*), args1), 0);
+
+    while (SE_GetQuitFlag() == 0)
+    {
+        SE_StepDT(0.05f);
+    }
+    SE_Close();
 
     std::unique_ptr<scenarioengine::Replay> replayer_ = std::make_unique<scenarioengine::Replay>(".", "simple_scenario_", "");
-    ASSERT_EQ(replayer_->pkgs_.size(), 5737);
+    ASSERT_EQ(replayer_->pkgs_.size(), 5834);
 
     replayer_->MoveToTime(2.0);
     ASSERT_EQ(replayer_->scenarioState.obj_states.size(), 2);
@@ -498,7 +490,7 @@ TEST(TestReplayer, TwoSimpleScenarioMerge)
     EXPECT_NEAR(replayer_->scenarioState.obj_states[0].pkgs[7].time_, 15.0, 1E-3);
     EXPECT_NEAR(replayer_->scenarioState.obj_states[1].pkgs[5].time_, 0.0, 1E-3);
     EXPECT_NEAR(replayer_->scenarioState.obj_states[1].pkgs[9].time_, 0.0, 1E-3);
-    EXPECT_NEAR(replayer_->scenarioState.obj_states[1].pkgs[2].time_, 7.2, 1E-3);
+    EXPECT_NEAR(replayer_->scenarioState.obj_states[1].pkgs[2].time_, 15.0, 1E-3);
     EXPECT_NEAR(replayer_->scenarioState.obj_states[1].pkgs[7].time_, 15.0, 1E-3);
 }
 
