@@ -445,7 +445,8 @@ TEST(TestReplayer, TwoSimpleScenarioMerge)
     {
         std::string dat_filename  = "simple_scenario_" + std::to_string(i) + ".dat";
         const char* args_filename = dat_filename.c_str();
-        const char* args[] = {"--osc", "../../../EnvironmentSimulator/Unittest/xosc/simple_scenario.xosc", args_filename, "--fixed_timestep", "0.5"};
+        const char* args[] =
+            {"--osc", "../../../EnvironmentSimulator/Unittest/xosc/simple_scenario.xosc", "--record", args_filename, "--fixed_timestep", "0.5"};
 
         SE_AddPath("../../../resources/models");
         ASSERT_EQ(SE_InitWithArgs(sizeof(args) / sizeof(char*), args), 0);

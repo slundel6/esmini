@@ -906,8 +906,7 @@ int main(int argc, char** argv)
 
         while (!(viewer->osgViewer_->done() || (opt.GetOptionSet("quit_at_end") && simTime >= (player->GetStopTime() - SMALL_NUMBER))))
         {
-            simTime = player->GetTime();  // potentially wrapped for repeat
-            // double targetSimTime = simTime;
+            simTime = player->GetTime();
             if (!pause_player)
             {
                 if (viewer->GetSaveImagesToFile())
@@ -936,7 +935,7 @@ int main(int argc, char** argv)
             if (!(pause_player || viewer->GetSaveImagesToFile()))
             {
                 player->MoveToDeltaTime(deltaSimTime);
-                simTime = player->GetTime();  // potentially wrapped for repeat
+                simTime = player->GetTime();
             }
 
             // Fetch states of scenario objects

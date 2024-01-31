@@ -63,7 +63,6 @@ Dat2csv::Dat2csv(std::string filename) : log_mode_(log_mode::ORIGINAL), step_tim
             file << line;
         }
     }
-    // player->SetShowRestart(true); // include restart details always in csv files
 }
 
 Dat2csv::~Dat2csv()
@@ -75,7 +74,7 @@ void Dat2csv::CreateCSV()
     static char line[MAX_LINE_LEN];
     if (log_mode_ == log_mode::MIN_STEP || log_mode_ == log_mode::MIN_STEP_MIXED || log_mode_ == log_mode::CUSTOM_TIME_STEP ||
         log_mode_ == log_mode::CUSTOM_TIME_STEP_MIXED)
-    {  // delta time setting, write for each delta time+sim time. Will skips original time frame
+    {
         double requestedTime = SMALL_NUMBER;
         double delta_time    = SMALL_NUMBER;
         if (log_mode_ == log_mode::MIN_STEP || log_mode_ == log_mode::MIN_STEP_MIXED)
