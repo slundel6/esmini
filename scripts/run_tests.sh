@@ -9,13 +9,13 @@ skipOpenGLTests=false
 if ! [[ -z "$arg1" ]]; then
     if [[ "$arg1" = "Debug" ]]; then
         buildConfiguration="Debug"
-    fi
+    fi 
 fi
 
 if ! [[ -z "$arg2" ]]; then
     if [[ "$arg2" = true ]]; then
         skipOpenGLTests=true
-    fi
+    fi 
 fi
 
 echo "$buildConfiguration - Skip OpenGL tests: $skipOpenGLTests"
