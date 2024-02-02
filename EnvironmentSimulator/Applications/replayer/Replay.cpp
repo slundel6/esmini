@@ -1497,33 +1497,6 @@ void Replay::AdjustObjectId(std::vector<std::vector<int>>& objIds)
     }
 }
 
-double Replay::GetLastTime()
-{
-    double maxTime  = SMALL_NUMBER;
-    double timeTemp = SMALL_NUMBER;
-    for (size_t j = 0; j < scenarioData.size(); j++)
-    {
-        for (size_t k = scenarioData[j].second.size(); static_cast<int>(k) >= 0; k--)
-        {
-            if (scenarioData[j].second[k].hdr.id == static_cast<int>(datLogger::PackageId::TIME_SERIES))
-            {
-                timeTemp = *reinterpret_cast<double*>(scenarioData[j].second[k].content);
-                // find the smallest value in the all scenarios
-                if (j == 0)
-                {
-                    maxTime = timeTemp;
-                }
-                else if (maxTime < timeTemp)
-                {
-                    maxTime = timeTemp;
-                }
-                break;
-            }
-        }
-    }
-    return maxTime;
-}
-
 void Replay::BuildData()
 {
     // Scenario with smallest start time first
@@ -1542,7 +1515,6 @@ void Replay::BuildData()
 
     // Populate data based on first (with lowest timestamp) scenario
     double cur_timestamp      = *reinterpret_cast<double*>(scenarioData[0].second[0].content);
-    double last_timestamp     = GetLastTime();
     double timeTemp           = SMALL_NUMBER;
     bool   timeFound          = false;
     double min_time_stamp     = LARGE_NUMBER;
@@ -1617,7 +1589,7 @@ void Replay::BuildData()
         cur_timestamp  = min_time_stamp;
         timePkgWritten = false;
 
-        if (endOfScenarioCount == static_cast<int>(cur_idx.size()) || GetTime() > last_timestamp - SMALL_NUMBER)
+        if (endOfScenarioCount == static_cast<int>(cur_idx.size()))
         {
             break;  // reached end of file
         }
