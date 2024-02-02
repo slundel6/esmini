@@ -195,7 +195,7 @@ void Replay::MoveToStart()
 
 void Replay::MoveToEnd()
 {
-    MoveToTime(stopTime_, true);
+    MoveToTime(stopTime_);
 }
 
 int Replay::FindIndexAtTimestamp(double timestamp, int startSearchIndex)
@@ -681,27 +681,13 @@ bool Replay::IsObjAvailableActive(int id)  // check in current state
     {
         if (scenarioState.obj_states[i].id == id)
         {
-            if (scenarioState.obj_states[i].active == true)
-            {
-                status = true;  // obj id present
-                break;
-            }
+            status = scenarioState.obj_states[i].active;  // obj id present
+            break;
         }
     }
     return status;
 }
 
-int Replay::UpdateObjStatus(int id, bool status)
-{
-    for (size_t i = 0; i < scenarioState.obj_states.size(); i++)  // loop current state object id to find the object id
-    {
-        if (scenarioState.obj_states[i].id == id)
-        {
-            scenarioState.obj_states[i].active = status;
-        }
-    }
-    return 0;
-}
 void Replay::MoveToDeltaTime(double dt)
 {
     MoveToTime(scenarioState.sim_time + dt);
@@ -711,124 +697,72 @@ void Replay::GetRestartTimes()
 {
     double       perviousTime  = -LARGE_NUMBER;
     unsigned int perviousIndex = 0;
-    for (size_t i = 0; i < pkgs_.size(); i++)
+    if (!(restartTimes.size() > 0))
     {
-        if (pkgs_[i].hdr.id == static_cast<int>(datLogger::PackageId::TIME_SERIES))
+        for (size_t i = 0; i < pkgs_.size(); i++)
         {
-            double timeTemp = *reinterpret_cast<double*>(pkgs_[i].content);
-            if (perviousTime > timeTemp)
+            if (pkgs_[i].hdr.id == static_cast<int>(datLogger::PackageId::TIME_SERIES))
             {
-                RestartTimes restartTime;
-                restartTime.restart_time_  = perviousTime;
-                restartTime.restart_index_ = perviousIndex;
-                restartTimes.push_back(restartTime);
-            }
-            perviousTime  = timeTemp;
-            perviousIndex = static_cast<unsigned int>(i);
-            if (restartTimes.size() > 0)
-            {
-                for (size_t j = 0; j < restartTimes.size(); j++)
+                double timeTemp = *reinterpret_cast<double*>(pkgs_[i].content);
+                if (perviousTime > timeTemp)
                 {
-                    if (isEqualDouble(restartTimes[j].next_time_, LARGE_NUMBER))  // only once
-                    {
-                        if (restartTimes[j].restart_time_ < timeTemp)
-                        {
-                            restartTimes[j].next_time_  = timeTemp;
-                            restartTimes[j].next_index_ = static_cast<unsigned int>(i);
-                            break;
-                        }
-                    }
+                    RestartTimes restartTime;
+                    restartTime.restart_time_  = perviousTime;
+                    restartTime.restart_index_ = perviousIndex;
+                    restartTimes.push_back(restartTime);
                 }
-            }
-        }
-    }
-}
-
-bool Replay::MoveToNextFrame(double time)
-{
-    bool timeLapsed = false;
-    IsRestart       = false;
-
-    for (size_t i = static_cast<size_t>(index_); i < pkgs_.size(); i++)
-    {
-        if (pkgs_[i].hdr.id == static_cast<int>(datLogger::PackageId::TIME_SERIES))
-        {
-            double timeTemp = *reinterpret_cast<double*>(pkgs_[i].content);
-
-            if (timeTemp > time + SMALL_NUMBER)  // gone past time
-            {
-                timeLapsed = true;
-                break;
-            }
-            else if (time_ > timeTemp && show_restart_)
-            {
-                index_ = static_cast<unsigned int>(i);
-                time_  = timeTemp;  // move to next frame
-                if (show_restart_)
-                {
-                    IsRestart = true;  // jump to restart
-                }
-
-                break;
-            }
-            else if (timeTemp > time_)  // move to next frame
-            {
-                index_ = static_cast<unsigned int>(i);
-                time_  = timeTemp;
-                break;
-            }
-        }
-    }
-    return timeLapsed;
-}
-
-bool Replay::MoveToPreviousFrame(double time)
-{
-    bool timeLapsed = false;
-    IsRestart       = false;
-
-    for (size_t i = static_cast<size_t>(index_); static_cast<int>(i) >= 0; i--)
-    {
-        if (pkgs_[i].hdr.id == static_cast<int>(datLogger::PackageId::TIME_SERIES))
-        {
-            double timeTemp = *reinterpret_cast<double*>(pkgs_[i].content);
-            if (!show_restart_)
-            {
+                perviousTime  = timeTemp;
+                perviousIndex = static_cast<unsigned int>(i);
                 if (restartTimes.size() > 0)
                 {
                     for (size_t j = 0; j < restartTimes.size(); j++)
                     {
-                        if (static_cast<size_t>(restartTimes[j].next_index_) == i)
+                        if (isEqualDouble(restartTimes[j].next_time_, LARGE_NUMBER))  // only once
                         {
-                            index_    = restartTimes[j].restart_index_;  // jump to restart
-                            time_     = restartTimes[j].restart_time_;
-                            IsRestart = true;
-                            break;
+                            if (restartTimes[j].restart_time_ < timeTemp)
+                            {
+                                restartTimes[j].next_time_  = timeTemp;
+                                restartTimes[j].next_index_ = static_cast<unsigned int>(i);
+                                break;
+                            }
                         }
                     }
                 }
             }
-            if (IsRestart)
-            {
-                break;
-            }
-            if (timeTemp < time + SMALL_NUMBER)  // gone past time
-            {
-                timeLapsed = true;
-                break;
-            }
-            else if (timeTemp < time_)  // pervious frame
-            {
-                index_ = static_cast<unsigned int>(i);
-                time_  = timeTemp;
-            }
         }
     }
-    return timeLapsed;
 }
 
+void Replay::MoveToNextFrame()
+{
+    for (size_t i = static_cast<size_t>(index_) + 1; i < pkgs_.size(); i++)
+    {
+        if (pkgs_[i].hdr.id == static_cast<int>(datLogger::PackageId::TIME_SERIES))
+        {
+            double timeTemp = *reinterpret_cast<double*>(pkgs_[i].content);
+            index_          = static_cast<unsigned int>(i);
+            time_           = timeTemp;
+            break;
+        }
+    }
+}
+
+void Replay::MoveToPreviousFrame()
+{
+    for (size_t i = static_cast<size_t>(index_) - 1; static_cast<int>(i) >= 0; i--)
+    {
+        if (pkgs_[i].hdr.id == static_cast<int>(datLogger::PackageId::TIME_SERIES))
+        {
+            double timeTemp = *reinterpret_cast<double*>(pkgs_[i].content);
+            index_          = static_cast<unsigned int>(i);
+            time_           = timeTemp;
+            break;
+        }
+    }
+}
 void Replay::UpdateCache()
 {
+    scenarioState.sim_time        = time_;
     std::vector<int> objIdIndices = GetNumberOfObjectsAtTime();
     for (size_t l = 0; l < objIdIndices.size(); l++)
     {
@@ -857,55 +791,63 @@ void Replay::UpdateCache()
     }
 }
 
+void Replay::UpdateObjStatus(int id, bool status)
+{
+    for (size_t i = 0; i < scenarioState.obj_states.size(); i++)  // loop current state object id to find the object id
+    {
+        if (scenarioState.obj_states[i].id == id)
+        {
+            scenarioState.obj_states[i].active = status;
+        }
+    }
+}
+
 void Replay::CheckObjAvailabilityForward()
 {
-    // check all obj in this time frame also in cache
+    // check all obj status in current time frame
     std::vector<int> objIdIndices = GetNumberOfObjectsAtTime();
     for (size_t Index = 0; Index < objIdIndices.size(); Index++)
     {
         int obj_id = *reinterpret_cast<int*>(pkgs_[static_cast<size_t>(objIdIndices[Index])].content);
         if (pkgs_[static_cast<size_t>(objIdIndices[Index] + 1)].hdr.id == static_cast<int>(datLogger::PackageId::OBJ_DELETED))
         {
-            UpdateObjStatus(obj_id, false);  // obj deleted in cache
+            UpdateObjStatus(obj_id, false);  // obj not active in cache
             continue;
         }
         else if (pkgs_[static_cast<size_t>(objIdIndices[Index] + 1)].hdr.id == static_cast<int>(datLogger::PackageId::OBJ_ADDED))
         {
-            if (!IsObjAvailableInCache(obj_id))
+            if (IsObjAvailableInCache(obj_id))  // make sure same obj deleted before adding the same object
             {
-                AddObjState(static_cast<size_t>(objIdIndices[Index]), time_);  // obj added in cache. this will also take updating pkgs
-                continue;
+                deleteObjState(obj_id);  // make sure same obj deleted before adding the same object
             }
-            UpdateObjStatus(obj_id, true);
+            AddObjState(static_cast<size_t>(objIdIndices[Index]), time_);  // obj added in cache. this will also initiate this obj
+            continue;
         }
     }
 }
 
 void Replay::CheckObjAvailabilityBackward()
 {
+    // check all obj status in current time frame
     std::vector<int> objIdIndices = GetNumberOfObjectsAtTime();
-    // check all obj in this time frame also in cache
     for (size_t Index = 0; Index < objIdIndices.size(); Index++)
     {
         int obj_id = *reinterpret_cast<int*>(pkgs_[static_cast<size_t>(objIdIndices[Index])].content);
         if (pkgs_[static_cast<size_t>(objIdIndices[Index] + 1)].hdr.id == static_cast<int>(datLogger::PackageId::OBJ_DELETED))
         {
-            if (!IsObjAvailableInCache(obj_id))
-            {
-                AddObjState(static_cast<size_t>(objIdIndices[Index]), time_);  // obj added in cache. this will also take updating pkgs
-                continue;
-            }
-            UpdateObjStatus(obj_id, true);  // obj deleted in cache
+            UpdateObjStatus(obj_id, true);  // obj added in cache with same state as when its deleted
+            continue;
         }
         else if (pkgs_[static_cast<size_t>(objIdIndices[Index] + 1)].hdr.id == static_cast<int>(datLogger::PackageId::OBJ_ADDED) &&
                  !isEqualDouble(time_, startTime_))  // ignore first time frame
         {
             UpdateObjStatus(obj_id, false);
+            continue;
         }
     }
 }
 
-int Replay::MoveToTime(double t, bool goToEnd, bool stopAtEachFrame)
+int Replay::MoveToTime(double t, bool stopAtEachFrame)
 {
     if ((t > stopTime_) || isEqualDouble(t, stopTime_))  // go to stop time
     {
@@ -925,64 +867,70 @@ int Replay::MoveToTime(double t, bool goToEnd, bool stopAtEachFrame)
     {
         if (scenarioState.sim_time < t)
         {
-            while (!timeLapsed && !isEqualDouble(t, time_) &&
-                   !isEqualDouble(stopTime_, time_))  // gone past time, time equal, reached last time frame, given time
+            while (!timeLapsed)
             {
-                timeLapsed = MoveToNextFrame(t);  // move to next time frame in dat. Timelapsed will be true if given t is less than next time.
-                if (!timeLapsed)
+                double       pervious_time_  = time_;
+                unsigned int pervious_index_ = index_;
+                MoveToNextFrame();
+                if (time_ > t + SMALL_NUMBER)  // gone past requested time
                 {
-                    CheckObjAvailabilityForward();
-                    UpdateCache();
-                    if (stopAtEachFrame)
-                    {
-                        break;
-                    }
-                }
-                if (IsRestart && show_restart_ && !goToEnd)
-                {
+                    time_                  = pervious_time_;
+                    index_                 = pervious_index_;
+                    scenarioState.sim_time = t;  // sim time should be given time
                     break;
                 }
+                else if ((time_ + SMALL_NUMBER < pervious_time_ &&
+                          show_restart_) ||                 // next time less than pervious time. break only when show restart
+                         (time_ < t && stopAtEachFrame) ||  // less than requested time, break only when stop at each frame
+                         (isEqualDouble(t, time_)))         // requested time reached
+                {
+                    timeLapsed = true;
+                }
+
+                CheckObjAvailabilityForward();
+                UpdateCache();
             }
         }
         if (scenarioState.sim_time > t)
         {
-            while (!timeLapsed && !isEqualDouble(t, time_) &&
-                   !isEqualDouble(startTime_, time_))  // gone past time, time equal, reached first time frame
+            while (!timeLapsed)
             {
-                timeLapsed = MoveToPreviousFrame(t);
-                if (!timeLapsed)
+                MoveToPreviousFrame();
+
+                if (restartTimes.size() > 0)
                 {
-                    CheckObjAvailabilityBackward();
-                    UpdateCache();
-                    if (stopAtEachFrame)
+                    for (size_t j = 0; j < restartTimes.size(); j++)
                     {
-                        break;
+                        if ((restartTimes[j].next_index_ == index_) && (!show_restart_))  // go to restarted time from restart finished next time
+                        {
+                            index_ = restartTimes[j].restart_index_;  // jump, skip all time frames belong during restart
+                            time_  = restartTimes[j].restart_time_;
+                            break;
+                        }
+                        else if ((restartTimes[j].restart_index_ == index_) && (show_restart_))  // go to restarted time from restart first time
+                        {
+                            timeLapsed = true;
+                            break;
+                        }
                     }
                 }
 
-                if (IsRestart && show_restart_)
+                if ((time_ > t && stopAtEachFrame) ||  // less than given time
+                    (isEqualDouble(t, time_)) ||       // requested time equal to next time
+                    (time_ < t + SMALL_NUMBER))        // gone past requested time
                 {
-                    break;
+                    timeLapsed = true;
+                }
+
+                CheckObjAvailabilityBackward();
+                UpdateCache();
+
+                if (time_ < t + SMALL_NUMBER)  // gone past requested time, sim time should be given time
+                {
+                    scenarioState.sim_time = t;
                 }
             }
         }
-    }
-
-    if (IsRestart && show_restart_ && !goToEnd)
-    {
-        scenarioState.sim_time = time_;
-    }
-    else if (!timeLapsed && stopAtEachFrame)
-    {
-        scenarioState.sim_time = time_;
-    }
-    else if (isEqualDouble(t, time_))
-    {
-        scenarioState.sim_time = time_;
-    }
-    else
-    {
-        scenarioState.sim_time = t;
     }
     return 0;
 }
@@ -998,68 +946,6 @@ void Replay::SetStopEntries()
             break;
         }
     }
-}
-
-bool IsObjAvailableInEntities(const std::vector<ScenarioEntities> entities, int id)
-{
-    bool status = false;
-    if (entities.size() == 0)
-    {
-        return status = false;
-    }
-    for (size_t i = 0; i < entities.size(); i++)
-    {
-        if (entities[i].obj_id == id)
-        {
-            status = true;
-            break;
-        }
-        else if (i == entities.size() - 1)  // last iteration
-        {
-            status = false;
-            break;
-        }
-    }
-    return status;
-}
-
-void Replay::GetScenarioEntities()
-{
-    double time = 0.0;
-    int    id   = -1;
-    for (size_t i = 0; i < pkgs_.size(); i++)
-    {
-        if (static_cast<datLogger::PackageId>(pkgs_[i].hdr.id) == datLogger::PackageId::TIME_SERIES)
-        {
-            time = *reinterpret_cast<double*>(pkgs_[i].content);
-        }
-
-        if (static_cast<datLogger::PackageId>(pkgs_[i].hdr.id) == datLogger::PackageId::OBJ_ID)
-        {
-            id = *reinterpret_cast<int*>(pkgs_[i].content);
-            if (!IsObjAvailableInEntities(entities, id))
-            {
-                ScenarioEntities entities_;
-                entities_.sim_time = time;
-                entities_.obj_id   = id;
-                entities.push_back(entities_);
-            }
-        }
-    }
-}
-
-double Replay::GetTimeFromEntities(int id)
-{
-    double t = SMALL_NUMBER;
-    for (size_t i = 0; i < entities.size(); i++)
-    {
-        if (entities[i].obj_id == id)
-        {
-            t = entities[i].sim_time;
-            break;
-        }
-    }
-    return t;
 }
 
 double Replay::GetTimeFromCnt(int count)
@@ -1114,8 +1000,9 @@ void Replay::deleteObjState(int objId)
     {
         if (scenarioState.obj_states[i].id == objId)  // found object id
         {
-            scenarioState.obj_states[i].active = false;
-            // scenarioState.obj_states.erase(scenarioState.obj_states.begin() + static_cast<unsigned int>(i));
+            // scenarioState.obj_states[i].active = false;
+            scenarioState.obj_states.erase(scenarioState.obj_states.begin() + static_cast<unsigned int>(i));
+            break;
         }
     }
 }
@@ -1129,12 +1016,6 @@ void Replay::InitiateStates()
     index_                 = startIndex_;
 
     std::vector<int> objIdIndices = GetNumberOfObjectsAtTime();
-
-    if (objIdIndices.size() == 0)
-    {
-        // no obj found for given time, may be given time frame pkg not available.
-        std::cout << " No obj found for given time, may be given time frame pkg not available. " << std::endl;
-    }
 
     for (size_t Index = 0; Index < objIdIndices.size(); Index++)
     {
@@ -1616,6 +1497,33 @@ void Replay::AdjustObjectId(std::vector<std::vector<int>>& objIds)
     }
 }
 
+double Replay::GetLastTime()
+{
+    double maxTime  = SMALL_NUMBER;
+    double timeTemp = SMALL_NUMBER;
+    for (size_t j = 0; j < scenarioData.size(); j++)
+    {
+        for (size_t k = scenarioData[j].second.size(); static_cast<int>(k) >= 0; k--)
+        {
+            if (scenarioData[j].second[k].hdr.id == static_cast<int>(datLogger::PackageId::TIME_SERIES))
+            {
+                timeTemp = *reinterpret_cast<double*>(scenarioData[j].second[k].content);
+                // find the smallest value in the all scenarios
+                if (j == 0)
+                {
+                    maxTime = timeTemp;
+                }
+                else if (maxTime < timeTemp)
+                {
+                    maxTime = timeTemp;
+                }
+                break;
+            }
+        }
+    }
+    return maxTime;
+}
+
 void Replay::BuildData()
 {
     // Scenario with smallest start time first
@@ -1634,6 +1542,7 @@ void Replay::BuildData()
 
     // Populate data based on first (with lowest timestamp) scenario
     double cur_timestamp      = *reinterpret_cast<double*>(scenarioData[0].second[0].content);
+    double last_timestamp     = GetLastTime();
     double timeTemp           = SMALL_NUMBER;
     bool   timeFound          = false;
     double min_time_stamp     = LARGE_NUMBER;
@@ -1708,7 +1617,7 @@ void Replay::BuildData()
         cur_timestamp  = min_time_stamp;
         timePkgWritten = false;
 
-        if (endOfScenarioCount == static_cast<int>(cur_idx.size()))
+        if (endOfScenarioCount == static_cast<int>(cur_idx.size()) || GetTime() > last_timestamp - SMALL_NUMBER)
         {
             break;  // reached end of file
         }
@@ -1754,4 +1663,28 @@ int Replay::CreateMergedDatfile(const std::string filename)
         }
     }
     return 0;
+}
+
+void Replay::UpdateOdaMeter(int obj_id, double value)
+{
+    for (size_t i = 0; i < scenarioState.obj_states.size(); i++)
+    {
+        if (scenarioState.obj_states[i].id != obj_id)
+        {
+            scenarioState.obj_states[i].odometer = value;
+        }
+    }
+}
+
+double Replay::GetOdaMeter(int obj_id)
+{
+    double odaMeter = 0.0;
+    for (size_t i = 0; i < scenarioState.obj_states.size(); i++)
+    {
+        if (scenarioState.obj_states[i].id != obj_id)
+        {
+            odaMeter = scenarioState.obj_states[i].odometer;
+        }
+    }
+    return odaMeter;
 }

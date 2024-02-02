@@ -245,11 +245,11 @@ TEST(TestReplayer, WithTwoObjectAndAddAndDelete)
     ASSERT_DOUBLE_EQ(replayer_->scenarioState.obj_states[2].pkgs[1].time_, replayer_->GetTimeFromCnt(2));
 
     replayer_->MoveToTime(replayer_->GetTimeFromCnt(3));
-    ASSERT_EQ(replayer_->scenarioState.obj_states.size(), 3);
+    ASSERT_EQ(replayer_->scenarioState.obj_states.size(), 3);  // obj deleted
     ASSERT_EQ(replayer_->scenarioState.obj_states[0].id, 0);
     ASSERT_EQ(replayer_->scenarioState.obj_states[1].id, 1);
     ASSERT_EQ(replayer_->scenarioState.obj_states[2].id, 2);
-    ASSERT_EQ(replayer_->scenarioState.obj_states[2].active, false);  // obj deleted
+    ASSERT_EQ(replayer_->scenarioState.obj_states[2].active, false);
     ASSERT_DOUBLE_EQ(replayer_->scenarioState.obj_states[0].pkgs[0].time_, replayer_->GetTimeFromCnt(1));
     ASSERT_DOUBLE_EQ(replayer_->scenarioState.obj_states[0].pkgs[1].time_, replayer_->GetTimeFromCnt(3));
     ASSERT_DOUBLE_EQ(replayer_->scenarioState.obj_states[1].pkgs[0].time_, replayer_->GetTimeFromCnt(1));
@@ -275,6 +275,45 @@ TEST(TestReplayer, WithTwoObjectAndAddAndDelete)
     ASSERT_DOUBLE_EQ(replayer_->scenarioState.obj_states[1].pkgs[1].time_, replayer_->GetTimeFromCnt(4));
     ASSERT_DOUBLE_EQ(replayer_->scenarioState.obj_states[2].pkgs[0].time_, replayer_->GetTimeFromCnt(5));
     ASSERT_DOUBLE_EQ(replayer_->scenarioState.obj_states[2].pkgs[1].time_, replayer_->GetTimeFromCnt(4));
+
+    std::unique_ptr<Dat2csv> dat_to_csv;
+    dat_to_csv = std::make_unique<Dat2csv>("sim.dat");
+
+    dat_to_csv->SetLogMode(Dat2csv::log_mode::ORIGINAL);
+    dat_to_csv->CreateCSV();
+
+    // Also check a few entries in the csv log file, focus on scenario controlled entity "Target"
+    std::vector<std::vector<std::string>> csv;
+    ASSERT_EQ(SE_ReadCSVFile("sim.csv", csv, 0), 0);
+    EXPECT_NEAR(std::stod(csv[2][0]), 0.033, 1E-3);
+    ASSERT_EQ(std::stod(csv[2][1]), 0);
+    ASSERT_EQ(std::stod(csv[2][3]), 1.0);
+
+    EXPECT_NEAR(std::stod(csv[3][0]), 0.033, 1E-3);
+    ASSERT_EQ(std::stod(csv[3][1]), 1);
+    ASSERT_EQ(std::stod(csv[2][3]), 1.0);
+
+    EXPECT_NEAR(std::stod(csv[4][0]), 0.033, 1E-3);
+    ASSERT_EQ(std::stod(csv[4][1]), 2);
+    ASSERT_EQ(std::stod(csv[4][3]), 1.0);
+
+    EXPECT_NEAR(std::stod(csv[8][0]), 2.211, 1E-3);
+    ASSERT_EQ(std::stod(csv[8][1]), 0);
+
+    EXPECT_NEAR(std::stod(csv[9][0]), 2.211, 1E-3);
+    ASSERT_EQ(std::stod(csv[9][1]), 1);  // one object deleted
+
+    EXPECT_NEAR(std::stod(csv[10][0]), 3.300, 1E-3);
+    ASSERT_EQ(std::stod(csv[10][1]), 0);
+    ASSERT_EQ(std::stod(csv[10][3]), 1.0);
+
+    EXPECT_NEAR(std::stod(csv[11][0]), 3.300, 1E-3);
+    ASSERT_EQ(std::stod(csv[11][1]), 1);
+    ASSERT_EQ(std::stod(csv[11][3]), 1.0);
+
+    EXPECT_NEAR(std::stod(csv[12][0]), 3.300, 1E-3);
+    ASSERT_EQ(std::stod(csv[12][1]), 2);  // added back
+    ASSERT_EQ(std::stod(csv[12][3]), 1.0);
 }
 
 TEST(TestReplayer, RepeatedObjectState)
@@ -377,6 +416,34 @@ TEST(TestReplayer, SimpleScenario)
     EXPECT_NEAR(replayer_->scenarioState.obj_states[0].pkgs[9].time_, 0.0, 1E-3);
     EXPECT_NEAR(replayer_->scenarioState.obj_states[0].pkgs[2].time_, 7.2, 1E-3);
     EXPECT_NEAR(replayer_->scenarioState.obj_states[0].pkgs[7].time_, 15.0, 1E-3);
+
+    // going back in time
+    replayer_->MoveToTime(13.0);
+    ASSERT_EQ(replayer_->scenarioState.obj_states.size(), 1);
+    ASSERT_EQ(replayer_->scenarioState.obj_states[0].pkgs.size(), 17);
+    EXPECT_NEAR(replayer_->scenarioState.sim_time, 13.0, 1E-3);
+    EXPECT_NEAR(replayer_->scenarioState.obj_states[0].pkgs[5].time_, 0.0, 1E-3);
+    EXPECT_NEAR(replayer_->scenarioState.obj_states[0].pkgs[9].time_, 0.0, 1E-3);
+    EXPECT_NEAR(replayer_->scenarioState.obj_states[0].pkgs[2].time_, 7.2, 1E-3);
+    EXPECT_NEAR(replayer_->scenarioState.obj_states[0].pkgs[7].time_, 13.0, 1E-3);
+
+    replayer_->MoveToTime(7.0);
+    ASSERT_EQ(replayer_->scenarioState.obj_states.size(), 1);
+    ASSERT_EQ(replayer_->scenarioState.obj_states[0].pkgs.size(), 17);
+    EXPECT_NEAR(replayer_->scenarioState.sim_time, 7.0, 1E-3);
+    EXPECT_NEAR(replayer_->scenarioState.obj_states[0].pkgs[5].time_, 0.0, 1E-3);
+    EXPECT_NEAR(replayer_->scenarioState.obj_states[0].pkgs[9].time_, 0.0, 1E-3);
+    EXPECT_NEAR(replayer_->scenarioState.obj_states[0].pkgs[2].time_, 7.0, 1E-3);
+    EXPECT_NEAR(replayer_->scenarioState.obj_states[0].pkgs[7].time_, 7.0, 1E-3);
+
+    replayer_->MoveToTime(4.0);
+    ASSERT_EQ(replayer_->scenarioState.obj_states.size(), 1);
+    ASSERT_EQ(replayer_->scenarioState.obj_states[0].pkgs.size(), 17);
+    EXPECT_NEAR(replayer_->scenarioState.sim_time, 4.0, 1E-3);
+    EXPECT_NEAR(replayer_->scenarioState.obj_states[0].pkgs[5].time_, 0.0, 1E-3);
+    EXPECT_NEAR(replayer_->scenarioState.obj_states[0].pkgs[9].time_, 0.0, 1E-3);
+    EXPECT_NEAR(replayer_->scenarioState.obj_states[0].pkgs[2].time_, 4.0, 1E-3);
+    EXPECT_NEAR(replayer_->scenarioState.obj_states[0].pkgs[7].time_, 4.0, 1E-3);
 }
 
 TEST(TestReplayer, SpeedChangeScenario)
@@ -553,7 +620,7 @@ TEST(TestReplayer, ShowAndNotShowRestart)
     ASSERT_DOUBLE_EQ(replayer_->restartTimes[1].restart_time_, 8.00999982096255);
     ASSERT_DOUBLE_EQ(replayer_->restartTimes[1].next_time_, 8.019999820739022);
 
-    replayer_->MoveToTime(replayer_->restartTimes[0].restart_time_);  // first restart frame
+    replayer_->MoveToTime(replayer_->restartTimes[0].restart_time_);  // frame first restart triggered
     ASSERT_EQ(replayer_->scenarioState.obj_states.size(), 3);
     ASSERT_EQ(replayer_->scenarioState.obj_states[0].pkgs.size(), 17);
     ASSERT_DOUBLE_EQ(replayer_->scenarioState.sim_time, replayer_->restartTimes[0].restart_time_);
@@ -570,7 +637,7 @@ TEST(TestReplayer, ShowAndNotShowRestart)
     EXPECT_NEAR(replayer_->GetX(replayer_->scenarioState.obj_states[2].id), 60.099, 1E-3);
     EXPECT_NEAR(replayer_->GetY(replayer_->scenarioState.obj_states[2].id), -1.5, 1E-3);
 
-    replayer_->MoveToTime(replayer_->restartTimes[0].next_time_);  // shall go first restart frame
+    replayer_->MoveToTime(replayer_->restartTimes[0].next_time_);  // shall go first restart started frame
     ASSERT_DOUBLE_EQ(replayer_->scenarioState.sim_time, -0.93000004515051837);
     replayer_->GetName(replayer_->scenarioState.obj_states[0].id, name);
     EXPECT_EQ(name, "Ego");
@@ -585,20 +652,48 @@ TEST(TestReplayer, ShowAndNotShowRestart)
     EXPECT_NEAR(replayer_->GetX(replayer_->scenarioState.obj_states[2].id), 10.000, 1E-3);
     EXPECT_NEAR(replayer_->GetY(replayer_->scenarioState.obj_states[2].id), -1.5, 1E-3);
 
-    replayer_->MoveToTime(replayer_->restartTimes[1].restart_time_);  // second restart frame
+    // check reverse from first restart start time
+
+    replayer_->MoveToTime(replayer_->scenarioState.sim_time - 0.05);  // going back from first restart started frame
+    ASSERT_EQ(replayer_->scenarioState.obj_states.size(), 3);
+    ASSERT_EQ(replayer_->scenarioState.obj_states[0].pkgs.size(), 17);
+    ASSERT_DOUBLE_EQ(replayer_->scenarioState.sim_time, replayer_->restartTimes[0].restart_time_);  // shall go to first restart triggered time
+    replayer_->GetName(replayer_->scenarioState.obj_states[0].id, name);
+    EXPECT_EQ(name, "Ego");
+    EXPECT_NEAR(replayer_->GetX(replayer_->scenarioState.obj_states[0].id), 10.0, 1E-3);
+    EXPECT_NEAR(replayer_->GetY(replayer_->scenarioState.obj_states[0].id), -1.5, 1E-3);
+    replayer_->GetName(replayer_->scenarioState.obj_states[1].id, name);
+    EXPECT_EQ(name, "Target");
+    EXPECT_NEAR(replayer_->GetX(replayer_->scenarioState.obj_states[1].id), 50.199, 1E-3);
+    EXPECT_NEAR(replayer_->GetY(replayer_->scenarioState.obj_states[1].id), -4.5, 1E-3);
+    replayer_->GetName(replayer_->scenarioState.obj_states[2].id, name);
+    EXPECT_EQ(name, "Ego_ghost");
+    EXPECT_NEAR(replayer_->GetX(replayer_->scenarioState.obj_states[2].id), 60.099, 1E-3);
+    EXPECT_NEAR(replayer_->GetY(replayer_->scenarioState.obj_states[2].id), -1.5, 1E-3);
+
+    replayer_->MoveToTime(replayer_->scenarioState.sim_time + 0.05);  // go forward to test second restart
+    ASSERT_EQ(replayer_->scenarioState.obj_states.size(), 3);
+    ASSERT_EQ(replayer_->scenarioState.obj_states[0].pkgs.size(), 17);
+    ASSERT_DOUBLE_EQ(replayer_->scenarioState.sim_time, -0.93000004515051837);
+
+    // check second restart
+    replayer_->MoveToTime(replayer_->restartTimes[1].restart_time_);  // frame second restart triggered
     ASSERT_EQ(replayer_->scenarioState.obj_states.size(), 3);
     ASSERT_EQ(replayer_->scenarioState.obj_states[0].pkgs.size(), 17);
     ASSERT_DOUBLE_EQ(replayer_->scenarioState.sim_time, replayer_->restartTimes[1].restart_time_);
 
-    replayer_->MoveToTime(replayer_->restartTimes[1].next_time_);  // shall go second restart frame
+    replayer_->MoveToTime(replayer_->restartTimes[1].next_time_);  // shall go second restart started frame
     ASSERT_DOUBLE_EQ(replayer_->scenarioState.sim_time, 5.0699998207390324);
+
+    // check reverse from first restart start time
+    replayer_->MoveToTime(replayer_->scenarioState.sim_time - 0.05);                                // shall go second restart frame
+    ASSERT_DOUBLE_EQ(replayer_->scenarioState.sim_time, replayer_->restartTimes[1].restart_time_);  // shall go to second restart triggered time
 
     // with no show restart
     replayer_->InitiateStates();
     replayer_->SetShowRestart(false);
-    replayer_->GetRestartTimes();
 
-    replayer_->MoveToTime(replayer_->restartTimes[0].restart_time_);  // first restart frame
+    replayer_->MoveToTime(replayer_->restartTimes[0].restart_time_);  // first restart triggered frame
     ASSERT_EQ(replayer_->scenarioState.obj_states.size(), 3);
     ASSERT_EQ(replayer_->scenarioState.obj_states[0].pkgs.size(), 17);
     replayer_->GetName(replayer_->scenarioState.obj_states[0].id, name);
@@ -615,7 +710,7 @@ TEST(TestReplayer, ShowAndNotShowRestart)
     EXPECT_NEAR(replayer_->GetX(replayer_->scenarioState.obj_states[2].id), 60.099, 1E-3);
     EXPECT_NEAR(replayer_->GetY(replayer_->scenarioState.obj_states[2].id), -1.5, 1E-3);
 
-    replayer_->MoveToTime(replayer_->restartTimes[0].next_time_);  // shall go next frame
+    replayer_->MoveToTime(replayer_->restartTimes[0].next_time_);  // shall go next frame from restart triggered frame
     ASSERT_DOUBLE_EQ(replayer_->scenarioState.sim_time, replayer_->restartTimes[0].next_time_);
     replayer_->GetName(replayer_->scenarioState.obj_states[0].id, name);
     EXPECT_EQ(name, "Ego");
@@ -623,13 +718,32 @@ TEST(TestReplayer, ShowAndNotShowRestart)
     EXPECT_NEAR(replayer_->GetY(replayer_->scenarioState.obj_states[0].id), -1.5, 1E-3);
     replayer_->GetName(replayer_->scenarioState.obj_states[1].id, name);
     EXPECT_EQ(name, "Target");
-    EXPECT_NEAR(replayer_->GetX(replayer_->scenarioState.obj_states[1].id), 50.199, 1E-3);
+    EXPECT_NEAR(replayer_->GetX(replayer_->scenarioState.obj_states[1].id), 50.399, 1E-3);
     EXPECT_NEAR(replayer_->GetY(replayer_->scenarioState.obj_states[1].id), -4.5, 1E-3);
     replayer_->GetName(replayer_->scenarioState.obj_states[2].id, name);
     EXPECT_EQ(name, "Ego_ghost");
     EXPECT_NEAR(replayer_->GetX(replayer_->scenarioState.obj_states[2].id), 23.724, 1E-3);
     EXPECT_NEAR(replayer_->GetY(replayer_->scenarioState.obj_states[2].id), -1.5, 1E-3);
 
+    // check going back from first restart started time
+    replayer_->MoveToTime(replayer_->scenarioState.sim_time - 0.05);  // going back first restart frame
+    ASSERT_EQ(replayer_->scenarioState.obj_states.size(), 3);
+    ASSERT_EQ(replayer_->scenarioState.obj_states[0].pkgs.size(), 17);
+    replayer_->GetName(replayer_->scenarioState.obj_states[0].id, name);
+    EXPECT_EQ(name, "Ego");
+    ASSERT_DOUBLE_EQ(replayer_->scenarioState.sim_time, 1.9699999548494829);  // shall go requested time
+    EXPECT_NEAR(replayer_->GetX(replayer_->scenarioState.obj_states[0].id), 10.0, 1E-3);
+    EXPECT_NEAR(replayer_->GetY(replayer_->scenarioState.obj_states[0].id), -1.5, 1E-3);
+    replayer_->GetName(replayer_->scenarioState.obj_states[1].id, name);
+    EXPECT_EQ(name, "Target");
+    EXPECT_NEAR(replayer_->GetX(replayer_->scenarioState.obj_states[1].id), 50.399999096989632, 1E-3);
+    EXPECT_NEAR(replayer_->GetY(replayer_->scenarioState.obj_states[1].id), -4.5, 1E-3);
+    replayer_->GetName(replayer_->scenarioState.obj_states[2].id, name);
+    EXPECT_EQ(name, "Ego_ghost");
+    EXPECT_NEAR(replayer_->GetX(replayer_->scenarioState.obj_states[2].id), 23.166686680659474, 1E-3);
+    EXPECT_NEAR(replayer_->GetY(replayer_->scenarioState.obj_states[2].id), -1.5, 1E-3);
+
+    // check second restart
     replayer_->MoveToTime(replayer_->restartTimes[1].restart_time_);  // second restart frame
     ASSERT_EQ(replayer_->scenarioState.obj_states.size(), 3);
     ASSERT_EQ(replayer_->scenarioState.obj_states[0].pkgs.size(), 17);
@@ -665,20 +779,20 @@ TEST(TestReplayer, StopAtEachTimeFrame)
     replayer_->MoveToTime(0.5);
     EXPECT_NEAR(replayer_->scenarioState.sim_time, 0.5, 1E-3);
 
-    replayer_->MoveToTime(3, false, true);  // go through each frame
+    replayer_->MoveToTime(3, true);  // go through each frame
     EXPECT_NEAR(replayer_->scenarioState.sim_time, 1, 1E-3);
 
-    replayer_->MoveToTime(1.5, false, true);  // go through each frame
+    replayer_->MoveToTime(1.5, true);  // go through each frame
     EXPECT_NEAR(replayer_->scenarioState.sim_time, 1.5, 1E-3);
 
-    replayer_->MoveToTime(3, false, true);  // go through each frame
+    replayer_->MoveToTime(3, true);  // go through each frame
     EXPECT_NEAR(replayer_->scenarioState.sim_time, 2.0, 1E-3);
 }
 
 TEST(TestDat2Csv, TimeModes)
 {
     const char* args[] = {"--osc", "../../../EnvironmentSimulator/Unittest/xosc/test_time_mode.xosc", "--record", "sim.dat"};
-    SE_AddPath("../../../../resources/xosc");
+    SE_AddPath("../../../resources/xosc");
     SE_AddPath("../../../../resources/models");
     ASSERT_EQ(SE_InitWithArgs(sizeof(args) / sizeof(char*), args), 0);
 

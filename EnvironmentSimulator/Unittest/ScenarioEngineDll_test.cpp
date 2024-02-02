@@ -2380,7 +2380,7 @@ TEST(ExternalControlTest, TestTimings)
             EXPECT_NEAR(replay->GetX(replay->scenarioState.obj_states[2].id), 257.624, 1E-3);
             EXPECT_NEAR(replay->GetY(replay->scenarioState.obj_states[2].id), -1.5, 1E-3);
 
-            replay->MoveToTime(8.2);  // shall be in secound restart
+            replay->MoveToTime(8.2);  // shall be in second restart
             EXPECT_NEAR(replay->scenarioState.sim_time, 5.25, 1E-3);
             replay->GetName(replay->scenarioState.obj_states[0].id, name);
             EXPECT_EQ(name, "Ego");

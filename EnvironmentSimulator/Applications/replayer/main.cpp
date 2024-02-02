@@ -112,16 +112,8 @@ int ParseEntities(viewer::Viewer* viewer, Replay* player)
     };
     std::map<int, OdoInfo> odo_info;  // temporary keep track of entity odometers
 
-    player->GetRestartTimes();
-    player->GetScenarioEntities();
-
-    for (int j = 0; j < static_cast<int>(player->entities.size()); j++)
+    while (true)
     {
-        if (!isEqualDouble(player->entities[static_cast<size_t>(j)].sim_time, player->scenarioState.sim_time))  // already in correct time
-        {
-            player->MoveToTime(player->entities[static_cast<size_t>(j)].sim_time);
-        }
-
         for (int i = 0; i < static_cast<int>(player->scenarioState.obj_states.size()); i++)
         {
             OdoInfo odo_entry;
@@ -184,7 +176,6 @@ int ParseEntities(viewer::Viewer* viewer, Replay* player)
                 {
                     new_sc.entityModel->txNode_->setNodeMask(0x0);
                 }
-
                 new_sc.bounding_box = bb;
 
                 // Add it to the list of scenario cars
@@ -198,28 +189,6 @@ int ParseEntities(viewer::Viewer* viewer, Replay* player)
 
                 odo_info.insert(std::make_pair(new_sc.id, odo_entry));  // Set inital odometer value for the entity
             }
-            // calculate odometer
-            odo_entry    = odo_info[sc->id];
-            double delta = GetLengthOfLine2D(odo_entry.x, odo_entry.y, player->GetX(obj_id), player->GetY(obj_id));
-            odo_entry.x  = player->GetX(obj_id);
-            odo_entry.y  = player->GetY(obj_id);
-            odo_entry.odometer += delta;
-            odo_info[sc->id] = odo_entry;  // save updated odo info for next calculation
-
-            player->UpdateOdaMeter(odo_entry.odometer);  // update odometer
-        }
-    }
-
-    // reset the cache
-    player->InitiateStates();
-
-    // calculate trajectory points
-    while (true)
-    {
-        for (size_t i = 0; i < scenarioEntity.size(); i++)
-        {
-            int             obj_id = player->scenarioState.obj_states[i].id;
-            ScenarioEntity* sc     = getScenarioEntityById(obj_id);
 
             if (sc->trajPoints == 0)
             {
@@ -245,25 +214,27 @@ int ParseEntities(viewer::Viewer* viewer, Replay* player)
                     sc->trajPoints->push_back(osg::Vec3d(player->GetX(obj_id), player->GetY(obj_id), player->GetZ(obj_id) + z_offset));
                 }
             }
-        }
+            // calculate odometer
+            odo_entry    = odo_info[sc->id];
+            double delta = GetLengthOfLine2D(odo_entry.x, odo_entry.y, player->GetX(obj_id), player->GetY(obj_id));
+            odo_entry.x  = player->GetX(obj_id);
+            odo_entry.y  = player->GetY(obj_id);
+            odo_entry.odometer += delta;
+            odo_info[sc->id] = odo_entry;  // save updated odo info for next calculation
 
+            player->UpdateOdaMeter(sc->id, odo_entry.odometer);  // update odometer
+        }
         if (player->GetTime() > player->GetStopTime() - SMALL_NUMBER)
         {
             break;  // reached end of file
         }
-        else if (player->deltaTime_ < SMALL_NUMBER)
-        {
-            LOG("Warning: Unexpected delta time zero found! Can't process remaining part of the file");
-            break;
-        }
-        else
-        {
-            player->MoveToTime(player->GetTime() + player->deltaTime_);  // continue
-        }
+        player->MoveToNextFrame();
+        player->CheckObjAvailabilityForward();
+        player->UpdateCache();
     }
-
     // reset the cache
     player->InitiateStates();
+    player->GetRestartTimes();
 
     for (int i = 0; i < static_cast<int>(scenarioEntity.size()); i++)
     {
@@ -984,7 +955,7 @@ int main(int argc, char** argv)
                          " %s (%d) %.2fm\n %.2fkm/h road %d lane %d/%.2f s %.2f\n x %.2f y %.2f hdg %.2f\n osi x %.2f y %.2f \n|",
                          name.c_str(),
                          scenarioEntity[static_cast<unsigned int>(index)].id,
-                         player->scenarioState.odometer,
+                         player->GetOdaMeter(scenarioEntity[static_cast<unsigned int>(index)].id),
                          3.6 * player->GetSpeed(scenarioEntity[static_cast<unsigned int>(index)].id),
                          player->GetRoadId(scenarioEntity[static_cast<unsigned int>(index)].id),
                          player->GetLaneId(scenarioEntity[static_cast<unsigned int>(index)].id),
@@ -1009,7 +980,7 @@ int main(int argc, char** argv)
                              scenarioEntity[static_cast<unsigned int>(index)].id,
                              player->scenarioState.sim_time,
                              3.6 * player->GetSpeed(scenarioEntity[static_cast<unsigned int>(index)].id),
-                             player->scenarioState.odometer,
+                             player->GetOdaMeter(scenarioEntity[static_cast<unsigned int>(index)].id),
                              player->GetRoadId(scenarioEntity[static_cast<unsigned int>(index)].id),
                              player->GetLaneId(scenarioEntity[static_cast<unsigned int>(index)].id),
                              fabs(sc->pos.offset) < SMALL_NUMBER ? 0 : sc->pos.offset,

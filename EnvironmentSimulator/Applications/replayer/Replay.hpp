@@ -38,21 +38,15 @@ namespace scenarioengine
     {
         int                             id;
         bool                            active;
+        double                          odometer = 0.0;
         std::vector<ObjectStateWithPkg> pkgs;
     } ObjectStateWithObjId;
 
     struct ScenarioState
     {
         double                            sim_time;
-        double                            odometer = 0.0;
         std::vector<ObjectStateWithObjId> obj_states;
     };
-
-    typedef struct
-    {
-        double sim_time;
-        int    obj_id;
-    } ScenarioEntities;
 
     struct RestartTimes
     {
@@ -79,13 +73,13 @@ namespace scenarioengine
         void   GetReplaysFromDirectory(const std::string dir, const std::string sce);
         size_t GetNumberOfScenarios();
         void   BuildData();
+        double GetLastTime();
         int    CreateMergedDatfile(const std::string filename);
 
         // vector and method for record and read pkg
         std::vector<datLogger::CommonPkg> pkgs_;
         ScenarioState                     scenarioState;
         int                               RecordPkgs(const std::string& fileName);  // check package can be recorded or not
-        void                              GetScenarioEntities();                    // get all the entities in complete scenario
         std::vector<int>                  GetNumberOfObjectsAtTime();               // till next time forward
         int                               GetPkgCntBtwObj(size_t idx);              // till next time forward
         datLogger::PackageId              ReadPkgHdr(char* package);
@@ -101,22 +95,21 @@ namespace scenarioengine
         /**
          Move to specified timestamp
          @param time_frame Timestamp
-         @param goToEnd In case to go to end, Will be faster.
          @param stopAtEachFrame Always fill cache for each time frame
         */
-        int                           MoveToTime(double time_frame, bool goToEnd = false, bool stopAtEachFrame = false);
-        bool                          MoveToNextFrame(double t);
-        bool                          MoveToPreviousFrame(double t);
-        void                          MoveToDeltaTime(double dt);
-        void                          MoveToStart();
-        void                          MoveToEnd();
-        bool                          IsObjAvailableInCache(int Id);  // check in cache
-        bool                          IsObjAvailableActive(int id);
-        int                           UpdateObjStatus(int id, bool status);
-        std::vector<ScenarioEntities> entities;
-        double                        GetTimeFromEntities(int id);
-        void                          CheckObjAvailabilityForward();
-        void                          CheckObjAvailabilityBackward();
+        int MoveToTime(double time_frame, bool stopAtEachFrame = false);
+        // bool                          MoveToNextFrame(double t);
+        void MoveToNextFrame();
+        // bool                          MoveToPreviousFrame(double t);
+        void MoveToPreviousFrame();
+        void MoveToDeltaTime(double dt);
+        void MoveToStart();
+        void MoveToEnd();
+        bool IsObjAvailableInCache(int Id);  // check in cache
+        bool IsObjAvailableActive(int id);
+        void UpdateObjStatus(int id, bool status);
+        void CheckObjAvailabilityForward();
+        void CheckObjAvailabilityBackward();
 
         // method to handle private members
         void   SetStartTime(double time);
@@ -156,10 +149,7 @@ namespace scenarioengine
             repeat_ = repeat;
         }
 
-        void UpdateOdaMeter(double value)
-        {
-            scenarioState.odometer = value;
-        }
+        void UpdateOdaMeter(int obj_id, double value);
 
         void SetShowRestart(bool showRestart)
         {
@@ -192,6 +182,7 @@ namespace scenarioengine
         double                  GetWheelRot(int obj_id);
         double                  GetSpeed(int obj_id);
         int                     GetName(int obj_id, std::string& name);
+        double                  GetOdaMeter(int obj_id);
 
     private:
         std::ifstream            file_;

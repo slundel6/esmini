@@ -89,11 +89,11 @@ void Dat2csv::CreateCSV()
         {
             for (size_t i = 0; i < player->scenarioState.obj_states.size(); i++)
             {
-                if (player->scenarioState.obj_states[i].active == true)  // only for active members may be its deleted
+                int         obj_id = player->scenarioState.obj_states[i].id;
+                std::string name;
+                player->GetName(player->scenarioState.obj_states[i].id, name);
+                if (player->scenarioState.obj_states[i].active)
                 {
-                    int         obj_id = player->scenarioState.obj_states[i].id;
-                    std::string name;
-                    player->GetName(player->scenarioState.obj_states[i].id, name);
                     if (!extended)
                     {
                         snprintf(line,
@@ -160,11 +160,11 @@ void Dat2csv::CreateCSV()
                     if (isEqualDouble(player->GetTime(), requestedTime) || isEqualDouble(player->GetTime(), player->GetStartTime()))
                     {  // first time frame or until reach requested time frame reached, dont move to next time frame
                         requestedTime = player->GetTime() + delta_time;
-                        player->MoveToTime(player->GetTime() + delta_time, false, true);  // continue
+                        player->MoveToTime(player->GetTime() + delta_time, true);  // continue
                     }
                     else
                     {
-                        player->MoveToTime(requestedTime, false, true);  // continue
+                        player->MoveToTime(requestedTime, true);  // continue
                     }
                 }
             }
@@ -187,11 +187,11 @@ void Dat2csv::CreateCSV()
                 player->scenarioState.sim_time = timeTemp;
                 for (size_t i = 0; i < player->scenarioState.obj_states.size(); i++)
                 {
-                    if (player->scenarioState.obj_states[i].active == true)  // only for active members may be its deleted
+                    int         obj_id = player->scenarioState.obj_states[i].id;
+                    std::string name;
+                    player->GetName(player->scenarioState.obj_states[i].id, name);
+                    if (player->scenarioState.obj_states[i].active)
                     {
-                        int         obj_id = player->scenarioState.obj_states[i].id;
-                        std::string name;
-                        player->GetName(player->scenarioState.obj_states[i].id, name);
                         if (!extended)
                         {
                             snprintf(line,
