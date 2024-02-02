@@ -34,13 +34,13 @@ namespace scenarioengine
         char*  pkg;
     } ObjectStateWithPkg;
 
-    typedef struct
+    struct ObjectStateWithObjId
     {
         int                             id;
         bool                            active;
         double                          odometer = 0.0;
         std::vector<ObjectStateWithPkg> pkgs;
-    } ObjectStateWithObjId;
+    };
 
     struct ScenarioState
     {
