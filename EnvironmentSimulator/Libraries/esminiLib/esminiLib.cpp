@@ -1691,7 +1691,9 @@ extern "C"
 #ifdef _USE_OSI
         if (player != nullptr)
         {
-            return player->osiReporter->UpdateOSIGroundTruth(player->scenarioGateway->objectState_, refetchStaticGt);
+            return player->osiReporter->UpdateOSIGroundTruth(player->scenarioGateway->objectState_,
+                                                             &player->scenarioEngine->environment,
+                                                             refetchStaticGt);
         }
 #else
         (void)refetchStaticGt;
@@ -1716,7 +1718,9 @@ extern "C"
 #ifdef _USE_OSI
         if (player != nullptr)
         {
-            return player->osiReporter->UpdateOSIDynamicGroundTruth(player->scenarioGateway->objectState_, reportGhost);
+            return player->osiReporter->UpdateOSIDynamicGroundTruth(player->scenarioGateway->objectState_,
+                                                                    &player->scenarioEngine->environment,
+                                                                    reportGhost);
         }
 #else
         (void)reportGhost;

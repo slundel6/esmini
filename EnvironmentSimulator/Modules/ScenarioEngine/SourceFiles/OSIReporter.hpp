@@ -77,7 +77,7 @@ public:
     /**
     Calls UpdateOSIStaticGroundTruth and UpdateOSIDynamicGroundTruth
     */
-    int UpdateOSIGroundTruth(const std::vector<std::unique_ptr<ObjectState>>& objectState, bool refetchStaticGt = false);
+    int UpdateOSIGroundTruth(const std::vector<std::unique_ptr<ObjectState>>& objectState, OSCEnvironment* environment, bool refetchStaticGt = false);
     /**
     Fills up the osi message with  static GroundTruth
     */
@@ -85,7 +85,9 @@ public:
     /**
     Fills up the osi message with dynamic GroundTruth
     */
-    int UpdateOSIDynamicGroundTruth(const std::vector<std::unique_ptr<ObjectState>>& objectState, bool reportGhost = true);
+    int UpdateOSIDynamicGroundTruth(const std::vector<std::unique_ptr<ObjectState>>& objectState,
+                                    OSCEnvironment*                                  environment,
+                                    bool                                             reportGhost = true);
     /**
     Fills up the osi message with Stationary Object from the OpenDRIVE description
     */
@@ -122,6 +124,10 @@ public:
     Fills the Traffic Commands (scenario events)
     */
     int UpdateOSITrafficCommand();
+    /**
+    Fills the Environment_condition
+    */
+    int UpdateEnvironment(OSCEnvironment* environment);
 
     std::vector<TrafficCommandStateChange> traffic_command_state_changes_;
 

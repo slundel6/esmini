@@ -323,7 +323,7 @@ void ScenarioPlayer::ScenarioPostFrame()
 
             if ((GetCounter() - 1) % osi_freq_ == 0)
             {
-                osiReporter->UpdateOSIGroundTruth(scenarioGateway->objectState_);
+                osiReporter->UpdateOSIGroundTruth(scenarioGateway->objectState_, &scenarioEngine->environment);
             }
 
             osiReporter->UpdateOSITrafficCommand();
@@ -340,6 +340,14 @@ void ScenarioPlayer::ViewerFrame(bool init)
     if (viewer_ == nullptr)
     {
         return;
+    }
+
+    // Ask Environment for fog pos and dim
+    // Tell viewer to move and scale fog bounding box
+    // viewer_->UpdateFog(scenarioEngine->environment_->GetFogCenter...)
+    if (scenarioEngine->environment.IsEnvironment())
+    {
+        viewer_->CreateWeatherGroup(&scenarioEngine->environment);
     }
 
     mutex.Lock();
