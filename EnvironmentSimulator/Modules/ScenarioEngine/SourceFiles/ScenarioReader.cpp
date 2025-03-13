@@ -4873,6 +4873,47 @@ static int selectCloudState(scenarioengine::CloudState &state, const std::string
     return 1;
 }
 
+int ScenarioReader::ParseOSCBoundingBoxFog(OSCBoundingBox &boundingbox, pugi::xml_node &xml_node)
+{
+    pugi::xml_node boundingbox_node = xml_node.child("BoundingBox");
+    if (boundingbox_node != NULL)
+    {
+        for (pugi::xml_node boundingboxChild = boundingbox_node.first_child(); boundingboxChild; boundingboxChild = boundingboxChild.next_sibling())
+        {
+            std::string boundingboxChildName(boundingboxChild.name());
+            if (boundingboxChildName == "Center")
+            {
+                std::string xStr = parameters.ReadAttribute(boundingboxChild, "x");
+                std::string yStr = parameters.ReadAttribute(boundingboxChild, "y");
+                std::string zStr = parameters.ReadAttribute(boundingboxChild, "z");
+                if (xStr.empty() || yStr.empty() || zStr.empty())
+                {
+                    LOG_ERROR("Ignorning fog bounding box in weather, Missing x, y or z attribute in BoundingBox/Center");
+                    return 0;
+                }
+                boundingbox.center_ = {std::stof(xStr), std::stof(yStr), std::stof(zStr)};
+            }
+            else if (boundingboxChildName == "Dimensions")
+            {
+                std::string widthStr  = parameters.ReadAttribute(boundingboxChild, "width");
+                std::string lengthStr = parameters.ReadAttribute(boundingboxChild, "length");
+                std::string heightStr = parameters.ReadAttribute(boundingboxChild, "height");
+                if (widthStr.empty() || lengthStr.empty() || heightStr.empty())
+                {
+                    LOG_ERROR("Ignorning fog bounding box in weather, Missing width, length or height attribute in BoundingBox/Dimensions");
+                    return 0;
+                }
+                boundingbox.dimensions_ = {std::stof(widthStr), std::stof(lengthStr), std::stof(heightStr)};
+            }
+            else
+            {
+                LOG_ERROR("Not valid boudingbox attribute name:{}", boundingboxChildName);
+            }
+        }
+    }
+    return 1;
+}
+
 void ScenarioReader::ParseOSCEnvironment(const pugi::xml_node &xml_node, OSCEnvironment *env)
 {
     for (pugi::xml_node envChild : xml_node.children())
@@ -4907,11 +4948,16 @@ void ScenarioReader::ParseOSCEnvironment(const pugi::xml_node &xml_node, OSCEnvi
                 else if (weatherAttrName == "temperature")
                 {
                     std::string temperature = parameters.ReadAttribute(envChild, "temperature");
+                    if (temperature.empty())
+                    {
+                        LOG_WARN("Ignorning Temperature in weather, attribute is empty");
+                        continue;
+                    }
                     env->SetTemperature(std::stod(temperature));
                 }
                 else
                 {
-                    LOG_WARN("Not valid weather property name:%s", weatherAttrName.c_str());
+                    LOG_WARN("Not valid weather property name:{}", weatherAttrName);
                 }
             }
 
@@ -4920,20 +4966,41 @@ void ScenarioReader::ParseOSCEnvironment(const pugi::xml_node &xml_node, OSCEnvi
                 std::string weatherChildName(weatherChild.name());
                 if (weatherChildName == "Sun")
                 {
-                    std::string azimuth   = parameters.ReadAttribute(weatherChild, "azimuth");
-                    std::string elevation = parameters.ReadAttribute(weatherChild, "elevation");
-                    std::string intensity = parameters.ReadAttribute(weatherChild, "intensity");
+                    std::string azimuth      = parameters.ReadAttribute(weatherChild, "azimuth");
+                    std::string elevation    = parameters.ReadAttribute(weatherChild, "elevation");
+                    std::string intensityStr = parameters.ReadAttribute(weatherChild, "intensity");
 
-                    env->SetSun(Sun{std::stod(azimuth), std::stod(elevation), std::stod(intensity)});
+                    if (azimuth.empty() || elevation.empty())
+                    {
+                        LOG_WARN("Ignorning Sun, attribute azimuth or elevation missing");
+                        continue;
+                    }
+                    double intensity = 0.0;  // default value
+                    if (!intensityStr.empty())
+                    {
+                        intensity = std::stod(intensityStr);
+                    }
+                    env->SetSun(Sun{std::stod(azimuth), std::stod(elevation), intensity});
                 }
                 else if (weatherChildName == "Fog")
                 {
                     std::string visualRange = parameters.ReadAttribute(weatherChild, "visualRange");
+                    if (visualRange.empty())
+                    {
+                        LOG_WARN("Ignorning Fog, mandatory attribute visualRange missing");
+                        continue;
+                    }
                     if (weatherChild.child("BoundingBox") != NULL)
                     {
                         OSCBoundingBox bb;
-                        ParseOSCBoundingBox(bb, weatherChild);
-                        env->SetFog(Fog{std::stof(visualRange), bb});
+                        if (ParseOSCBoundingBoxFog(bb, weatherChild))
+                        {
+                            env->SetFog(Fog{std::stof(visualRange), bb});
+                        }
+                        else
+                        {
+                            env->SetFog(std::stof(visualRange));
+                        }
                     }
                     else
                     {
@@ -4967,7 +5034,7 @@ void ScenarioReader::ParseOSCEnvironment(const pugi::xml_node &xml_node, OSCEnvi
                 }
                 else
                 {
-                    LOG_WARN("Not valid weather property name:%s", weatherChildName.c_str());
+                    LOG_WARN("Not valid weather property name:{}", weatherChildName);
                 }
             }
         }
@@ -4978,7 +5045,7 @@ void ScenarioReader::ParseOSCEnvironment(const pugi::xml_node &xml_node, OSCEnvi
         }
         else
         {
-            LOG_WARN("Not valid environment attribute name:%s", envChildName.c_str());
+            LOG_WARN("Not valid environment attribute name:{}", envChildName);
         }
     }
 }

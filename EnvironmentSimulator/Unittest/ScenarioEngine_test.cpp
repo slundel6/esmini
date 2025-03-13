@@ -5032,6 +5032,96 @@ TEST(EnvironmentTest, Parsing)
     delete globalAct;
 }
 
+TEST(EnvironmentTest, ParsingMissingWeatherAttribute)
+{
+    // Set up mock xml_node
+    pugi::xml_document doc;
+    pugi::xml_node     actionNode    = doc.append_child("Action");
+    pugi::xml_node     envActionNode = actionNode.append_child("EnvironmentAction");
+    pugi::xml_node     envNode       = envActionNode.append_child("Environment");
+
+    // Weather and attributes
+    pugi::xml_node weatherNode = envNode.append_child("Weather");
+    weatherNode.append_attribute("temperature").set_value("");
+    // Sun
+    pugi::xml_node sunNode = weatherNode.append_child("Sun");
+    sunNode.append_attribute("azimuth").set_value(0.5);
+    sunNode.append_attribute("intensity").set_value(300.1);
+
+    // Test using ScenarioReader
+    Entities       entities;
+    Catalogs       catalogs;
+    OSCEnvironment environment;
+    ScenarioReader reader(&entities, &catalogs, &environment);
+
+    OSCGlobalAction*   globalAct = reader.parseOSCGlobalAction(actionNode, nullptr);
+    EnvironmentAction* envAct    = static_cast<EnvironmentAction*>(globalAct);
+    OSCEnvironment     oscEnv    = envAct->new_environment_;
+
+    EXPECT_FALSE(oscEnv.IsEnvironment());
+    EXPECT_FALSE(oscEnv.IsAtmosphericPressureSet());
+    EXPECT_FALSE(oscEnv.IsTemperatureSet());
+    EXPECT_FALSE(oscEnv.IsCloudStateSet());
+    EXPECT_FALSE(oscEnv.IsFogSet());
+    EXPECT_FALSE(oscEnv.IsPrecipitationSet());
+    EXPECT_FALSE(oscEnv.IsSunSet());
+    EXPECT_FALSE(oscEnv.IsWindSet());
+    EXPECT_FALSE(oscEnv.IsRoadConditionSet());
+    EXPECT_FALSE(oscEnv.IsFogBoundingBoxSet());
+    EXPECT_FALSE(oscEnv.IsTimeOfDaySet());
+
+    delete globalAct;
+}
+
+TEST(EnvironmentTest, ParsingMissingFogBBAttribute)
+{
+    // Set up mock xml_node
+    pugi::xml_document doc;
+    pugi::xml_node     actionNode    = doc.append_child("Action");
+    pugi::xml_node     envActionNode = actionNode.append_child("EnvironmentAction");
+    pugi::xml_node     envNode       = envActionNode.append_child("Environment");
+
+    // Weather and attributes
+    pugi::xml_node weatherNode = envNode.append_child("Weather");
+    weatherNode.append_attribute("temperature").set_value("");
+    pugi::xml_node fogNode = weatherNode.append_child("Fog");
+    fogNode.append_attribute("visualRange").set_value(1000);
+    pugi::xml_node fogBoundingboxNode = fogNode.append_child("BoundingBox");
+    pugi::xml_node bbCenterNode       = fogBoundingboxNode.append_child("Center");
+    bbCenterNode.append_attribute("x").set_value(1);
+    bbCenterNode.append_attribute("y").set_value(1);  // Missing z
+    pugi::xml_node bbDimNode = fogBoundingboxNode.append_child("Dimensions");
+    bbDimNode.append_attribute("width").set_value(1.2);
+    bbDimNode.append_attribute("length").set_value(1.3);
+    bbDimNode.append_attribute("height").set_value(1.4);
+    // Precipitation
+    // Test using ScenarioReader
+    Entities       entities;
+    Catalogs       catalogs;
+    OSCEnvironment environment;
+    ScenarioReader reader(&entities, &catalogs, &environment);
+
+    OSCGlobalAction*   globalAct = reader.parseOSCGlobalAction(actionNode, nullptr);
+    EnvironmentAction* envAct    = static_cast<EnvironmentAction*>(globalAct);
+    OSCEnvironment     oscEnv    = envAct->new_environment_;
+
+    EXPECT_TRUE(oscEnv.IsEnvironment());
+    EXPECT_FALSE(oscEnv.IsAtmosphericPressureSet());
+    EXPECT_FALSE(oscEnv.IsTemperatureSet());
+    EXPECT_FALSE(oscEnv.IsCloudStateSet());
+    EXPECT_TRUE(oscEnv.IsFogSet());
+    EXPECT_FALSE(oscEnv.IsPrecipitationSet());
+    EXPECT_FALSE(oscEnv.IsSunSet());
+    EXPECT_FALSE(oscEnv.IsWindSet());
+    EXPECT_FALSE(oscEnv.IsRoadConditionSet());
+    EXPECT_FALSE(oscEnv.IsFogBoundingBoxSet());
+    EXPECT_FALSE(oscEnv.IsTimeOfDaySet());
+
+    EXPECT_NEAR(oscEnv.GetFog().value().visibility_range, fogNode.attribute("visualRange").as_float(), 1e-5);
+
+    delete globalAct;
+}
+
 int main(int argc, char** argv)
 {
 #if 0  // set to 1 and modify filter to run one single test
