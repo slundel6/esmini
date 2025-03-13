@@ -345,7 +345,7 @@ void ScenarioPlayer::ViewerFrame(bool init)
     // viewer_->UpdateFog(scenarioEngine->environment_->GetFogCenter...)
     if (scenarioEngine->environment.IsEnvironment())
     {
-        viewer_->CreateWeatherGroup(&scenarioEngine->environment);
+        viewer_->CreateWeatherGroup(scenarioEngine->environment);
     }
 
     mutex.Lock();

@@ -135,11 +135,11 @@ public:
         report_ghost_ = false;
         LOG_INFO("Excluding ghost from ground truth");
     }
-    
+
     /**
     Fills the Environment_condition
     */
-    int UpdateEnvironment(OSCEnvironment* environment);
+    int UpdateEnvironment(const OSCEnvironment& environment);
 
     std::vector<TrafficCommandStateChange> traffic_command_state_changes_;
 

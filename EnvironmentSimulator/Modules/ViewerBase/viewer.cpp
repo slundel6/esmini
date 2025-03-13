@@ -1841,20 +1841,18 @@ void Viewer::SetSunLight(float sunIntensity)
     osgViewer_->getCamera()->setClearColor(osg::Vec4(r, g, b, 0.0f));
 }
 
-int Viewer::CreateWeatherGroup(scenarioengine::OSCEnvironment* environment)
+int Viewer::CreateWeatherGroup(scenarioengine::OSCEnvironment& environment)
 {
     weatherGroup_ = new osg::PositionAttitudeTransform;
     // CreateFogBoundingBox(weatherGroup_);
-    if (environment->IsFog())
+    if (environment.IsFogSet())
     {
-        scenarioengine::Fog* fog = environment->GetFog();
-        CreateFog(fog->visibility_range);
+        CreateFog(environment.GetFog().value().visibility_range);
     }
 
-    if (environment->IsSun())
+    if (environment.IsSunSet())
     {
-        scenarioengine::Sun* sun = environment->GetSun();
-        SetSunLight(sun->intensity);
+        SetSunLight(environment.GetSun().value().intensity);
     }
 
     rootnode_->addChild(weatherGroup_);

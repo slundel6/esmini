@@ -4879,68 +4879,68 @@ TEST(EnvironmentTest, Basic)
     OSCEnvironment new_environment;
 
     new_environment.SetAtmosphericPressure(100000);
-    environment.UpdateEnvironment(&new_environment);
+    environment.UpdateEnvironment(new_environment);
     EXPECT_EQ(new_environment.GetAtmosphericPressure(), 100000);
     EXPECT_EQ(new_environment.GetAtmosphericPressure(), environment.GetAtmosphericPressure());
-    EXPECT_TRUE(new_environment.IsAtmosphericPressure());
-    EXPECT_TRUE(environment.IsAtmosphericPressure());
+    EXPECT_TRUE(new_environment.IsAtmosphericPressureSet());
+    EXPECT_TRUE(environment.IsAtmosphericPressureSet());
 
     new_environment.SetTemperature(293);
-    environment.UpdateEnvironment(&new_environment);
+    environment.UpdateEnvironment(new_environment);
     EXPECT_EQ(new_environment.GetTemperature(), 293);
     EXPECT_EQ(new_environment.GetTemperature(), environment.GetTemperature());
-    EXPECT_TRUE(new_environment.IsTemperature());
-    EXPECT_TRUE(environment.IsTemperature());
+    EXPECT_TRUE(new_environment.IsTemperatureSet());
+    EXPECT_TRUE(environment.IsTemperatureSet());
 
     new_environment.SetCloudState(scenarioengine::CloudState::HEAVILY_CLOUDY);
-    environment.UpdateEnvironment(&new_environment);
+    environment.UpdateEnvironment(new_environment);
     EXPECT_EQ(new_environment.GetCloudState(), scenarioengine::CloudState::HEAVILY_CLOUDY);
     EXPECT_EQ(new_environment.GetCloudState(), environment.GetCloudState());
-    EXPECT_TRUE(new_environment.IsCloudState());
-    EXPECT_TRUE(environment.IsCloudState());
+    EXPECT_TRUE(new_environment.IsCloudStateSet());
+    EXPECT_TRUE(environment.IsCloudStateSet());
 
     new_environment.SetFog(1000);
-    environment.UpdateEnvironment(&new_environment);
+    environment.UpdateEnvironment(new_environment);
     EXPECT_EQ(new_environment.GetFog()->visibility_range, 1000);
     EXPECT_EQ(new_environment.GetFog()->visibility_range, environment.GetFog()->visibility_range);
-    EXPECT_TRUE(new_environment.IsFog());
-    EXPECT_TRUE(environment.IsFog());
+    EXPECT_TRUE(new_environment.IsFogSet());
+    EXPECT_TRUE(environment.IsFogSet());
 
-    new_environment.SetPrecipitation(0.1, scenarioengine::PrecipitationType::SNOW);
-    environment.UpdateEnvironment(&new_environment);
+    new_environment.SetPrecipitation(scenarioengine::Precipitation{0.1, scenarioengine::PrecipitationType::SNOW});
+    environment.UpdateEnvironment(new_environment);
     EXPECT_EQ(new_environment.GetPrecipitation()->precipitationintensity, 0.1);
     EXPECT_EQ(new_environment.GetPrecipitation()->precipitationtype, scenarioengine::PrecipitationType::SNOW);
     EXPECT_EQ(new_environment.GetPrecipitation()->precipitationintensity, environment.GetPrecipitation()->precipitationintensity);
     EXPECT_EQ(new_environment.GetPrecipitation()->precipitationtype, environment.GetPrecipitation()->precipitationtype);
-    EXPECT_TRUE(new_environment.IsPrecipitation());
-    EXPECT_TRUE(environment.IsPrecipitation());
+    EXPECT_TRUE(new_environment.IsPrecipitationSet());
+    EXPECT_TRUE(environment.IsPrecipitationSet());
 
-    new_environment.SetSun(2, 1, 10000);
-    environment.UpdateEnvironment(&new_environment);
+    new_environment.SetSun(scenarioengine::Sun{2, 1, 10000});
+    environment.UpdateEnvironment(new_environment);
     EXPECT_EQ(new_environment.GetSun()->azimuth, 2);
     EXPECT_EQ(new_environment.GetSun()->elevation, 1);
     EXPECT_EQ(new_environment.GetSun()->intensity, 10000);
     EXPECT_EQ(new_environment.GetSun()->azimuth, environment.GetSun()->azimuth);
     EXPECT_EQ(new_environment.GetSun()->intensity, environment.GetSun()->intensity);
     EXPECT_EQ(new_environment.GetSun()->elevation, environment.GetSun()->elevation);
-    EXPECT_TRUE(new_environment.IsSun());
-    EXPECT_TRUE(environment.IsSun());
+    EXPECT_TRUE(new_environment.IsSunSet());
+    EXPECT_TRUE(environment.IsSunSet());
 
-    new_environment.SetWind(2, 10);
-    environment.UpdateEnvironment(&new_environment);
+    new_environment.SetWind(scenarioengine::Wind{2, 10});
+    environment.UpdateEnvironment(new_environment);
     EXPECT_EQ(new_environment.GetWind()->direction, 2);
     EXPECT_EQ(new_environment.GetWind()->speed, 10);
     EXPECT_EQ(new_environment.GetWind()->direction, environment.GetWind()->direction);
     EXPECT_EQ(new_environment.GetWind()->speed, environment.GetWind()->speed);
-    EXPECT_TRUE(new_environment.GetWind());
-    EXPECT_TRUE(environment.GetWind());
+    EXPECT_TRUE(new_environment.IsWindSet());
+    EXPECT_TRUE(environment.IsWindSet());
 
     new_environment.SetRoadCondition(1);
-    environment.UpdateEnvironment(&new_environment);
+    environment.UpdateEnvironment(new_environment);
     EXPECT_EQ(new_environment.GetRoadCondition()->frictionscalefactor, 1);
     EXPECT_EQ(new_environment.GetRoadCondition()->frictionscalefactor, environment.GetRoadCondition()->frictionscalefactor);
-    EXPECT_TRUE(new_environment.IsRoadCondition());
-    EXPECT_TRUE(environment.IsRoadCondition());
+    EXPECT_TRUE(new_environment.IsRoadConditionSet());
+    EXPECT_TRUE(environment.IsRoadConditionSet());
 }
 
 TEST(EnvironmentTest, Parsing)
@@ -5000,32 +5000,43 @@ TEST(EnvironmentTest, Parsing)
     EnvironmentAction* envAct    = static_cast<EnvironmentAction*>(globalAct);
     OSCEnvironment     oscEnv    = envAct->new_environment_;
 
+    EXPECT_TRUE(oscEnv.IsAtmosphericPressureSet());
+    EXPECT_TRUE(oscEnv.IsTemperatureSet());
+    EXPECT_TRUE(oscEnv.IsCloudStateSet());
+    EXPECT_TRUE(oscEnv.IsFogSet());
+    EXPECT_TRUE(oscEnv.IsPrecipitationSet());
+    EXPECT_TRUE(oscEnv.IsSunSet());
+    EXPECT_TRUE(oscEnv.IsWindSet());
+    EXPECT_TRUE(oscEnv.IsRoadConditionSet());
+    EXPECT_TRUE(oscEnv.IsFogBoundingBoxSet());
+    EXPECT_TRUE(oscEnv.IsTimeOfDaySet());
+
     EXPECT_EQ(oscEnv.GetTimeOfDay()->animation, todNode.attribute("animation").as_bool());
     EXPECT_EQ(oscEnv.GetTimeOfDay()->datetime, todNode.attribute("dateTime").value());
 
-    EXPECT_EQ(oscEnv.GetCloudState(), scenarioengine::CloudState::CLOUDY);
-    EXPECT_NEAR(oscEnv.GetTemperature(), weatherNode.attribute("temperature").as_double(), 1e-5);
-    EXPECT_NEAR(oscEnv.GetAtmosphericPressure(), weatherNode.attribute("atmosphericPressure").as_double(), 1e-5);
+    EXPECT_EQ(oscEnv.GetCloudState().value(), scenarioengine::CloudState::CLOUDY);
+    EXPECT_NEAR(oscEnv.GetTemperature().value(), weatherNode.attribute("temperature").as_double(), 1e-5);
+    EXPECT_NEAR(oscEnv.GetAtmosphericPressure().value(), weatherNode.attribute("atmosphericPressure").as_double(), 1e-5);
 
-    EXPECT_NEAR(oscEnv.GetSun()->azimuth, sunNode.attribute("azimuth").as_double(), 1e-5);
-    EXPECT_NEAR(oscEnv.GetSun()->intensity, sunNode.attribute("intensity").as_double(), 1e-5);
-    EXPECT_NEAR(oscEnv.GetSun()->elevation, sunNode.attribute("elevation").as_double(), 1e-5);
+    EXPECT_NEAR(oscEnv.GetSun().value().azimuth, sunNode.attribute("azimuth").as_double(), 1e-5);
+    EXPECT_NEAR(oscEnv.GetSun().value().intensity, sunNode.attribute("intensity").as_double(), 1e-5);
+    EXPECT_NEAR(oscEnv.GetSun().value().elevation, sunNode.attribute("elevation").as_double(), 1e-5);
 
-    EXPECT_NEAR(oscEnv.GetFog()->visibility_range, fogNode.attribute("visualRange").as_float(), 1e-5);
-    EXPECT_NEAR(oscEnv.GetFog()->boundingbox.center_.x_, bbCenterNode.attribute("x").as_float(), 1e-5);
-    EXPECT_NEAR(oscEnv.GetFog()->boundingbox.center_.y_, bbCenterNode.attribute("y").as_float(), 1e-5);
-    EXPECT_NEAR(oscEnv.GetFog()->boundingbox.center_.z_, bbCenterNode.attribute("z").as_float(), 1e-5);
-    EXPECT_NEAR(oscEnv.GetFog()->boundingbox.dimensions_.width_, bbDimNode.attribute("width").as_float(), 1e-5);
-    EXPECT_NEAR(oscEnv.GetFog()->boundingbox.dimensions_.length_, bbDimNode.attribute("length").as_float(), 1e-5);
-    EXPECT_NEAR(oscEnv.GetFog()->boundingbox.dimensions_.height_, bbDimNode.attribute("height").as_float(), 1e-5);
+    EXPECT_NEAR(oscEnv.GetFog().value().visibility_range, fogNode.attribute("visualRange").as_float(), 1e-5);
+    EXPECT_NEAR(oscEnv.GetFog().value().boundingbox.value().center_.x_, bbCenterNode.attribute("x").as_float(), 1e-5);
+    EXPECT_NEAR(oscEnv.GetFog().value().boundingbox.value().center_.y_, bbCenterNode.attribute("y").as_float(), 1e-5);
+    EXPECT_NEAR(oscEnv.GetFog().value().boundingbox.value().center_.z_, bbCenterNode.attribute("z").as_float(), 1e-5);
+    EXPECT_NEAR(oscEnv.GetFog().value().boundingbox.value().dimensions_.width_, bbDimNode.attribute("width").as_float(), 1e-5);
+    EXPECT_NEAR(oscEnv.GetFog().value().boundingbox.value().dimensions_.length_, bbDimNode.attribute("length").as_float(), 1e-5);
+    EXPECT_NEAR(oscEnv.GetFog().value().boundingbox.value().dimensions_.height_, bbDimNode.attribute("height").as_float(), 1e-5);
 
-    EXPECT_EQ(oscEnv.GetPrecipitation()->precipitationtype, scenarioengine::PrecipitationType::DRY);
-    EXPECT_NEAR(oscEnv.GetPrecipitation()->precipitationintensity, precipNode.attribute("precipitationIntensity").as_double(), 1e-5);
+    EXPECT_EQ(oscEnv.GetPrecipitation().value().precipitationtype, scenarioengine::PrecipitationType::DRY);
+    EXPECT_NEAR(oscEnv.GetPrecipitation().value().precipitationintensity, precipNode.attribute("precipitationIntensity").as_double(), 1e-5);
 
-    EXPECT_NEAR(oscEnv.GetWind()->direction, windNode.attribute("direction").as_double(), 1e-5);
-    EXPECT_NEAR(oscEnv.GetWind()->speed, windNode.attribute("speed").as_double(), 1e-5);
+    EXPECT_NEAR(oscEnv.GetWind().value().direction, windNode.attribute("direction").as_double(), 1e-5);
+    EXPECT_NEAR(oscEnv.GetWind().value().speed, windNode.attribute("speed").as_double(), 1e-5);
 
-    EXPECT_NEAR(oscEnv.GetRoadCondition()->frictionscalefactor, roadCondNode.attribute("frictionScaleFactor").as_double(), 1e-5);
+    EXPECT_NEAR(oscEnv.GetRoadCondition().value().frictionscalefactor, roadCondNode.attribute("frictionScaleFactor").as_double(), 1e-5);
 
     delete globalAct;
 }
