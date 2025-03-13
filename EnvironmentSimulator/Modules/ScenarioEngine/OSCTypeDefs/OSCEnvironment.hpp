@@ -153,6 +153,10 @@ namespace scenarioengine
         OSCEnvironment()  = default;
         ~OSCEnvironment() = default;
 
+        void                     SetTimeOfDay(const TimeOfDay& timeofday);
+        std::optional<TimeOfDay> GetTimeOfDay() const;
+        bool                     IsTimeOfDaySet() const;
+
         void                  SetAtmosphericPressure(double atmosphericpressure);
         std::optional<double> GetAtmosphericPressure() const;
         bool                  IsAtmosphericPressureSet() const;
@@ -165,27 +169,23 @@ namespace scenarioengine
         std::optional<CloudState> GetCloudState() const;
         bool                      IsCloudStateSet() const;
 
+        void               SetSun(const Sun& sun);
+        std::optional<Sun> GetSun() const;
+        bool               IsSunSet() const;
+
         void               SetFog(const Fog& fog);
         void               SetFog(const float visualrange);
         std::optional<Fog> GetFog() const;
         bool               IsFogSet() const;
         bool               IsFogBoundingBoxSet() const;
 
-        void                SetWind(const Wind& wind);
-        std::optional<Wind> GetWind() const;
-        bool                IsWindSet() const;
-
         void                         SetPrecipitation(const Precipitation& precipitation);
         std::optional<Precipitation> GetPrecipitation() const;
         bool                         IsPrecipitationSet() const;
 
-        void               SetSun(const Sun& sun);
-        std::optional<Sun> GetSun() const;
-        bool               IsSunSet() const;
-
-        void                     SetTimeOfDay(const TimeOfDay& timeofday);
-        std::optional<TimeOfDay> GetTimeOfDay() const;
-        bool                     IsTimeOfDaySet() const;
+        void                SetWind(const Wind& wind);
+        std::optional<Wind> GetWind() const;
+        bool                IsWindSet() const;
 
         void                         SetRoadCondition(const RoadCondition& roadcondition);
         void                         SetRoadCondition(const double friction);
@@ -196,15 +196,15 @@ namespace scenarioengine
         bool IsEnvironment() const;
 
     private:
+        std::optional<TimeOfDay>     timeofday_;
         std::optional<double>        atmosphericpressure_;
         std::optional<double>        temperature_;
         std::optional<CloudState>    cloudstate_;
-        std::optional<Fog>           fog_;
-        std::optional<Wind>          wind_;
-        std::optional<Precipitation> precipitation_;
         std::optional<Sun>           sun_;
+        std::optional<Fog>           fog_;
+        std::optional<Precipitation> precipitation_;
+        std::optional<Wind>          wind_;
         std::optional<RoadCondition> roadcondition_;
-        std::optional<TimeOfDay>     timeofday_;
     };
 
 }  // namespace scenarioengine

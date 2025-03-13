@@ -133,6 +133,7 @@ namespace scenarioengine
         void                      parseOSCOrientation(OSCOrientation& orientation, pugi::xml_node orientationNode);
         OSCPosition*              parseOSCPosition(pugi::xml_node positionNode, OSCPosition* base_on_pos = nullptr);
         void                      ParseOSCEnvironment(const pugi::xml_node& xml_node, OSCEnvironment* new_env);
+        int                       ParseOSCBoundingBoxFog(OSCBoundingBox& boundingbox, pugi::xml_node& xml_node);
 
         // Storyboard - Story
         OSCCondition* parseOSCCondition(pugi::xml_node conditionNode);
