@@ -1692,7 +1692,7 @@ extern "C"
         if (player != nullptr)
         {
             return player->osiReporter->UpdateOSIGroundTruth(player->scenarioGateway->objectState_,
-                                                             &player->scenarioEngine->environment,
+                                                             player->scenarioEngine->environment,
                                                              refetchStaticGt);
         }
 #else
@@ -1719,7 +1719,7 @@ extern "C"
         if (player != nullptr)
         {
             return player->osiReporter->UpdateOSIDynamicGroundTruth(player->scenarioGateway->objectState_,
-                                                                    &player->scenarioEngine->environment,
+                                                                    player->scenarioEngine->environment,
                                                                     reportGhost);
         }
 #else

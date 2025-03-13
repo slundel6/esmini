@@ -316,7 +316,9 @@ int OSIReporter::ClearOSIGroundTruth()
     return 0;
 }
 
-int OSIReporter::UpdateOSIGroundTruth(const std::vector<std::unique_ptr<ObjectState>> &objectState, OSCEnvironment *environment, bool refetchStaticGt)
+int OSIReporter::UpdateOSIGroundTruth(const std::vector<std::unique_ptr<ObjectState>> &objectState,
+                                      const OSCEnvironment                            &environment,
+                                      bool                                             refetchStaticGt)
 {
     // osi_static_gt_loaded == 0 means its loaded, then static_gt_set == true as it is already set
     bool static_gt_set = (osi_static_gt_loaded_ == 0) ? true : false;
@@ -482,7 +484,7 @@ int OSIReporter::UpdateOSIStaticGroundTruth(const std::vector<std::unique_ptr<Ob
 }
 
 int OSIReporter::UpdateOSIDynamicGroundTruth(const std::vector<std::unique_ptr<ObjectState>> &objectState,
-                                             OSCEnvironment                                  *environment,
+                                             const OSCEnvironment                            &environment,
                                              bool                                             reportGhost)
 {
     obj_osi_internal.gt->clear_moving_object();
@@ -2929,63 +2931,63 @@ void OSIReporter::SetStationaryModelReference(std::string model_reference)
     }
 }
 
-int OSIReporter::UpdateEnvironment(OSCEnvironment *environment)
+int OSIReporter::UpdateEnvironment(const OSCEnvironment &environment)
 {
-    if (environment->IsEnvironment())
+    if (environment.IsEnvironment())
     {
         obj_osi_external.gt->clear_environmental_conditions();
-        if (environment->IsAtmosphericPressure())
+        if (environment.IsAtmosphericPressureSet())
         {
-            obj_osi_external.gt->mutable_environmental_conditions()->set_atmospheric_pressure(environment->GetAtmosphericPressure());
+            obj_osi_external.gt->mutable_environmental_conditions()->set_atmospheric_pressure(environment.GetAtmosphericPressure().value());
         }
-        if (environment->IsTemperature())
+        if (environment.IsTemperatureSet())
         {
-            obj_osi_external.gt->mutable_environmental_conditions()->set_temperature(environment->GetTemperature());
+            obj_osi_external.gt->mutable_environmental_conditions()->set_temperature(environment.GetTemperature().value());
         }
-        if (environment->IsSun())
+        if (environment.IsSunSet())
         {
-            Sun *sun = environment->GetSun();
-            if (sun->intensity > 10000)
+            Sun sun = environment.GetSun().value();
+            if (sun.intensity > 10000)
             {
                 obj_osi_external.gt->mutable_environmental_conditions()->set_ambient_illumination(
                     osi3::EnvironmentalConditions_AmbientIllumination_AMBIENT_ILLUMINATION_LEVEL9);
             }
-            else if (sun->intensity > 1000)
+            else if (sun.intensity > 1000)
             {
                 obj_osi_external.gt->mutable_environmental_conditions()->set_ambient_illumination(
                     osi3::EnvironmentalConditions_AmbientIllumination_AMBIENT_ILLUMINATION_LEVEL8);
             }
-            else if (sun->intensity > 400)
+            else if (sun.intensity > 400)
             {
                 obj_osi_external.gt->mutable_environmental_conditions()->set_ambient_illumination(
                     osi3::EnvironmentalConditions_AmbientIllumination_AMBIENT_ILLUMINATION_LEVEL7);
             }
-            else if (sun->intensity > 20)
+            else if (sun.intensity > 20)
             {
                 obj_osi_external.gt->mutable_environmental_conditions()->set_ambient_illumination(
                     osi3::EnvironmentalConditions_AmbientIllumination_AMBIENT_ILLUMINATION_LEVEL6);
             }
-            else if (sun->intensity > 10)
+            else if (sun.intensity > 10)
             {
                 obj_osi_external.gt->mutable_environmental_conditions()->set_ambient_illumination(
                     osi3::EnvironmentalConditions_AmbientIllumination_AMBIENT_ILLUMINATION_LEVEL5);
             }
-            else if (sun->intensity > 3)
+            else if (sun.intensity > 3)
             {
                 obj_osi_external.gt->mutable_environmental_conditions()->set_ambient_illumination(
                     osi3::EnvironmentalConditions_AmbientIllumination_AMBIENT_ILLUMINATION_LEVEL4);
             }
-            else if (sun->intensity > 1)
+            else if (sun.intensity > 1)
             {
                 obj_osi_external.gt->mutable_environmental_conditions()->set_ambient_illumination(
                     osi3::EnvironmentalConditions_AmbientIllumination_AMBIENT_ILLUMINATION_LEVEL3);
             }
-            else if (sun->intensity > 0.01)
+            else if (sun.intensity > 0.01)
             {
                 obj_osi_external.gt->mutable_environmental_conditions()->set_ambient_illumination(
                     osi3::EnvironmentalConditions_AmbientIllumination_AMBIENT_ILLUMINATION_LEVEL2);
             }
-            else if (sun->intensity > 0)
+            else if (sun.intensity > 0)
             {
                 obj_osi_external.gt->mutable_environmental_conditions()->set_ambient_illumination(
                     osi3::EnvironmentalConditions_AmbientIllumination_AMBIENT_ILLUMINATION_LEVEL1);
@@ -2996,38 +2998,38 @@ int OSIReporter::UpdateEnvironment(OSCEnvironment *environment)
                     osi3::EnvironmentalConditions_AmbientIllumination_AMBIENT_ILLUMINATION_OTHER);
             }
         }
-        if (environment->IsFog())
+        if (environment.IsFogSet())
         {
-            Fog *fog = environment->GetFog();
-            if (fog->visibility_range > 40000)
+            Fog fog = environment.GetFog().value();
+            if (fog.visibility_range > 40000)
             {
                 obj_osi_external.gt->mutable_environmental_conditions()->set_fog(osi3::EnvironmentalConditions_Fog_FOG_EXCELLENT_VISIBILITY);
             }
-            else if (fog->visibility_range > 10000)
+            else if (fog.visibility_range > 10000)
             {
                 obj_osi_external.gt->mutable_environmental_conditions()->set_fog(osi3::EnvironmentalConditions_Fog_FOG_GOOD_VISIBILITY);
             }
-            else if (fog->visibility_range > 4000)
+            else if (fog.visibility_range > 4000)
             {
                 obj_osi_external.gt->mutable_environmental_conditions()->set_fog(osi3::EnvironmentalConditions_Fog_FOG_MODERATE_VISIBILITY);
             }
-            else if (fog->visibility_range > 2000)
+            else if (fog.visibility_range > 2000)
             {
                 obj_osi_external.gt->mutable_environmental_conditions()->set_fog(osi3::EnvironmentalConditions_Fog_FOG_POOR_VISIBILITY);
             }
-            else if (fog->visibility_range > 1000)
+            else if (fog.visibility_range > 1000)
             {
                 obj_osi_external.gt->mutable_environmental_conditions()->set_fog(osi3::EnvironmentalConditions_Fog_FOG_MIST);
             }
-            else if (fog->visibility_range > 200)
+            else if (fog.visibility_range > 200)
             {
                 obj_osi_external.gt->mutable_environmental_conditions()->set_fog(osi3::EnvironmentalConditions_Fog_FOG_LIGHT);
             }
-            else if (fog->visibility_range > 50)
+            else if (fog.visibility_range > 50)
             {
                 obj_osi_external.gt->mutable_environmental_conditions()->set_fog(osi3::EnvironmentalConditions_Fog_FOG_THICK);
             }
-            else if (fog->visibility_range > 0)
+            else if (fog.visibility_range > 0)
             {
                 obj_osi_external.gt->mutable_environmental_conditions()->set_fog(osi3::EnvironmentalConditions_Fog_FOG_DENSE);
             }
@@ -3036,40 +3038,40 @@ int OSIReporter::UpdateEnvironment(OSCEnvironment *environment)
                 obj_osi_external.gt->mutable_environmental_conditions()->set_fog(osi3::EnvironmentalConditions_Fog_FOG_OTHER);
             }
         }
-        if (environment->IsPrecipitation())
+        if (environment.IsPrecipitationSet())
         {
-            Precipitation *precipitation = environment->GetPrecipitation();
-            if (precipitation->precipitationintensity > 149)
+            Precipitation precipitation = environment.GetPrecipitation().value();
+            if (precipitation.precipitationintensity > 149)
             {
                 obj_osi_external.gt->mutable_environmental_conditions()->set_precipitation(
                     osi3::EnvironmentalConditions_Precipitation_PRECIPITATION_EXTREME);
             }
-            else if (precipitation->precipitationintensity > 34)
+            else if (precipitation.precipitationintensity > 34)
             {
                 obj_osi_external.gt->mutable_environmental_conditions()->set_precipitation(
                     osi3::EnvironmentalConditions_Precipitation_PRECIPITATION_VERY_HEAVY);
             }
-            else if (precipitation->precipitationintensity > 8.1)
+            else if (precipitation.precipitationintensity > 8.1)
             {
                 obj_osi_external.gt->mutable_environmental_conditions()->set_precipitation(
                     osi3::EnvironmentalConditions_Precipitation_PRECIPITATION_HEAVY);
             }
-            else if (precipitation->precipitationintensity > 1.9)
+            else if (precipitation.precipitationintensity > 1.9)
             {
                 obj_osi_external.gt->mutable_environmental_conditions()->set_precipitation(
                     osi3::EnvironmentalConditions_Precipitation_PRECIPITATION_MODERATE);
             }
-            else if (precipitation->precipitationintensity > 0.5)
+            else if (precipitation.precipitationintensity > 0.5)
             {
                 obj_osi_external.gt->mutable_environmental_conditions()->set_precipitation(
                     osi3::EnvironmentalConditions_Precipitation_PRECIPITATION_LIGHT);
             }
-            else if (precipitation->precipitationintensity > 0.1)
+            else if (precipitation.precipitationintensity > 0.1)
             {
                 obj_osi_external.gt->mutable_environmental_conditions()->set_precipitation(
                     osi3::EnvironmentalConditions_Precipitation_PRECIPITATION_VERY_LIGHT);
             }
-            else if (precipitation->precipitationintensity > 0)
+            else if (precipitation.precipitationintensity > 0)
             {
                 obj_osi_external.gt->mutable_environmental_conditions()->set_precipitation(
                     osi3::EnvironmentalConditions_Precipitation_PRECIPITATION_NONE);

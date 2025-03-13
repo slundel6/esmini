@@ -450,7 +450,7 @@ namespace viewer
         // Weather stuff
         osg::ref_ptr<osg::PositionAttitudeTransform> weatherGroup_;  // parent for all OSC Environment related stuff
         osg::ref_ptr<osg::PositionAttitudeTransform> fogBoundingBox_;
-        int                                          CreateWeatherGroup(scenarioengine::OSCEnvironment* environment);
+        int                                          CreateWeatherGroup(scenarioengine::OSCEnvironment& environment);
 
         std::string                   exe_path_;
         std::vector<KeyEventCallback> callback_;

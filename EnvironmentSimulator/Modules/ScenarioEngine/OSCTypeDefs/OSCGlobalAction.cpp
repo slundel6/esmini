@@ -44,7 +44,7 @@ int SwarmTrafficAction::counter_ = 0;
 
 void EnvironmentAction::Start(double simTime)
 {
-    environment_->UpdateEnvironment(&new_environment_);
+    environment_->UpdateEnvironment(new_environment_);
     OSCAction::Start(simTime);
 }
 

@@ -4865,7 +4865,7 @@ static int selectCloudState(scenarioengine::CloudState &state, const std::string
     auto it = stateMap.find(cloudStateStr);
     if (it == stateMap.end())
     {
-        LOG_WARN("Not valid cloud state name:%s", cloudStateStr.c_str());
+        LOG_WARN("Not valid cloud state name:{}", cloudStateStr);
         return -1;
     }
 
@@ -4882,7 +4882,8 @@ void ScenarioReader::ParseOSCEnvironment(const pugi::xml_node &xml_node, OSCEnvi
         {
             bool        animation = (parameters.ReadAttribute(envChild, "animation") == "True") ? true : false;
             std::string tod       = parameters.ReadAttribute(envChild, "dateTime");
-            env->SetTimeOfDay(animation, tod);
+            env->SetTimeOfDay(TimeOfDay{animation, tod});
+            // env->SetTimeOfDay(animation, tod);
         }
         else if (envChildName == "Weather")
         {
@@ -4892,7 +4893,7 @@ void ScenarioReader::ParseOSCEnvironment(const pugi::xml_node &xml_node, OSCEnvi
                 if (weatherAttrName == "atmosphericPressure")
                 {
                     std::string atmosphericPressure = parameters.ReadAttribute(envChild, "atmosphericPressure");
-                    env->SetAtmosphericPressure(std::stof(atmosphericPressure));
+                    env->SetAtmosphericPressure(std::stod(atmosphericPressure));
                 }
                 else if (weatherAttrName == "cloudState")
                 {
@@ -4906,7 +4907,7 @@ void ScenarioReader::ParseOSCEnvironment(const pugi::xml_node &xml_node, OSCEnvi
                 else if (weatherAttrName == "temperature")
                 {
                     std::string temperature = parameters.ReadAttribute(envChild, "temperature");
-                    env->SetTemperature(std::stof(temperature));
+                    env->SetTemperature(std::stod(temperature));
                 }
                 else
                 {
@@ -4923,7 +4924,7 @@ void ScenarioReader::ParseOSCEnvironment(const pugi::xml_node &xml_node, OSCEnvi
                     std::string elevation = parameters.ReadAttribute(weatherChild, "elevation");
                     std::string intensity = parameters.ReadAttribute(weatherChild, "intensity");
 
-                    env->SetSun(std::stof(azimuth), std::stof(elevation), std::stof(intensity));
+                    env->SetSun(Sun{std::stod(azimuth), std::stod(elevation), std::stod(intensity)});
                 }
                 else if (weatherChildName == "Fog")
                 {
@@ -4932,7 +4933,7 @@ void ScenarioReader::ParseOSCEnvironment(const pugi::xml_node &xml_node, OSCEnvi
                     {
                         OSCBoundingBox bb;
                         ParseOSCBoundingBox(bb, weatherChild);
-                        env->SetFog(std::stof(visualRange), bb);
+                        env->SetFog(Fog{std::stof(visualRange), bb});
                     }
                     else
                     {
@@ -4956,13 +4957,13 @@ void ScenarioReader::ParseOSCEnvironment(const pugi::xml_node &xml_node, OSCEnvi
                     {
                         precipType = scenarioengine::PrecipitationType::SNOW;
                     }
-                    env->SetPrecipitation(std::stof(precipIntensity), precipType);
+                    env->SetPrecipitation(Precipitation{std::stod(precipIntensity), precipType});
                 }
                 else if (weatherChildName == "Wind")
                 {
                     std::string direction = parameters.ReadAttribute(weatherChild, "direction");
                     std::string speed     = parameters.ReadAttribute(weatherChild, "speed");
-                    env->SetWind(std::stof(direction), std::stof(speed));
+                    env->SetWind(Wind{std::stof(direction), std::stof(speed)});
                 }
                 else
                 {
@@ -4973,7 +4974,7 @@ void ScenarioReader::ParseOSCEnvironment(const pugi::xml_node &xml_node, OSCEnvi
         else if (envChildName == "RoadCondition")
         {
             std::string friction = parameters.ReadAttribute(envChild, "frictionScaleFactor");
-            env->SetRoadCondition(std::stof(friction));
+            env->SetRoadCondition(std::stod(friction));
         }
         else
         {
