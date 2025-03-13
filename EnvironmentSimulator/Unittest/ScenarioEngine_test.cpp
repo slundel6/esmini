@@ -5017,6 +5017,8 @@ TEST(EnvironmentTest, Parsing)
     EXPECT_NEAR(oscEnv.GetWind()->speed, windNode.attribute("speed").as_double(), 1e-5);
 
     EXPECT_NEAR(oscEnv.GetRoadCondition()->frictionscalefactor, roadCondNode.attribute("frictionScaleFactor").as_double(), 1e-5);
+
+    delete globalAct;
 }
 
 int main(int argc, char** argv)
