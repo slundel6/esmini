@@ -1592,7 +1592,7 @@ extern "C"
             {
                 player->osiReporter->SetOSIFrequency(1);
             }
-            player->osiReporter->UpdateOSIGroundTruth(player->scenarioGateway->objectState_);
+            player->osiReporter->UpdateOSIGroundTruth(player->scenarioGateway->objectState_, &player->scenarioEngine->environment);
             return player->osiReporter->GetOSIGroundTruth(size);
         }
 
@@ -1612,7 +1612,7 @@ extern "C"
             {
                 player->osiReporter->SetOSIFrequency(1);
             }
-            player->osiReporter->UpdateOSIGroundTruth(player->scenarioGateway->objectState_);
+            player->osiReporter->UpdateOSIGroundTruth(player->scenarioGateway->objectState_, &player->scenarioEngine->environment);
             return player->osiReporter->GetOSIGroundTruthRaw();
         }
 #endif  // _USE_OSI
