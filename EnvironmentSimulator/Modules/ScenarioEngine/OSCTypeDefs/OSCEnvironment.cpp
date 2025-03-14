@@ -114,6 +114,16 @@ bool OSCEnvironment::IsPrecipitationSet() const
     return precipitation_.has_value();
 }
 
+bool scenarioengine::OSCEnvironment::IsPrecipitationIntensitySet() const
+{
+    return IsPrecipitationSet() && GetPrecipitation().value().precipitationintensity.has_value();
+}
+
+double scenarioengine::OSCEnvironment::GetPrecipitationIntensity() const
+{
+    return GetPrecipitation().value().precipitationintensity.value();
+}
+
 void OSCEnvironment::SetSun(const Sun& sun)
 {
     sun_ = sun;
@@ -127,6 +137,16 @@ std::optional<Sun> OSCEnvironment::GetSun() const
 bool OSCEnvironment::IsSunSet() const
 {
     return sun_.has_value();
+}
+
+bool scenarioengine::OSCEnvironment::IsSunIntensitySet() const
+{
+    return IsSunSet() && GetSun().value().intensity.has_value();
+}
+
+std::optional<double> scenarioengine::OSCEnvironment::GetSunIntensity() const
+{
+    return GetSun().value().intensity.value();
 }
 
 void OSCEnvironment::SetTimeOfDay(const TimeOfDay& timeofday)

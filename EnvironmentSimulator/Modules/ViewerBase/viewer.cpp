@@ -1850,9 +1850,9 @@ int Viewer::CreateWeatherGroup(scenarioengine::OSCEnvironment& environment)
         CreateFog(environment.GetFog().value().visibility_range);
     }
 
-    if (environment.IsSunSet())
+    if (environment.IsSunSet() && environment.IsSunIntensitySet())
     {
-        SetSunLight(environment.GetSun().value().intensity);
+        SetSunLight(environment.GetSunIntensity().value());
     }
 
     rootnode_->addChild(weatherGroup_);
