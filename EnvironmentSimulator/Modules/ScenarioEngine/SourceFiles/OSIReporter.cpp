@@ -2998,7 +2998,7 @@ int OSIReporter::UpdateEnvironment(const OSCEnvironment &environment)
         }
         if (environment.IsSunSet())
         {
-            Sun sun = environment.GetSun().value();
+            scenarioengine::Sun sun = environment.GetSun().value();
             if (sun.intensity > 10000)
             {
                 obj_osi_external.gt->mutable_environmental_conditions()->set_ambient_illumination(
@@ -3052,7 +3052,7 @@ int OSIReporter::UpdateEnvironment(const OSCEnvironment &environment)
         }
         if (environment.IsFogSet())
         {
-            Fog fog = environment.GetFog().value();
+            scenarioengine::Fog fog = environment.GetFog().value();
             if (fog.visibility_range > 40000)
             {
                 obj_osi_external.gt->mutable_environmental_conditions()->set_fog(osi3::EnvironmentalConditions_Fog_FOG_EXCELLENT_VISIBILITY);
@@ -3090,40 +3090,40 @@ int OSIReporter::UpdateEnvironment(const OSCEnvironment &environment)
                 obj_osi_external.gt->mutable_environmental_conditions()->set_fog(osi3::EnvironmentalConditions_Fog_FOG_OTHER);
             }
         }
-        if (environment.IsPrecipitationSet())
+        if (environment.IsPrecipitationIntensitySet())
         {
-            Precipitation precipitation = environment.GetPrecipitation().value();
-            if (precipitation.precipitationintensity > 149)
+            double precipitationintensity = environment.GetPrecipitationIntensity();
+            if (precipitationintensity > 149)
             {
                 obj_osi_external.gt->mutable_environmental_conditions()->set_precipitation(
                     osi3::EnvironmentalConditions_Precipitation_PRECIPITATION_EXTREME);
             }
-            else if (precipitation.precipitationintensity > 34)
+            else if (precipitationintensity > 34)
             {
                 obj_osi_external.gt->mutable_environmental_conditions()->set_precipitation(
                     osi3::EnvironmentalConditions_Precipitation_PRECIPITATION_VERY_HEAVY);
             }
-            else if (precipitation.precipitationintensity > 8.1)
+            else if (precipitationintensity > 8.1)
             {
                 obj_osi_external.gt->mutable_environmental_conditions()->set_precipitation(
                     osi3::EnvironmentalConditions_Precipitation_PRECIPITATION_HEAVY);
             }
-            else if (precipitation.precipitationintensity > 1.9)
+            else if (precipitationintensity > 1.9)
             {
                 obj_osi_external.gt->mutable_environmental_conditions()->set_precipitation(
                     osi3::EnvironmentalConditions_Precipitation_PRECIPITATION_MODERATE);
             }
-            else if (precipitation.precipitationintensity > 0.5)
+            else if (precipitationintensity > 0.5)
             {
                 obj_osi_external.gt->mutable_environmental_conditions()->set_precipitation(
                     osi3::EnvironmentalConditions_Precipitation_PRECIPITATION_LIGHT);
             }
-            else if (precipitation.precipitationintensity > 0.1)
+            else if (precipitationintensity > 0.1)
             {
                 obj_osi_external.gt->mutable_environmental_conditions()->set_precipitation(
                     osi3::EnvironmentalConditions_Precipitation_PRECIPITATION_VERY_LIGHT);
             }
-            else if (precipitation.precipitationintensity > 0)
+            else if (precipitationintensity > 0)
             {
                 obj_osi_external.gt->mutable_environmental_conditions()->set_precipitation(
                     osi3::EnvironmentalConditions_Precipitation_PRECIPITATION_NONE);

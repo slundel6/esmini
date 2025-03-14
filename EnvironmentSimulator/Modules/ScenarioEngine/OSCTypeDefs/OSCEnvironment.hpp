@@ -78,31 +78,31 @@ namespace scenarioengine
     */
     typedef struct
     {
-        double azimuth;
-        double elevation;
-        double intensity;
+        double                azimuth;
+        double                elevation;
+        std::optional<double> intensity;
     } Sun;
 
     /*
     Class Precipitation
     Represents the state of rain/snow
 
-    precipitationintensity 	    double 	 	        intensity of precipitation
-    precipitationtype     	    PrecipitationType   type of precipitation
+    precipitationintensity 	    double 	 	        intensity of precipitation, NOT IMPLEMENTED YET
+    precipitationtype     	    PrecipitationType   type of precipitation, NOT IMPLEMENTED YET
 
     */
     typedef struct
     {
-        double            precipitationintensity;
-        PrecipitationType precipitationtype;
+        std::optional<double> precipitationintensity;
+        PrecipitationType     precipitationtype;
     } Precipitation;
 
     /*
     Class Wind
     Represents the state of the wind
 
-    direction 	    double      direction of the wind in the x/y plane
-    speed           double     	speed of the wind
+    direction 	    double      direction of the wind in the x/y plane, NOT IMPLEMENTED YET
+    speed           double     	speed of the wind, NOT IMPLEMENTED YET, NOT IMPLEMENTED YET
 
     */
     typedef struct
@@ -115,8 +115,8 @@ namespace scenarioengine
     Class TimeOfDay
     Represents the state of the wind
 
-    animation 	    True      if an animation should be used
-    speed           dateTime  	NOT IMPLEMENTED YET
+    animation 	    True      if an animation should be used, NOT IMPLEMENTED YET
+    speed           dateTime  NOT IMPLEMENTED YET
 
     */
     typedef struct
@@ -169,9 +169,11 @@ namespace scenarioengine
         std::optional<CloudState> GetCloudState() const;
         bool                      IsCloudStateSet() const;
 
-        void               SetSun(const Sun& sun);
-        std::optional<Sun> GetSun() const;
-        bool               IsSunSet() const;
+        void                  SetSun(const Sun& sun);
+        std::optional<Sun>    GetSun() const;
+        bool                  IsSunSet() const;
+        bool                  IsSunIntensitySet() const;
+        std::optional<double> GetSunIntensity() const;
 
         void               SetFog(const Fog& fog);
         void               SetFog(const float visualrange);
@@ -182,6 +184,8 @@ namespace scenarioengine
         void                         SetPrecipitation(const Precipitation& precipitation);
         std::optional<Precipitation> GetPrecipitation() const;
         bool                         IsPrecipitationSet() const;
+        bool                         IsPrecipitationIntensitySet() const;
+        double                       GetPrecipitationIntensity() const;
 
         void                SetWind(const Wind& wind);
         std::optional<Wind> GetWind() const;
