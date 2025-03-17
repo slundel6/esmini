@@ -4946,7 +4946,7 @@ void ScenarioReader::ParseOSCEnvironment(const pugi::xml_node &xml_node, OSCEnvi
                     }
                     else
                     {
-                        env->SetSun(Sun{std::stod(azimuth), std::stod(elevation), std::nullopt});
+                        env->SetSun(Sun{std::stod(azimuth), std::stod(elevation), 0.0});
                     }
                 }
                 else if (weatherChildName == "Fog")
@@ -4992,12 +4992,10 @@ void ScenarioReader::ParseOSCEnvironment(const pugi::xml_node &xml_node, OSCEnvi
 
                     if (const auto &val = parameters.ReadAttribute(weatherChild, "precipitationIntensity"); !val.empty())
                     {
-                        std::cout << "-----------------------------------------precipitationIntensity set: " << std::endl;
                         env->SetPrecipitation(Precipitation{std::stod(val), precipType});
                     }
                     else
                     {
-                        std::cout << "-----------------------------------------not precipitationIntensity set: " << std::endl;
                         env->SetPrecipitation(Precipitation{std::nullopt, precipType});
                     }
                 }

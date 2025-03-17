@@ -19,9 +19,9 @@ void OSCEnvironment::SetAtmosphericPressure(double atmosphericpressure)
     atmosphericpressure_ = atmosphericpressure;
 }
 
-std::optional<double> OSCEnvironment::GetAtmosphericPressure() const
+double OSCEnvironment::GetAtmosphericPressure() const
 {
-    return atmosphericpressure_;
+    return atmosphericpressure_.value();
 }
 
 bool OSCEnvironment::IsAtmosphericPressureSet() const
@@ -34,9 +34,9 @@ void OSCEnvironment::SetTemperature(double temperature)
     temperature_ = temperature;
 }
 
-std::optional<double> OSCEnvironment::GetTemperature() const
+double OSCEnvironment::GetTemperature() const
 {
-    return temperature_;
+    return temperature_.value();
 }
 
 bool OSCEnvironment::IsTemperatureSet() const
@@ -49,9 +49,9 @@ void OSCEnvironment::SetCloudState(CloudState cloudstate)
     cloudstate_ = cloudstate;
 }
 
-std::optional<CloudState> scenarioengine::OSCEnvironment::GetCloudState() const
+CloudState scenarioengine::OSCEnvironment::GetCloudState() const
 {
-    return cloudstate_;
+    return cloudstate_.value();
 }
 
 bool OSCEnvironment::IsCloudStateSet() const
@@ -69,9 +69,9 @@ void OSCEnvironment::SetFog(const float visualrange)
     fog_ = Fog{visualrange, std::nullopt};
 }
 
-std::optional<Fog> OSCEnvironment::GetFog() const
+Fog OSCEnvironment::GetFog() const
 {
-    return fog_;
+    return fog_.value();
 }
 
 bool OSCEnvironment::IsFogSet() const
@@ -89,9 +89,9 @@ void OSCEnvironment::SetWind(const Wind& wind)
     wind_ = wind;
 }
 
-std::optional<Wind> OSCEnvironment::GetWind() const
+Wind OSCEnvironment::GetWind() const
 {
-    return wind_;
+    return wind_.value();
 }
 
 bool OSCEnvironment::IsWindSet() const
@@ -104,9 +104,9 @@ void OSCEnvironment::SetPrecipitation(const Precipitation& precipitation)
     precipitation_ = precipitation;
 }
 
-std::optional<Precipitation> OSCEnvironment::GetPrecipitation() const
+Precipitation OSCEnvironment::GetPrecipitation() const
 {
-    return precipitation_;
+    return precipitation_.value();
 }
 
 bool OSCEnvironment::IsPrecipitationSet() const
@@ -116,12 +116,12 @@ bool OSCEnvironment::IsPrecipitationSet() const
 
 bool scenarioengine::OSCEnvironment::IsPrecipitationIntensitySet() const
 {
-    return IsPrecipitationSet() && GetPrecipitation().value().precipitationintensity.has_value();
+    return IsPrecipitationSet() && GetPrecipitation().precipitationintensity.has_value();
 }
 
 double scenarioengine::OSCEnvironment::GetPrecipitationIntensity() const
 {
-    return GetPrecipitation().value().precipitationintensity.value();
+    return GetPrecipitation().precipitationintensity.value();
 }
 
 void OSCEnvironment::SetSun(const Sun& sun)
@@ -129,9 +129,9 @@ void OSCEnvironment::SetSun(const Sun& sun)
     sun_ = sun;
 }
 
-std::optional<Sun> OSCEnvironment::GetSun() const
+Sun OSCEnvironment::GetSun() const
 {
-    return sun_;
+    return sun_.value();
 }
 
 bool OSCEnvironment::IsSunSet() const
@@ -139,24 +139,14 @@ bool OSCEnvironment::IsSunSet() const
     return sun_.has_value();
 }
 
-bool scenarioengine::OSCEnvironment::IsSunIntensitySet() const
-{
-    return IsSunSet() && GetSun().value().intensity.has_value();
-}
-
-std::optional<double> scenarioengine::OSCEnvironment::GetSunIntensity() const
-{
-    return GetSun().value().intensity.value();
-}
-
 void OSCEnvironment::SetTimeOfDay(const TimeOfDay& timeofday)
 {
     timeofday_ = timeofday;
 }
 
-std::optional<TimeOfDay> OSCEnvironment::GetTimeOfDay() const
+TimeOfDay OSCEnvironment::GetTimeOfDay() const
 {
-    return timeofday_;
+    return timeofday_.value();
 }
 
 bool OSCEnvironment::IsTimeOfDaySet() const
@@ -174,9 +164,9 @@ void OSCEnvironment::SetRoadCondition(const double friction)
     roadcondition_ = RoadCondition{friction, std::nullopt, std::nullopt};
 }
 
-std::optional<RoadCondition> OSCEnvironment::GetRoadCondition() const
+RoadCondition OSCEnvironment::GetRoadCondition() const
 {
-    return roadcondition_;
+    return roadcondition_.value();
 }
 
 bool OSCEnvironment::IsRoadConditionSet() const
@@ -188,39 +178,39 @@ void OSCEnvironment::UpdateEnvironment(const OSCEnvironment& new_environment)
 {
     if (new_environment.IsAtmosphericPressureSet())
     {
-        SetAtmosphericPressure(new_environment.GetAtmosphericPressure().value());
+        SetAtmosphericPressure(new_environment.GetAtmosphericPressure());
     }
     if (new_environment.IsTemperatureSet())
     {
-        SetTemperature(new_environment.GetTemperature().value());
+        SetTemperature(new_environment.GetTemperature());
     }
     if (new_environment.IsCloudStateSet())
     {
-        SetCloudState(new_environment.GetCloudState().value());
+        SetCloudState(new_environment.GetCloudState());
     }
     if (new_environment.IsFogSet())
     {
-        SetFog(new_environment.GetFog().value());
+        SetFog(new_environment.GetFog());
     }
     if (new_environment.IsWindSet())
     {
-        SetWind(new_environment.GetWind().value());
+        SetWind(new_environment.GetWind());
     }
     if (new_environment.IsPrecipitationSet())
     {
-        SetPrecipitation(new_environment.GetPrecipitation().value());
+        SetPrecipitation(new_environment.GetPrecipitation());
     }
     if (new_environment.IsSunSet())
     {
-        SetSun(new_environment.GetSun().value());
+        SetSun(new_environment.GetSun());
     }
     if (new_environment.IsRoadConditionSet())
     {
-        SetRoadCondition(new_environment.GetRoadCondition().value());
+        SetRoadCondition(new_environment.GetRoadCondition());
     }
     if (new_environment.IsTimeOfDaySet())
     {
-        SetTimeOfDay(new_environment.GetTimeOfDay().value());
+        SetTimeOfDay(new_environment.GetTimeOfDay());
     }
 }
 

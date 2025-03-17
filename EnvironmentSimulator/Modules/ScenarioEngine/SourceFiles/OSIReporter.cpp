@@ -2938,15 +2938,15 @@ int OSIReporter::UpdateEnvironment(const OSCEnvironment &environment)
         obj_osi_external.gt->clear_environmental_conditions();
         if (environment.IsAtmosphericPressureSet())
         {
-            obj_osi_external.gt->mutable_environmental_conditions()->set_atmospheric_pressure(environment.GetAtmosphericPressure().value());
+            obj_osi_external.gt->mutable_environmental_conditions()->set_atmospheric_pressure(environment.GetAtmosphericPressure());
         }
         if (environment.IsTemperatureSet())
         {
-            obj_osi_external.gt->mutable_environmental_conditions()->set_temperature(environment.GetTemperature().value());
+            obj_osi_external.gt->mutable_environmental_conditions()->set_temperature(environment.GetTemperature());
         }
         if (environment.IsSunSet())
         {
-            scenarioengine::Sun sun = environment.GetSun().value();
+            scenarioengine::Sun sun = environment.GetSun();
             if (sun.intensity > 10000)
             {
                 obj_osi_external.gt->mutable_environmental_conditions()->set_ambient_illumination(
@@ -3000,7 +3000,7 @@ int OSIReporter::UpdateEnvironment(const OSCEnvironment &environment)
         }
         if (environment.IsFogSet())
         {
-            scenarioengine::Fog fog = environment.GetFog().value();
+            scenarioengine::Fog fog = environment.GetFog();
             if (fog.visibility_range > 40000)
             {
                 obj_osi_external.gt->mutable_environmental_conditions()->set_fog(osi3::EnvironmentalConditions_Fog_FOG_EXCELLENT_VISIBILITY);
