@@ -78,9 +78,9 @@ namespace scenarioengine
     */
     typedef struct
     {
-        double                azimuth;
-        double                elevation;
-        std::optional<double> intensity;
+        double azimuth;
+        double elevation;
+        double intensity;
     } Sun;
 
     /*
@@ -153,48 +153,46 @@ namespace scenarioengine
         OSCEnvironment()  = default;
         ~OSCEnvironment() = default;
 
-        void                     SetTimeOfDay(const TimeOfDay& timeofday);
-        std::optional<TimeOfDay> GetTimeOfDay() const;
-        bool                     IsTimeOfDaySet() const;
+        void      SetTimeOfDay(const TimeOfDay& timeofday);
+        TimeOfDay GetTimeOfDay() const;
+        bool      IsTimeOfDaySet() const;
 
-        void                  SetAtmosphericPressure(double atmosphericpressure);
-        std::optional<double> GetAtmosphericPressure() const;
-        bool                  IsAtmosphericPressureSet() const;
+        void   SetAtmosphericPressure(double atmosphericpressure);
+        double GetAtmosphericPressure() const;
+        bool   IsAtmosphericPressureSet() const;
 
-        void                  SetTemperature(double temperature);
-        std::optional<double> GetTemperature() const;
-        bool                  IsTemperatureSet() const;
+        void   SetTemperature(double temperature);
+        double GetTemperature() const;
+        bool   IsTemperatureSet() const;
 
-        void                      SetCloudState(CloudState cloudstate);
-        std::optional<CloudState> GetCloudState() const;
-        bool                      IsCloudStateSet() const;
+        void       SetCloudState(CloudState cloudstate);
+        CloudState GetCloudState() const;
+        bool       IsCloudStateSet() const;
 
-        void                  SetSun(const Sun& sun);
-        std::optional<Sun>    GetSun() const;
-        bool                  IsSunSet() const;
-        bool                  IsSunIntensitySet() const;
-        std::optional<double> GetSunIntensity() const;
+        void SetSun(const Sun& sun);
+        Sun  GetSun() const;
+        bool IsSunSet() const;
 
-        void               SetFog(const Fog& fog);
-        void               SetFog(const float visualrange);
-        std::optional<Fog> GetFog() const;
-        bool               IsFogSet() const;
-        bool               IsFogBoundingBoxSet() const;
+        void SetFog(const Fog& fog);
+        void SetFog(const float visualrange);
+        Fog  GetFog() const;
+        bool IsFogSet() const;
+        bool IsFogBoundingBoxSet() const;
 
-        void                         SetPrecipitation(const Precipitation& precipitation);
-        std::optional<Precipitation> GetPrecipitation() const;
-        bool                         IsPrecipitationSet() const;
-        bool                         IsPrecipitationIntensitySet() const;
-        double                       GetPrecipitationIntensity() const;
+        void          SetPrecipitation(const Precipitation& precipitation);
+        Precipitation GetPrecipitation() const;
+        bool          IsPrecipitationSet() const;
+        bool          IsPrecipitationIntensitySet() const;
+        double        GetPrecipitationIntensity() const;
 
-        void                SetWind(const Wind& wind);
-        std::optional<Wind> GetWind() const;
-        bool                IsWindSet() const;
+        void SetWind(const Wind& wind);
+        Wind GetWind() const;
+        bool IsWindSet() const;
 
-        void                         SetRoadCondition(const RoadCondition& roadcondition);
-        void                         SetRoadCondition(const double friction);
-        std::optional<RoadCondition> GetRoadCondition() const;
-        bool                         IsRoadConditionSet() const;
+        void          SetRoadCondition(const RoadCondition& roadcondition);
+        void          SetRoadCondition(const double friction);
+        RoadCondition GetRoadCondition() const;
+        bool          IsRoadConditionSet() const;
 
         void UpdateEnvironment(const OSCEnvironment& new_environment);
         bool IsEnvironment() const;

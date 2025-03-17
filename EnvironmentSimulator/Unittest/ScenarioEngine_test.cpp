@@ -4901,44 +4901,44 @@ TEST(EnvironmentTest, Basic)
 
     new_environment.SetFog(1000);
     environment.UpdateEnvironment(new_environment);
-    EXPECT_EQ(new_environment.GetFog()->visibility_range, 1000);
-    EXPECT_EQ(new_environment.GetFog()->visibility_range, environment.GetFog()->visibility_range);
+    EXPECT_EQ(new_environment.GetFog().visibility_range, 1000);
+    EXPECT_EQ(new_environment.GetFog().visibility_range, environment.GetFog().visibility_range);
     EXPECT_TRUE(new_environment.IsFogSet());
     EXPECT_TRUE(environment.IsFogSet());
 
     new_environment.SetPrecipitation(scenarioengine::Precipitation{0.1, scenarioengine::PrecipitationType::SNOW});
     environment.UpdateEnvironment(new_environment);
-    EXPECT_EQ(new_environment.GetPrecipitation()->precipitationintensity, 0.1);
-    EXPECT_EQ(new_environment.GetPrecipitation()->precipitationtype, scenarioengine::PrecipitationType::SNOW);
-    EXPECT_EQ(new_environment.GetPrecipitation()->precipitationintensity, environment.GetPrecipitation()->precipitationintensity);
-    EXPECT_EQ(new_environment.GetPrecipitation()->precipitationtype, environment.GetPrecipitation()->precipitationtype);
+    EXPECT_EQ(new_environment.GetPrecipitation().precipitationintensity, 0.1);
+    EXPECT_EQ(new_environment.GetPrecipitation().precipitationtype, scenarioengine::PrecipitationType::SNOW);
+    EXPECT_EQ(new_environment.GetPrecipitation().precipitationintensity, environment.GetPrecipitation().precipitationintensity);
+    EXPECT_EQ(new_environment.GetPrecipitation().precipitationtype, environment.GetPrecipitation().precipitationtype);
     EXPECT_TRUE(new_environment.IsPrecipitationSet());
     EXPECT_TRUE(environment.IsPrecipitationSet());
 
     new_environment.SetSun(scenarioengine::Sun{2, 1, 10000});
     environment.UpdateEnvironment(new_environment);
-    EXPECT_EQ(new_environment.GetSun()->azimuth, 2);
-    EXPECT_EQ(new_environment.GetSun()->elevation, 1);
-    EXPECT_EQ(new_environment.GetSun()->intensity, 10000);
-    EXPECT_EQ(new_environment.GetSun()->azimuth, environment.GetSun()->azimuth);
-    EXPECT_EQ(new_environment.GetSun()->intensity, environment.GetSun()->intensity);
-    EXPECT_EQ(new_environment.GetSun()->elevation, environment.GetSun()->elevation);
+    EXPECT_EQ(new_environment.GetSun().azimuth, 2);
+    EXPECT_EQ(new_environment.GetSun().elevation, 1);
+    EXPECT_EQ(new_environment.GetSun().intensity, 10000);
+    EXPECT_EQ(new_environment.GetSun().azimuth, environment.GetSun().azimuth);
+    EXPECT_EQ(new_environment.GetSun().intensity, environment.GetSun().intensity);
+    EXPECT_EQ(new_environment.GetSun().elevation, environment.GetSun().elevation);
     EXPECT_TRUE(new_environment.IsSunSet());
     EXPECT_TRUE(environment.IsSunSet());
 
     new_environment.SetWind(scenarioengine::Wind{2, 10});
     environment.UpdateEnvironment(new_environment);
-    EXPECT_EQ(new_environment.GetWind()->direction, 2);
-    EXPECT_EQ(new_environment.GetWind()->speed, 10);
-    EXPECT_EQ(new_environment.GetWind()->direction, environment.GetWind()->direction);
-    EXPECT_EQ(new_environment.GetWind()->speed, environment.GetWind()->speed);
+    EXPECT_EQ(new_environment.GetWind().direction, 2);
+    EXPECT_EQ(new_environment.GetWind().speed, 10);
+    EXPECT_EQ(new_environment.GetWind().direction, environment.GetWind().direction);
+    EXPECT_EQ(new_environment.GetWind().speed, environment.GetWind().speed);
     EXPECT_TRUE(new_environment.IsWindSet());
     EXPECT_TRUE(environment.IsWindSet());
 
     new_environment.SetRoadCondition(1);
     environment.UpdateEnvironment(new_environment);
-    EXPECT_EQ(new_environment.GetRoadCondition()->frictionscalefactor, 1);
-    EXPECT_EQ(new_environment.GetRoadCondition()->frictionscalefactor, environment.GetRoadCondition()->frictionscalefactor);
+    EXPECT_EQ(new_environment.GetRoadCondition().frictionscalefactor, 1);
+    EXPECT_EQ(new_environment.GetRoadCondition().frictionscalefactor, environment.GetRoadCondition().frictionscalefactor);
     EXPECT_TRUE(new_environment.IsRoadConditionSet());
     EXPECT_TRUE(environment.IsRoadConditionSet());
 }
@@ -5011,32 +5011,32 @@ TEST(EnvironmentTest, Parsing)
     EXPECT_TRUE(oscEnv.IsFogBoundingBoxSet());
     EXPECT_TRUE(oscEnv.IsTimeOfDaySet());
 
-    EXPECT_EQ(oscEnv.GetTimeOfDay()->animation, todNode.attribute("animation").as_bool());
-    EXPECT_EQ(oscEnv.GetTimeOfDay()->datetime, todNode.attribute("dateTime").value());
+    EXPECT_EQ(oscEnv.GetTimeOfDay().animation, todNode.attribute("animation").as_bool());
+    EXPECT_EQ(oscEnv.GetTimeOfDay().datetime, todNode.attribute("dateTime").value());
 
-    EXPECT_EQ(oscEnv.GetCloudState().value(), scenarioengine::CloudState::CLOUDY);
-    EXPECT_NEAR(oscEnv.GetTemperature().value(), weatherNode.attribute("temperature").as_double(), 1e-5);
-    EXPECT_NEAR(oscEnv.GetAtmosphericPressure().value(), weatherNode.attribute("atmosphericPressure").as_double(), 1e-5);
+    EXPECT_EQ(oscEnv.GetCloudState(), scenarioengine::CloudState::CLOUDY);
+    EXPECT_NEAR(oscEnv.GetTemperature(), weatherNode.attribute("temperature").as_double(), 1e-5);
+    EXPECT_NEAR(oscEnv.GetAtmosphericPressure(), weatherNode.attribute("atmosphericPressure").as_double(), 1e-5);
 
-    EXPECT_NEAR(oscEnv.GetSun().value().azimuth, sunNode.attribute("azimuth").as_double(), 1e-5);
-    EXPECT_NEAR(oscEnv.GetSun().value().intensity.value(), sunNode.attribute("intensity").as_double(), 1e-5);
-    EXPECT_NEAR(oscEnv.GetSun().value().elevation, sunNode.attribute("elevation").as_double(), 1e-5);
+    EXPECT_NEAR(oscEnv.GetSun().azimuth, sunNode.attribute("azimuth").as_double(), 1e-5);
+    EXPECT_NEAR(oscEnv.GetSun().intensity, sunNode.attribute("intensity").as_double(), 1e-5);
+    EXPECT_NEAR(oscEnv.GetSun().elevation, sunNode.attribute("elevation").as_double(), 1e-5);
 
-    EXPECT_NEAR(oscEnv.GetFog().value().visibility_range, fogNode.attribute("visualRange").as_float(), 1e-5);
-    EXPECT_NEAR(oscEnv.GetFog().value().boundingbox.value().center_.x_, bbCenterNode.attribute("x").as_float(), 1e-5);
-    EXPECT_NEAR(oscEnv.GetFog().value().boundingbox.value().center_.y_, bbCenterNode.attribute("y").as_float(), 1e-5);
-    EXPECT_NEAR(oscEnv.GetFog().value().boundingbox.value().center_.z_, bbCenterNode.attribute("z").as_float(), 1e-5);
-    EXPECT_NEAR(oscEnv.GetFog().value().boundingbox.value().dimensions_.width_, bbDimNode.attribute("width").as_float(), 1e-5);
-    EXPECT_NEAR(oscEnv.GetFog().value().boundingbox.value().dimensions_.length_, bbDimNode.attribute("length").as_float(), 1e-5);
-    EXPECT_NEAR(oscEnv.GetFog().value().boundingbox.value().dimensions_.height_, bbDimNode.attribute("height").as_float(), 1e-5);
+    EXPECT_NEAR(oscEnv.GetFog().visibility_range, fogNode.attribute("visualRange").as_float(), 1e-5);
+    EXPECT_NEAR(oscEnv.GetFog().boundingbox->center_.x_, bbCenterNode.attribute("x").as_float(), 1e-5);
+    EXPECT_NEAR(oscEnv.GetFog().boundingbox->center_.y_, bbCenterNode.attribute("y").as_float(), 1e-5);
+    EXPECT_NEAR(oscEnv.GetFog().boundingbox->center_.z_, bbCenterNode.attribute("z").as_float(), 1e-5);
+    EXPECT_NEAR(oscEnv.GetFog().boundingbox->dimensions_.width_, bbDimNode.attribute("width").as_float(), 1e-5);
+    EXPECT_NEAR(oscEnv.GetFog().boundingbox->dimensions_.length_, bbDimNode.attribute("length").as_float(), 1e-5);
+    EXPECT_NEAR(oscEnv.GetFog().boundingbox->dimensions_.height_, bbDimNode.attribute("height").as_float(), 1e-5);
 
-    EXPECT_EQ(oscEnv.GetPrecipitation().value().precipitationtype, scenarioengine::PrecipitationType::DRY);
-    EXPECT_NEAR(oscEnv.GetPrecipitation().value().precipitationintensity.value(), precipNode.attribute("precipitationIntensity").as_double(), 1e-5);
+    EXPECT_EQ(oscEnv.GetPrecipitation().precipitationtype, scenarioengine::PrecipitationType::DRY);
+    EXPECT_NEAR(oscEnv.GetPrecipitation().precipitationintensity.value(), precipNode.attribute("precipitationIntensity").as_double(), 1e-5);
 
-    EXPECT_NEAR(oscEnv.GetWind().value().direction, windNode.attribute("direction").as_double(), 1e-5);
-    EXPECT_NEAR(oscEnv.GetWind().value().speed, windNode.attribute("speed").as_double(), 1e-5);
+    EXPECT_NEAR(oscEnv.GetWind().direction, windNode.attribute("direction").as_double(), 1e-5);
+    EXPECT_NEAR(oscEnv.GetWind().speed, windNode.attribute("speed").as_double(), 1e-5);
 
-    EXPECT_NEAR(oscEnv.GetRoadCondition().value().frictionscalefactor, roadCondNode.attribute("frictionScaleFactor").as_double(), 1e-5);
+    EXPECT_NEAR(oscEnv.GetRoadCondition().frictionscalefactor, roadCondNode.attribute("frictionScaleFactor").as_double(), 1e-5);
 
     delete globalAct;
 }
@@ -5052,10 +5052,39 @@ TEST(EnvironmentTest, ParsingMissingWeatherAttribute)
     // Weather and attributes
     pugi::xml_node weatherNode = envNode.append_child("Weather");
     weatherNode.append_attribute("temperature").set_value("");
+    weatherNode.append_attribute("atmosphericPressure").set_value("");
     // Sun
     pugi::xml_node sunNode = weatherNode.append_child("Sun");
     sunNode.append_attribute("azimuth").set_value(0.5);
-    sunNode.append_attribute("intensity").set_value(300.1);
+    sunNode.append_attribute("intensity").set_value(300.1);  // missing elevation
+
+    // Fog
+    pugi::xml_node fogNode = weatherNode.append_child("Fog");
+    // missing visualRange
+    pugi::xml_node fogBoundingboxNode = fogNode.append_child("BoundingBox");
+    pugi::xml_node bbCenterNode       = fogBoundingboxNode.append_child("Center");
+    bbCenterNode.append_attribute("x").set_value(1);
+    bbCenterNode.append_attribute("y").set_value(1);
+    bbCenterNode.append_attribute("z").set_value(1.1);
+    pugi::xml_node bbDimNode = fogBoundingboxNode.append_child("Dimensions");
+    bbDimNode.append_attribute("width").set_value(1.2);
+    bbDimNode.append_attribute("length").set_value(1.3);
+    bbDimNode.append_attribute("height").set_value(1.4);
+
+    // Precipitation
+    pugi::xml_node precipNode = weatherNode.append_child("Precipitation");
+    // missing precipitationType
+    precipNode.append_attribute("precipitationIntensity").set_value(0.0);
+
+    // Wind
+    pugi::xml_node windNode = weatherNode.append_child("Wind");
+    windNode.append_attribute("direction").set_value(1.1);
+    // missing speed
+
+    // Road condition
+    pugi::xml_node roadCondNode = envNode.append_child("RoadCondition");
+    roadCondNode.append_attribute("frictionScaleFactor1").set_value(0.5);
+    // missing frictionScaleFactor
 
     // Test using ScenarioReader
     Entities       entities;
