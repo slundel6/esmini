@@ -4883,7 +4883,14 @@ void ScenarioReader::ParseOSCEnvironment(const pugi::xml_node &xml_node, OSCEnvi
             bool animation = (parameters.ReadAttribute(envChild, "animation") == "True") ? true : false;
             if (const auto &val = parameters.ReadAttribute(envChild, "dateTime"); !val.empty())
             {
-                env->SetTimeOfDay(TimeOfDay{animation, val});
+                if(IsValidDateTimeFormat(val))
+                {
+                    env->SetTimeOfDay(TimeOfDay{animation, val});
+                }
+                else
+                {
+                    LOG_WARN("Ignorning TimeOfDay in envirnoment, attribute {} is not in valid format", envChildName);
+                }
             }
             else
             {

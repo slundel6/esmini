@@ -3082,6 +3082,18 @@ int OSIReporter::UpdateEnvironment(const OSCEnvironment &environment)
                     osi3::EnvironmentalConditions_Precipitation_PRECIPITATION_OTHER);
             }
         }
+        if(environment.IsTimeOfDaySet())
+        {
+            obj_osi_external.gt->mutable_environmental_conditions()->mutable_time_of_day()->set_seconds_since_midnight(GetSecondsSinceMidnight(environment.GetTimeOfDay().datetime));
+            if(!environment.GetTimeOfDay().animation)
+            {
+                obj_osi_external.gt->mutable_environmental_conditions()->set_unix_timestamp(GetEpochTimeFromString(environment.GetTimeOfDay().datetime));
+            }
+            else
+            {
+                obj_osi_external.gt->mutable_environmental_conditions()->set_unix_timestamp(GetEpochTimeFromString(environment.GetTimeOfDay().datetime) + nanosec_ / 1000000000); // plus simulation time, nanosec is wrong
+            }
+        }
     }
 
     return 0;

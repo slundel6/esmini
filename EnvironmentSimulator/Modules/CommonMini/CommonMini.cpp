@@ -21,6 +21,10 @@
 #include <sstream>
 #include <locale>
 #include <array>
+#include <regex>
+#include <chrono>
+#include <iomanip>
+#include <string>
 
 // UDP network includes
 #ifndef _WIN32
@@ -661,6 +665,135 @@ bool IsNumber(const std::string& str, int max_digits)
     }
 
     return true;
+}
+
+bool IsValidDateTimeFormat(const std::string& dateTimeString)
+{
+    std::regex pattern(R"(\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}[+-]\d{4})");
+    if (!std::regex_match(dateTimeString, pattern)){
+        return false; // Invalid format
+    }
+
+    std::tm timeStruct = {};
+    std::stringstream ss(dateTimeString);
+    ss >> std::get_time(&timeStruct, "%Y-%m-%dT%H:%M:%S");
+
+    if (ss.fail()) {
+        return false; // Failed to parse time
+    }
+
+    // Check for valid date/time components
+    if (timeStruct.tm_year < 0 || timeStruct.tm_year > 20000 ||
+        timeStruct.tm_mon < 0 || timeStruct.tm_mon > 11 ||
+        timeStruct.tm_mday < 1 || timeStruct.tm_mday > 31 ||
+        timeStruct.tm_hour < 0 || timeStruct.tm_hour > 23 ||
+        timeStruct.tm_min < 0 || timeStruct.tm_min > 59 ||
+        timeStruct.tm_sec < 0 || timeStruct.tm_sec > 59) {
+        return false; // Invalid date/time values
+    }
+
+    //Basic month day validation
+    if(timeStruct.tm_mon == 1 && timeStruct.tm_mday > 29) return false;
+    if((timeStruct.tm_mon == 3 || timeStruct.tm_mon == 5 || timeStruct.tm_mon == 8 || timeStruct.tm_mon == 10) && timeStruct.tm_mday > 30) return false;
+
+    //Check Leap year for february
+    if(timeStruct.tm_mon == 1 && timeStruct.tm_mday == 29){
+        int year = timeStruct.tm_year + 1900;
+        if(year % 4 != 0) return false;
+        if(year % 100 == 0 && year % 400 != 0) return false;
+    }
+
+    //Check milliseconds
+    std::string millisecondsStr = dateTimeString.substr(20, 3);
+    try {
+        int milliseconds = std::stoi(millisecondsStr);
+        if (milliseconds < 0 || milliseconds > 999) {
+            return false;
+        }
+    } catch (const std::invalid_argument& e) {
+        return false; // Invalid milliseconds
+    }
+
+    //Check timezone offset
+    std::string timezoneStr = dateTimeString.substr(23);
+    std::regex timezonePattern(R"([+-]\d{4})");
+    if(!std::regex_match(timezoneStr, timezonePattern)) return false;
+
+    return true; // Valid date and time
+}
+
+uint32_t GetSecondsSinceMidnight(const std::string& dateTimeString)
+{
+    std::tm timeStruct = {};
+    std::stringstream ss(dateTimeString);
+
+    ss >> timeStruct.tm_year;
+    if (ss.peek() == '-') ss.ignore();
+    ss >> timeStruct.tm_mon;
+    if (ss.peek() == '-') ss.ignore();
+    ss >> timeStruct.tm_mday;
+    if (ss.peek() == 'T') ss.ignore();
+    ss >> timeStruct.tm_hour;
+    if (ss.peek() == ':') ss.ignore();
+    ss >> timeStruct.tm_min;
+    if (ss.peek() == ':') ss.ignore();
+    ss >> timeStruct.tm_sec;
+
+    uint32_t seconds = static_cast<uint32_t>(timeStruct.tm_hour * 3600 + timeStruct.tm_min * 60 + timeStruct.tm_sec);
+
+    return seconds;
+}
+
+// Function to convert tm to time_t in UTC
+std::time_t tmToTimeTUTC(const std::tm& tm)
+{
+#ifdef _WIN32
+    // Windows: Use _mkgmtime
+    return _mkgmtime(&const_cast<std::tm&>(tm));
+#else
+    // Unix-like systems: Use timegm
+    return timegm(&const_cast<std::tm&>(tm));
+#endif
+}
+
+std::time_t GetEpochTimeFromString(const std::string& dateTimeStr)
+{
+    // Define the format of the input string
+    const char* format = "%Y-%m-%dT%H:%M:%S";
+
+    // Create a stringstream to parse the input string
+    std::istringstream ss(dateTimeStr);
+
+    // Create a tm struct to hold the parsed date and time
+    std::tm tm = {};
+
+    // Parse the date and time from the string
+    ss >> std::get_time(&tm, format);
+
+    // Extract milliseconds and timezone offset
+    double milliseconds = 0;
+    int timezoneOffset = 0;
+    char dot, sign;
+    std::string tzHour, tzMin;
+
+    // Read the milliseconds and timezone offset
+    ss >> dot >> milliseconds >> sign >> std::setw(2) >> tzHour >> std::setw(2) >> tzMin;
+
+    // Convert timezone offset to seconds
+    timezoneOffset = std::stoi(tzHour) * 3600 + std::stoi(tzMin) * 60;
+
+    // Adjust the timezone offset based on the sign
+    if (sign == '-') {
+        timezoneOffset = -timezoneOffset;
+    }
+
+    // Treat the tm struct as UTC time by adjusting for the timezone offset
+    std::time_t utcEpoch = tmToTimeTUTC(tm) - timezoneOffset;
+
+    // Add milliseconds to the epoch time
+    utcEpoch += static_cast<time_t>(milliseconds / 1000.0);
+
+    return utcEpoch;
 }
 
 int strtoi(std::string s)

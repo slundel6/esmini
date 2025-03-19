@@ -2966,10 +2966,15 @@ TEST(EnvironmentTest, OSIForEnvironment)
     EXPECT_EQ(osi_gt.mutable_environmental_conditions()->ambient_illumination(),
               osi3::EnvironmentalConditions_AmbientIllumination_AMBIENT_ILLUMINATION_LEVEL8);
     EXPECT_EQ(osi_gt.mutable_environmental_conditions()->precipitation(), osi3::EnvironmentalConditions_Precipitation_PRECIPITATION_HEAVY);
+    EXPECT_EQ(osi_gt.mutable_environmental_conditions()->mutable_time_of_day()->seconds_since_midnight(), 37800);
+    EXPECT_EQ(osi_gt.mutable_environmental_conditions()->unix_timestamp(), 1700024400);
     SE_Close();
 }
 
 #endif  // _USE_OSI
+
+
+
 
 TEST(ParameterTest, GetTypedParameterValues)
 {
