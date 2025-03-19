@@ -48,7 +48,7 @@
                     <Actors selectTriggeringEntities="false">
                         <EntityRef entityRef="Ego"/>
                     </Actors>
-                    <Maneuver name="envman">
+                    <Maneuver name="envman_weather">
                         <Event name="fog" priority="overwrite" maximumExecutionCount="1">
                             <Action name="envaction">
                                 <GlobalAction>
@@ -65,6 +65,29 @@
                                                 <Precipitation precipitationType="snow" precipitationIntensity="10.0"/>
                                                 <Wind direction="3.1415" speed="10"/>
                                             </Weather>
+                                        </Environment>
+                                    </EnvironmentAction>
+                                </GlobalAction>
+                            </Action>
+                            <StartTrigger>
+                                <ConditionGroup>
+                                    <Condition name="s" delay="0" conditionEdge="none">
+                                        <ByValueCondition>
+                                            <SimulationTimeCondition value="0.01" rule="greaterOrEqual"/>
+                                        </ByValueCondition>
+                                    </Condition>
+                                </ConditionGroup>
+                            </StartTrigger>
+                        </Event>
+                    </Maneuver>
+                    <Maneuver name="envman_TimeOfDay">
+                        <Event name="fog" priority="overwrite" maximumExecutionCount="1">
+                            <Action name="envaction">
+                                <GlobalAction>
+                                    <EnvironmentAction>
+                                        <Environment name="TimeOfDay">
+                                            <TimeOfDay animation="True" dateTime="2023-11-15T10:30:00.123+0530">
+                                            </TimeOfDay>
                                         </Environment>
                                     </EnvironmentAction>
                                 </GlobalAction>
@@ -97,7 +120,7 @@
             <ConditionGroup>
                 <Condition name="start_trigger " delay="0" conditionEdge="none">
                     <ByValueCondition>
-                        <SimulationTimeCondition value="0.04" rule="greaterThan"/>
+                        <SimulationTimeCondition value=".04" rule="greaterThan"/>
                     </ByValueCondition>
                 </Condition>
             </ConditionGroup>
