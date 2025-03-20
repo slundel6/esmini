@@ -3412,9 +3412,6 @@ TEST(EnvironmentTest, OSIForEnvironment)
 
 #endif  // _USE_OSI
 
-
-
-
 TEST(ParameterTest, GetTypedParameterValues)
 {
     std::string scenario_file = "../../../resources/xosc/lane_change.xosc";
