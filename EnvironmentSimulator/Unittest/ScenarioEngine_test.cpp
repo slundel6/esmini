@@ -4885,10 +4885,10 @@ TEST(EnvironmentTest, Basic)
 
     new_environment.SetCloudState(scenarioengine::CloudState::HEAVILY_CLOUDY);
     environment.UpdateEnvironment(new_environment);
-    EXPECT_EQ(new_environment.GetCloudState(), scenarioengine::CloudState::HEAVILY_CLOUDY);
-    EXPECT_EQ(new_environment.GetCloudState(), environment.GetCloudState());
-    EXPECT_TRUE(new_environment.IsCloudStateSet());
-    EXPECT_TRUE(environment.IsCloudStateSet());
+    EXPECT_EQ(new_environment.GetFractionalCloudState(), "sixOktas");
+    EXPECT_EQ(new_environment.GetFractionalCloudState(), environment.GetFractionalCloudState());
+    EXPECT_TRUE(new_environment.IsFractionalCloudStateSet());
+    EXPECT_TRUE(environment.IsFractionalCloudStateSet());
 
     new_environment.SetFog(1000);
     environment.UpdateEnvironment(new_environment);
@@ -4993,7 +4993,7 @@ TEST(EnvironmentTest, Parsing)
 
     EXPECT_TRUE(oscEnv.IsAtmosphericPressureSet());
     EXPECT_TRUE(oscEnv.IsTemperatureSet());
-    EXPECT_TRUE(oscEnv.IsCloudStateSet());
+    EXPECT_TRUE(oscEnv.IsFractionalCloudStateSet());
     EXPECT_TRUE(oscEnv.IsFogSet());
     EXPECT_TRUE(oscEnv.IsPrecipitationSet());
     EXPECT_TRUE(oscEnv.IsSunSet());
@@ -5005,9 +5005,9 @@ TEST(EnvironmentTest, Parsing)
     EXPECT_EQ(oscEnv.GetTimeOfDay().animation, todNode.attribute("animation").as_bool());
     EXPECT_EQ(oscEnv.GetTimeOfDay().datetime, todNode.attribute("dateTime").value());
 
-    EXPECT_EQ(oscEnv.GetCloudState(), scenarioengine::CloudState::CLOUDY);
-    EXPECT_NEAR(oscEnv.GetTemperature(), weatherNode.attribute("temperature").as_double(), 1e-5);
-    EXPECT_NEAR(oscEnv.GetAtmosphericPressure(), weatherNode.attribute("atmosphericPressure").as_double(), 1e-5);
+    EXPECT_EQ(oscEnv.GetFractionalCloudState(), "fiveOktas");
+    EXPECT_NEAR(oscEnv.GetTemperature(), scenarioengine::OSCTemperatureMin, 1e-5);          // clamp to min
+    EXPECT_NEAR(oscEnv.GetAtmosphericPressure(), scenarioengine::OSCAtmosphericMin, 1e-5);  // clamp to min
 
     EXPECT_NEAR(oscEnv.GetSun().azimuth, sunNode.attribute("azimuth").as_double(), 1e-5);
     EXPECT_NEAR(oscEnv.GetSun().intensity, sunNode.attribute("intensity").as_double(), 1e-5);
@@ -5028,6 +5028,55 @@ TEST(EnvironmentTest, Parsing)
     EXPECT_NEAR(oscEnv.GetWind().speed, windNode.attribute("speed").as_double(), 1e-5);
 
     EXPECT_NEAR(oscEnv.GetRoadCondition().frictionscalefactor, roadCondNode.attribute("frictionScaleFactor").as_double(), 1e-5);
+
+    delete globalAct;
+}
+
+TEST(EnvironmentTest, ParsingV1_3_1)
+{
+    // Set up mock xml_node
+    pugi::xml_document doc;
+    pugi::xml_node     actionNode    = doc.append_child("Action");
+    pugi::xml_node     envActionNode = actionNode.append_child("EnvironmentAction");
+    pugi::xml_node     envNode       = envActionNode.append_child("Environment");
+
+    // Weather and attributes
+    pugi::xml_node weatherNode = envNode.append_child("Weather");
+    weatherNode.append_attribute("fractionalCloudCover").set_value("zeroOktas");
+
+    // Test using ScenarioReader
+    Entities       entities;
+    Catalogs       catalogs;
+    OSCEnvironment environment;
+    ScenarioReader reader(&entities, &catalogs, &environment);
+
+    OSCGlobalAction*   globalAct = reader.parseOSCGlobalAction(actionNode, nullptr);
+    EnvironmentAction* envAct    = static_cast<EnvironmentAction*>(globalAct);
+    OSCEnvironment     oscEnv    = envAct->new_environment_;
+    EXPECT_TRUE(oscEnv.IsEnvironment());
+    EXPECT_TRUE(oscEnv.IsWeatherSet());
+    EXPECT_TRUE(oscEnv.IsFractionalCloudStateSet());
+
+    EXPECT_EQ(oscEnv.GetFractionalCloudState(), "zeroOktas");
+
+    // More tests
+    // remove the attribute addition
+    pugi::xml_attribute attr = weatherNode.attribute("fractionalCloudCover");
+    if (attr)
+    {
+        weatherNode.remove_attribute(attr);
+    }
+    // add a new attribute
+    weatherNode.append_attribute("fractionalCloudCover").set_value("elevanOktas");
+
+    globalAct = reader.parseOSCGlobalAction(actionNode, nullptr);
+    envAct    = static_cast<EnvironmentAction*>(globalAct);
+    oscEnv    = envAct->new_environment_;
+    EXPECT_TRUE(oscEnv.IsEnvironment());
+    EXPECT_TRUE(oscEnv.IsWeatherSet());
+    EXPECT_TRUE(oscEnv.IsFractionalCloudStateSet());
+
+    EXPECT_EQ(oscEnv.GetFractionalCloudState(), "elevanOktas");
 
     delete globalAct;
 }
@@ -5094,7 +5143,7 @@ TEST(EnvironmentTest, ParsingMissingWeatherAttribute)
     EXPECT_FALSE(oscEnv.IsEnvironment());
     EXPECT_FALSE(oscEnv.IsAtmosphericPressureSet());
     EXPECT_FALSE(oscEnv.IsTemperatureSet());
-    EXPECT_FALSE(oscEnv.IsCloudStateSet());
+    EXPECT_FALSE(oscEnv.IsFractionalCloudStateSet());
     EXPECT_FALSE(oscEnv.IsFogSet());
     EXPECT_FALSE(oscEnv.IsPrecipitationSet());
     EXPECT_FALSE(oscEnv.IsSunSet());

@@ -16,7 +16,12 @@ using namespace scenarioengine;
 
 void OSCEnvironment::SetAtmosphericPressure(double atmosphericpressure)
 {
-    atmosphericpressure_ = atmosphericpressure;
+    if (atmosphericpressure < OSCAtmosphericMin || atmosphericpressure > OSCAtmosphericMax)
+    {
+        LOG_WARN("Atmospheric pressure clamped between 80000.0 and 120000.0 Pa");
+    }
+    // Clamp the atmospheric pressure to the defined range
+    atmosphericpressure_ = CLAMP(atmosphericpressure, OSCAtmosphericMin, OSCAtmosphericMax);
 }
 
 double OSCEnvironment::GetAtmosphericPressure() const
@@ -31,7 +36,12 @@ bool OSCEnvironment::IsAtmosphericPressureSet() const
 
 void OSCEnvironment::SetTemperature(double temperature)
 {
-    temperature_ = temperature;
+    if (temperature < OSCTemperatureMin || temperature > OSCTemperatureMax)
+    {
+        LOG_WARN("Temperature clamped between 170.0 and 340.0 K");
+    }
+    // Clamp the temperature to the defined range
+    temperature_ = CLAMP(temperature, OSCTemperatureMin, OSCTemperatureMax);
 }
 
 double OSCEnvironment::GetTemperature() const
@@ -44,19 +54,44 @@ bool OSCEnvironment::IsTemperatureSet() const
     return temperature_.has_value();
 }
 
+void OSCEnvironment::SetFractionalCloudState(const std::string& fractionalcloudStateStr)
+{
+    fractionalcloudstate_ = fractionalcloudStateStr;
+}
+
 void OSCEnvironment::SetCloudState(CloudState cloudstate)
 {
-    cloudstate_ = cloudstate;
+    std::map<CloudState, std::string> stateMap{
+        {CloudState::CLOUDLESS, "zeroOktas"},
+        {CloudState::SUNNY, "oneOktas"},
+        {CloudState::SERENE, "twoOktas"},
+        {CloudState::SLIGHTLY_CLOUDY, "threeOktas"},
+        {CloudState::LIGHT_CLOUDY, "fourOktas"},
+        {CloudState::CLOUDY, "fiveOktas"},
+        {CloudState::HEAVILY_CLOUDY, "sixOktas"},
+        {CloudState::ALMOST_OVERCAST, "sevenOktas"},
+        {CloudState::OVERCAST, "eightOktas"},
+        {CloudState::SKY_NOT_VISIBLE, "nineOktas"},
+    };
+    auto it = stateMap.find(cloudstate);
+    if (it == stateMap.end())
+    {
+        fractionalcloudstate_ = "other";
+    }
+    else
+    {
+        fractionalcloudstate_ = stateMap[cloudstate];
+    }
 }
 
-CloudState scenarioengine::OSCEnvironment::GetCloudState() const
+std::string scenarioengine::OSCEnvironment::GetFractionalCloudState() const
 {
-    return cloudstate_.value();
+    return fractionalcloudstate_.value();
 }
 
-bool OSCEnvironment::IsCloudStateSet() const
+bool OSCEnvironment::IsFractionalCloudStateSet() const
 {
-    return cloudstate_.has_value();
+    return fractionalcloudstate_.has_value();
 }
 
 void OSCEnvironment::SetFog(const Fog& fog)
@@ -97,6 +132,12 @@ Wind OSCEnvironment::GetWind() const
 bool OSCEnvironment::IsWindSet() const
 {
     return wind_.has_value();
+}
+
+bool scenarioengine::OSCEnvironment::IsWeatherSet() const
+{
+    return IsTemperatureSet() || IsAtmosphericPressureSet() || IsFractionalCloudStateSet() || IsFogSet() || IsWindSet() || IsPrecipitationSet() ||
+           IsSunSet();
 }
 
 void OSCEnvironment::SetPrecipitation(const Precipitation& precipitation)
@@ -184,9 +225,9 @@ void OSCEnvironment::UpdateEnvironment(const OSCEnvironment& new_environment)
     {
         SetTemperature(new_environment.GetTemperature());
     }
-    if (new_environment.IsCloudStateSet())
+    if (new_environment.IsFractionalCloudStateSet())
     {
-        SetCloudState(new_environment.GetCloudState());
+        SetFractionalCloudState(new_environment.GetFractionalCloudState());
     }
     if (new_environment.IsFogSet())
     {
@@ -216,6 +257,6 @@ void OSCEnvironment::UpdateEnvironment(const OSCEnvironment& new_environment)
 
 bool OSCEnvironment::IsEnvironment() const
 {
-    return IsTemperatureSet() || IsAtmosphericPressureSet() || IsCloudStateSet() || IsFogSet() || IsWindSet() || IsPrecipitationSet() || IsSunSet() ||
-           IsRoadConditionSet() || IsTimeOfDaySet();
+    return IsTemperatureSet() || IsAtmosphericPressureSet() || IsFractionalCloudStateSet() || IsFogSet() || IsWindSet() || IsPrecipitationSet() ||
+           IsSunSet() || IsRoadConditionSet() || IsTimeOfDaySet();
 }
