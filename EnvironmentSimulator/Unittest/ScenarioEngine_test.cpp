@@ -4944,7 +4944,7 @@ TEST(EnvironmentTest, Parsing)
     // Time of day
     pugi::xml_node todNode = envNode.append_child("TimeOfDay");
     todNode.append_attribute("animation").set_value(false);
-    todNode.append_attribute("dateTime").set_value("2021-12-02T11:30:30.000+0100");
+    todNode.append_attribute("dateTime").set_value("2021-12-02T11:30:30.000+01:00");
 
     // Weather and attributes
     pugi::xml_node weatherNode = envNode.append_child("Weather");
@@ -5108,55 +5108,57 @@ TEST(EnvironmentTest, ParsingMissingWeatherAttribute)
 
 TEST(EnvironmentTest, TimeOfDayFormat)
 {
-    std::string dateTime1 = "2011-03-10T11:23:56.000+0100";
+    std::string dateTime1 = "2011-03-10T11:23:56.000+01:00";
     EXPECT_TRUE(IsValidDateTimeFormat(dateTime1));
-    std::string dateTime2 = "2023-12-25T15:30:00.123-0500";
+    std::string dateTime2 = "2023-12-25T15:30:00.123-05:00";
     EXPECT_TRUE(IsValidDateTimeFormat(dateTime2));
-    std::string leapYear = "2024-02-29T12:00:00.000-0800";  // Leap year
+    std::string leapYear = "2024-02-29T12:00:00.000-08:00";  // Leap year
     EXPECT_TRUE(IsValidDateTimeFormat(leapYear));
     std::string dateTime3 = "invalid-date";
     EXPECT_FALSE(IsValidDateTimeFormat(dateTime3));
-    std::string dateTime4 = "2024-01-01T25:00:00.000+0000";  // invalid hour
+    std::string dateTime4 = "2024-01-01T25:00:00.000+00:00";  // invalid hour
     EXPECT_FALSE(IsValidDateTimeFormat(dateTime4));
-    std::string dateTime5 = "2024-01-01T23:60:00.000+0000";  // invalid minute
+    std::string dateTime5 = "2024-01-01T23:60:00.000+00:00";  // invalid minute
     EXPECT_FALSE(IsValidDateTimeFormat(dateTime5));
-    std::string dateTime6 = "2024-01-01T23:59:61.000+0000";  // invalid second
+    std::string dateTime6 = "2024-01-01T23:59:61.000+00:00";  // invalid second
     EXPECT_FALSE(IsValidDateTimeFormat(dateTime6));
-    std::string dateTime7 = "2024-01-01T23:59:59.1234+0000";  // invalid milisec
+    std::string dateTime7 = "2024-01-01T23:59:59.1234+00:00";  // invalid milisec
     EXPECT_FALSE(IsValidDateTimeFormat(dateTime7));
-    std::string dateTime8 = "2024-01-01T23:59:59.123+000";  // invalid timezone
+    std::string dateTime8 = "2024-01-01T23:59:59.123+0:00";  // invalid timezone
     EXPECT_FALSE(IsValidDateTimeFormat(dateTime8));
-    std::string yearMonthSwapped1 = "03-2023-10T12:00:00.000+0000";  // MM-YYYY-DD
+    std::string dateTime9 = "2011-03-10T11:23:56.000+0100";  // invalid timezone
+    EXPECT_FALSE(IsValidDateTimeFormat(dateTime9));
+    std::string yearMonthSwapped1 = "03-2023-10T12:00:00.000+00:00";  // MM-YYYY-DD
     EXPECT_FALSE(IsValidDateTimeFormat(yearMonthSwapped1));
-    std::string yearDaySwapped1 = "10-03-2023T12:00:00.000+0000";  // DD-MM-YYYY
+    std::string yearDaySwapped1 = "10-03-2023T12:00:00.000+00:00";  // DD-MM-YYYY
     EXPECT_FALSE(IsValidDateTimeFormat(yearDaySwapped1));
-    std::string monthDaySwapped1 = "2023-13-03T12:00:00.000+0000";  // YYYY-DD-MM
+    std::string monthDaySwapped1 = "2023-13-03T12:00:00.000+00:00";  // YYYY-DD-MM
     EXPECT_FALSE(IsValidDateTimeFormat(monthDaySwapped1));
-    std::string wrongFromat1 = "2011/03/10T11:23:56.000+0100";  // wrong separator
+    std::string wrongFromat1 = "2011/03/10T11:23:56.000+01:00";  // wrong separator
     EXPECT_FALSE(IsValidDateTimeFormat(wrongFromat1));
-    std::string invalidFormat2 = "2023-11-15 10:30:00.123+0530";  // Missing T
+    std::string invalidFormat2 = "2023-11-15 10:30:00.123+05:30";  // Missing T
     EXPECT_FALSE(IsValidDateTimeFormat(invalidFormat2));
-    std::string invalidFormat3 = "2023-11-15T10:30:00.123+0530Z";  // Invalid timezone
+    std::string invalidFormat3 = "2023-11-15T10:30:00.123+05:30Z";  // Invalid timezone
     EXPECT_FALSE(IsValidDateTimeFormat(invalidFormat3));
-    std::string invalidFormat4 = "2023-11-15T10:30:00.123+0530+0530";  // Invalid timezone
+    std::string invalidFormat4 = "2023-11-15T10:30:00.123+0530+05:30";  // Invalid timezone
     EXPECT_FALSE(IsValidDateTimeFormat(invalidFormat4));
-    std::string invalidValue2 = "2023-11-31T10:30:00.123+0530";  // Invalid day (November)
+    std::string invalidValue2 = "2023-11-31T10:30:00.123+05:30";  // Invalid day (November)
     EXPECT_FALSE(IsValidDateTimeFormat(invalidValue2));
 }
 
 TEST(EnvironmentTest, SecondsSinceMidnight)
 {
-    std::string dateTime1 = "2023-11-15T10:30:00.123+0530";
+    std::string dateTime1 = "2023-11-15T10:30:00.123+05:30";
     EXPECT_EQ(GetSecondsSinceMidnight(dateTime1), 37800);
-    std::string dateTime2 = "2023-11-15T00:00:00.123+0530";
+    std::string dateTime2 = "2023-11-15T00:00:00.123+05:30";
     EXPECT_EQ(GetSecondsSinceMidnight(dateTime2), 0);
-    std::string dateTime3 = "2023-11-15T23:59:59.123+0530";
+    std::string dateTime3 = "2023-11-15T23:59:59.123+05:30";
     EXPECT_EQ(GetSecondsSinceMidnight(dateTime3), 86399);
-    std::string dateTime4 = "2023-11-15T12:00:00.000+0530";
+    std::string dateTime4 = "2023-11-15T12:00:00.000+05:30";
     EXPECT_EQ(GetSecondsSinceMidnight(dateTime4), 43200);
-    std::string dateTime5 = "2023-11-15T12:00:00.000-0530";
+    std::string dateTime5 = "2023-11-15T12:00:00.000-05:30";
     EXPECT_EQ(GetSecondsSinceMidnight(dateTime5), 43200);
-    std::string dateTime6 = "2023-11-15T12:00:00.000+0000";
+    std::string dateTime6 = "2023-11-15T12:00:00.000+00:00";
     EXPECT_EQ(GetSecondsSinceMidnight(dateTime6), 43200);
 }
 

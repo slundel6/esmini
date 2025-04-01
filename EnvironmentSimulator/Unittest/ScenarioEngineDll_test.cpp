@@ -2968,6 +2968,15 @@ TEST(EnvironmentTest, OSIForEnvironment)
     EXPECT_EQ(osi_gt.mutable_environmental_conditions()->precipitation(), osi3::EnvironmentalConditions_Precipitation_PRECIPITATION_HEAVY);
     EXPECT_EQ(osi_gt.mutable_environmental_conditions()->mutable_time_of_day()->seconds_since_midnight(), 37800);
     EXPECT_EQ(osi_gt.mutable_environmental_conditions()->unix_timestamp(), 1700024400);
+
+    SE_StepDT(1.01f);
+    SE_UpdateOSIGroundTruth();
+    osi3::GroundTruth osi_gt1;
+    const char*       gt1 = SE_GetOSIGroundTruth(&sv_size);
+    osi_gt1.ParseFromArray(gt1, sv_size);
+    EXPECT_EQ(osi_gt1.mutable_environmental_conditions()->unix_timestamp(),
+              1700024401);  // TimeOfDay animation is true, simulation time is 1.0s which is added to epoch time
+
     SE_Close();
 }
 
