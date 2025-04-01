@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <OpenSCENARIO xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="OpenScenario.xsd">
-    <FileHeader description="Mandolin" author="my scenario" revMajor="1" revMinor="1" date="2021-12-03T07:43:43.904344"/>
+    <FileHeader description="Mandolin" author="my scenario" revMajor="1" revMinor="3" date="2021-12-03T07:43:43.904344"/>
     <ParameterDeclarations>
         <ParameterDeclaration name="name" parameterType="integer" value="0"/>
     </ParameterDeclarations>
@@ -86,8 +86,7 @@
                                 <GlobalAction>
                                     <EnvironmentAction>
                                         <Environment name="TimeOfDay">
-                                            <TimeOfDay animation="True" dateTime="2023-11-15T10:30:00.123+0530">
-                                            </TimeOfDay>
+                                            <TimeOfDay animation="true" dateTime="2023-11-15T10:30:00.123+05:30"/>
                                         </Environment>
                                     </EnvironmentAction>
                                 </GlobalAction>
@@ -120,7 +119,7 @@
             <ConditionGroup>
                 <Condition name="start_trigger " delay="0" conditionEdge="none">
                     <ByValueCondition>
-                        <SimulationTimeCondition value=".04" rule="greaterThan"/>
+                        <SimulationTimeCondition value="1.04" rule="greaterThan"/>
                     </ByValueCondition>
                 </Condition>
             </ConditionGroup>

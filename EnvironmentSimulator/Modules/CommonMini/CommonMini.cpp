@@ -681,7 +681,7 @@ bool IsNumber(const std::string& str, int max_digits)
 
 bool IsValidDateTimeFormat(const std::string& dateTimeString)
 {
-    std::regex pattern(R"(\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}[+-]\d{4})");
+    std::regex pattern(R"(\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}[+-]\d{2}:\d{2})");
     if (!std::regex_match(dateTimeString, pattern))
     {
         return false;  // Invalid format
@@ -737,7 +737,7 @@ bool IsValidDateTimeFormat(const std::string& dateTimeString)
 
     // Check timezone offset
     std::string timezoneStr = dateTimeString.substr(23);
-    std::regex  timezonePattern(R"([+-]\d{4})");
+    std::regex  timezonePattern(R"([+-]\d{2}:\d{2})");
     if (!std::regex_match(timezoneStr, timezonePattern))
         return false;
 
@@ -771,19 +771,7 @@ uint32_t GetSecondsSinceMidnight(const std::string& dateTimeString)
     return seconds;
 }
 
-// Function to convert tm to time_t in UTC
-std::time_t tmToTimeTUTC(const std::tm& tm)
-{
-#ifdef _WIN32
-    // Windows: Use _mkgmtime
-    return _mkgmtime(&const_cast<std::tm&>(tm));
-#else
-    // Unix-like systems: Use timegm
-    return timegm(&const_cast<std::tm&>(tm));
-#endif
-}
-
-std::time_t GetEpochTimeFromString(const std::string& dateTimeStr)
+int64_t GetEpochTimeFromString(const std::string& dateTimeStr)
 {
     // Define the format of the input string
     const char* format = "%Y-%m-%dT%H:%M:%S";
@@ -800,11 +788,11 @@ std::time_t GetEpochTimeFromString(const std::string& dateTimeStr)
     // Extract milliseconds and timezone offset
     double      milliseconds   = 0;
     int         timezoneOffset = 0;
-    char        dot, sign;
+    char        dot, sign, separator;
     std::string tzHour, tzMin;
 
     // Read the milliseconds and timezone offset
-    ss >> dot >> milliseconds >> sign >> std::setw(2) >> tzHour >> std::setw(2) >> tzMin;
+    ss >> dot >> milliseconds >> sign >> std::setw(2) >> tzHour >> separator >> std::setw(2) >> tzMin;
 
     // Convert timezone offset to seconds
     timezoneOffset = std::stoi(tzHour) * 3600 + std::stoi(tzMin) * 60;
@@ -816,10 +804,10 @@ std::time_t GetEpochTimeFromString(const std::string& dateTimeStr)
     }
 
     // Treat the tm struct as UTC time by adjusting for the timezone offset
-    std::time_t utcEpoch = tmToTimeTUTC(tm) - timezoneOffset;
+    int utcEpoch = timegm(&const_cast<std::tm&>(tm)) - timezoneOffset;
 
     // Add milliseconds to the epoch time
-    utcEpoch += static_cast<time_t>(milliseconds / 1000.0);
+    utcEpoch += milliseconds / 1000.0;
 
     return utcEpoch;
 }
@@ -1110,7 +1098,7 @@ FILE* FileOpen(const char* filename, const char* mode)
         return nullptr;
     }
 #else
-    file = fopen(filename, mode);
+    file    = fopen(filename, mode);
 #endif
 
     return file;

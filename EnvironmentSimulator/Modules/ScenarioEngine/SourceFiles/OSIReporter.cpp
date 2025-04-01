@@ -2990,6 +2990,7 @@ int OSIReporter::UpdateEnvironment(const OSCEnvironment &environment)
         obj_osi_external.gt->clear_environmental_conditions();
         if (environment.IsAtmosphericPressureSet())
         {
+            LOG_INFO("Atmospheric pressure set to {} hPa", environment.GetAtmosphericPressure());
             obj_osi_external.gt->mutable_environmental_conditions()->set_atmospheric_pressure(environment.GetAtmosphericPressure());
         }
         if (environment.IsTemperatureSet())
@@ -3143,12 +3144,12 @@ int OSIReporter::UpdateEnvironment(const OSCEnvironment &environment)
                 obj_osi_external.gt->mutable_environmental_conditions()->set_unix_timestamp(
                     GetEpochTimeFromString(environment.GetTimeOfDay().datetime));
             }
-            // else
-            // {
-            //     obj_osi_external.gt->mutable_environmental_conditions()->set_unix_timestamp(
-            //         GetEpochTimeFromString(environment.GetTimeOfDay().datetime) + nanosec_ / 1000000000);  // plus simulation time, nanosec is
-            //         wrong
-            // }
+            else
+            {
+                obj_osi_external.gt->mutable_environmental_conditions()->set_unix_timestamp(
+                    GetEpochTimeFromString(environment.GetTimeOfDay().datetime) +
+                    obj_osi_external.gt->mutable_timestamp()->seconds());  // plus simulation time, nanosec is wrong
+            }
         }
     }
 

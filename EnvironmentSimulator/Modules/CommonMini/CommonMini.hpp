@@ -639,7 +639,7 @@ uint32_t GetSecondsSinceMidnight(const std::string& dateTimeString);
  * representation format. Extracts the number of seconds that have elapsed since January 1, 1970 (midnight UTC/GMT [1]), not counting leap seconds [2]
  * Specifically, the format is: YYYY-MM-DDTHH:MM:SS.mmm+ZZZZ or YYYY-MM-DDTHH:MM:SS.mmm-ZZZZ.
  */
-std::time_t GetEpochTimeFromString(const std::string& dateTimeStr);
+int64_t GetEpochTimeFromString(const std::string& dateTimeStr);
 
 #if (defined WINVER && WINVER == _WIN32_WINNT_WIN7)
 #else

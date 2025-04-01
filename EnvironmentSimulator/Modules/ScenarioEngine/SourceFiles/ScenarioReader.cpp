@@ -2323,7 +2323,7 @@ OSCGlobalAction *ScenarioReader::parseOSCGlobalAction(pugi::xml_node actionNode,
             EnvironmentAction *envAction = new EnvironmentAction(parent);
             ParseOSCEnvironment(actionChild.child("Environment"), &envAction->new_environment_);
             envAction->SetEnvironment(environment_);
-            LOG_INFO("Parsing OSC Environment with node %s", actionChild.name());
+            LOG_INFO("Parsing OSC Environment with node {}", actionChild.name());
 
             action = envAction;
         }
@@ -4880,7 +4880,7 @@ void ScenarioReader::ParseOSCEnvironment(const pugi::xml_node &xml_node, OSCEnvi
         std::string envChildName(envChild.name());
         if (envChildName == "TimeOfDay")
         {
-            bool animation = (parameters.ReadAttribute(envChild, "animation") == "True") ? true : false;
+            bool animation = (parameters.ReadAttribute(envChild, "animation") == "true") ? true : false;
             if (const auto &val = parameters.ReadAttribute(envChild, "dateTime"); !val.empty())
             {
                 if (IsValidDateTimeFormat(val))
