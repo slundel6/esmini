@@ -13,9 +13,17 @@
 #include <optional>
 #include "OSCBoundingBox.hpp"
 #include "OSCProperties.hpp"
+#include "logger.hpp"
 
 namespace scenarioengine
 {
+    /*
+    constants
+    */
+    double const OSCAtmosphericMin = 80000.0;   // Pa
+    double const OSCAtmosphericMax = 120000.0;  // Pa
+    double const OSCTemperatureMin = 170.0;     // kelvin
+    double const OSCTemperatureMax = 340.0;     // kelvin
 
     /*
     Class PrecipitationType
@@ -42,8 +50,9 @@ namespace scenarioengine
         CLOUDY,
         HEAVILY_CLOUDY,  // osc <=1.1 rainy
         ALMOST_OVERCAST,
-        OVERCAST,        // osc <=1.1 overcast
-        SKY_NOT_VISIBLE  // osc <=1.1 sky off
+        OVERCAST,         // osc <=1.1 overcast
+        SKY_NOT_VISIBLE,  // osc <=1.1 sky off
+        OTHER
     };
 
     enum class WetnessType
@@ -165,9 +174,10 @@ namespace scenarioengine
         double GetTemperature() const;
         bool   IsTemperatureSet() const;
 
-        void       SetCloudState(CloudState cloudstate);
-        CloudState GetCloudState() const;
-        bool       IsCloudStateSet() const;
+        void        SetCloudState(CloudState cloudstate);
+        void        SetFractionalCloudState(const std::string& fractionalcloudStateStr);
+        std::string GetFractionalCloudState() const;
+        bool        IsFractionalCloudStateSet() const;
 
         void SetSun(const Sun& sun);
         Sun  GetSun() const;
@@ -189,6 +199,8 @@ namespace scenarioengine
         Wind GetWind() const;
         bool IsWindSet() const;
 
+        bool IsWeatherSet() const;
+
         void          SetRoadCondition(const RoadCondition& roadcondition);
         void          SetRoadCondition(const double friction);
         RoadCondition GetRoadCondition() const;
@@ -201,7 +213,7 @@ namespace scenarioengine
         std::optional<TimeOfDay>     timeofday_;
         std::optional<double>        atmosphericpressure_;
         std::optional<double>        temperature_;
-        std::optional<CloudState>    cloudstate_;
+        std::optional<std::string>   fractionalcloudstate_;
         std::optional<Sun>           sun_;
         std::optional<Fog>           fog_;
         std::optional<Precipitation> precipitation_;

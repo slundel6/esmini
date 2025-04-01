@@ -4845,7 +4845,7 @@ int ScenarioReader::parseStoryBoard(StoryBoard &storyBoard)
     return 0;
 }
 
-static int selectCloudState(scenarioengine::CloudState &state, const std::string &cloudStateStr)
+static void SelectCloudState(scenarioengine::CloudState &state, const std::string &cloudStateStr)
 {
     // Helper function for parseOSCEnvironment
     using scenarioengine::CloudState;
@@ -4865,12 +4865,13 @@ static int selectCloudState(scenarioengine::CloudState &state, const std::string
     auto it = stateMap.find(cloudStateStr);
     if (it == stateMap.end())
     {
-        LOG_WARN("Not valid cloud state name:{}", cloudStateStr);
-        return -1;
+        LOG_WARN("Not valid cloud state name:{}, Set to other", cloudStateStr);
+        state = CloudState::OTHER;
     }
-
-    state = stateMap[cloudStateStr];
-    return 1;
+    else
+    {
+        state = stateMap[cloudStateStr];
+    }
 }
 
 void ScenarioReader::ParseOSCEnvironment(const pugi::xml_node &xml_node, OSCEnvironment *env)
@@ -4914,10 +4915,15 @@ void ScenarioReader::ParseOSCEnvironment(const pugi::xml_node &xml_node, OSCEnvi
                     if (const auto &val = parameters.ReadAttribute(envChild, "cloudState"); !val.empty())
                     {
                         scenarioengine::CloudState cloudState;
-                        if (selectCloudState(cloudState, val) > 0)
-                        {
-                            env->SetCloudState(cloudState);
-                        }
+                        SelectCloudState(cloudState, val);
+                        env->SetCloudState(cloudState);
+                    }
+                }
+                else if (weatherAttrName == "fractionalCloudCover")
+                {
+                    if (const auto &val = parameters.ReadAttribute(envChild, "fractionalCloudCover"); !val.empty())
+                    {
+                        env->SetFractionalCloudState(val);
                     }
                 }
                 else if (weatherAttrName == "temperature")

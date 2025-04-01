@@ -3399,22 +3399,29 @@ TEST(EnvironmentTest, OSIForEnvironment)
     int               sv_size = 0;
     const char*       gt      = SE_GetOSIGroundTruth(&sv_size);
     osi_gt.ParseFromArray(gt, sv_size);
-    EXPECT_EQ(osi_gt.mutable_environmental_conditions()->atmospheric_pressure(), 10000);
+    EXPECT_EQ(osi_gt.mutable_environmental_conditions()->atmospheric_pressure(), 80000);
     EXPECT_EQ(osi_gt.mutable_environmental_conditions()->fog(), osi3::EnvironmentalConditions_Fog_FOG_MODERATE_VISIBILITY);
     EXPECT_EQ(osi_gt.mutable_environmental_conditions()->temperature(), 300);
     EXPECT_EQ(osi_gt.mutable_environmental_conditions()->ambient_illumination(),
               osi3::EnvironmentalConditions_AmbientIllumination_AMBIENT_ILLUMINATION_LEVEL8);
     EXPECT_EQ(osi_gt.mutable_environmental_conditions()->precipitation(), osi3::EnvironmentalConditions_Precipitation_PRECIPITATION_HEAVY);
-    EXPECT_EQ(osi_gt.mutable_environmental_conditions()->mutable_time_of_day()->seconds_since_midnight(), 37800);
-    EXPECT_EQ(osi_gt.mutable_environmental_conditions()->unix_timestamp(), 1700024400);
+    EXPECT_EQ(osi_gt.mutable_environmental_conditions()->mutable_clouds()->fractional_cloud_cover(),
+              osi3::EnvironmentalConditions_CloudLayer_FractionalCloudCover_FRACTIONAL_CLOUD_COVER_EIGHT_OKTAS);
 
-    SE_StepDT(1.01f);
+    while (SE_GetQuitFlag() != 1)
+    {
+        SE_StepDT(0.1f);
+    }
+
     SE_UpdateOSIGroundTruth();
     osi3::GroundTruth osi_gt1;
     const char*       gt1 = SE_GetOSIGroundTruth(&sv_size);
     osi_gt1.ParseFromArray(gt1, sv_size);
+    EXPECT_EQ(osi_gt1.mutable_environmental_conditions()->mutable_time_of_day()->seconds_since_midnight(), 37800);
     EXPECT_EQ(osi_gt1.mutable_environmental_conditions()->unix_timestamp(),
               1700024401);  // TimeOfDay animation is true, simulation time is 1.0s which is added to epoch time
+    EXPECT_EQ(osi_gt1.mutable_environmental_conditions()->mutable_clouds()->fractional_cloud_cover(),
+              osi3::EnvironmentalConditions_CloudLayer_FractionalCloudCover_FRACTIONAL_CLOUD_COVER_OTHER);
 
     SE_Close();
 }
