@@ -1098,7 +1098,7 @@ FILE* FileOpen(const char* filename, const char* mode)
         return nullptr;
     }
 #else
-    file    = fopen(filename, mode);
+    file = fopen(filename, mode);
 #endif
 
     return file;
