@@ -771,45 +771,41 @@ uint32_t GetSecondsSinceMidnight(const std::string& dateTimeString)
     return seconds;
 }
 
-int64_t GetEpochTimeFromString(const std::string& dateTimeStr)
+int64_t GetEpochTimeFromString(const std::string& datetime)
 {
-    // Define the format of the input string
-    const char* format = "%Y-%m-%dT%H:%M:%S";
+    std::tm tm           = {};
+    double  milliseconds = 0.0;
+    int     tz_hour = 0, tz_min = 0;
+    char    sign      = '+';
+    char    delimiter = ':';
 
-    // Create a stringstream to parse the input string
-    std::istringstream ss(dateTimeStr);
+    std::istringstream ss(datetime);
+    ss >> std::get_time(&tm, "%Y-%m-%dT%H:%M:%S");
 
-    // Create a tm struct to hold the parsed date and time
-    std::tm tm = {};
-
-    // Parse the date and time from the string
-    ss >> std::get_time(&tm, format);
-
-    // Extract milliseconds and timezone offset
-    double      milliseconds   = 0;
-    int         timezoneOffset = 0;
-    char        dot, sign, separator;
-    std::string tzHour, tzMin;
-
-    // Read the milliseconds and timezone offset
-    ss >> dot >> milliseconds >> sign >> std::setw(2) >> tzHour >> separator >> std::setw(2) >> tzMin;
-
-    // Convert timezone offset to seconds
-    timezoneOffset = std::stoi(tzHour) * 3600 + std::stoi(tzMin) * 60;
-
-    // Adjust the timezone offset based on the sign
-    if (sign == '-')
+    if (ss.peek() == '.')
     {
-        timezoneOffset = -timezoneOffset;
+        ss.ignore() >> milliseconds;
     }
 
-    // Treat the tm struct as UTC time by adjusting for the timezone offset
-    int utcEpoch = timegm(&const_cast<std::tm&>(tm)) - timezoneOffset;
+    // Parse timezone if present
+    if (ss >> sign >> tz_hour >> std::setw(1) >> delimiter >> tz_min)
+    {
+        // Calculate timezone offset in seconds
+        int tz_offset = (tz_hour * 3600 + tz_min * 60) * (sign == '+' ? 1 : -1);
 
-    // Add milliseconds to the epoch time
-    utcEpoch += milliseconds / 1000.0;
+        // Convert to time_t (local time) and adjust for timezone
+        std::time_t time = std::mktime(&tm) - tz_offset;
 
-    return utcEpoch;
+        // Convert to chrono time_point with milliseconds
+        auto tp = std::chrono::system_clock::from_time_t(time) + std::chrono::milliseconds(static_cast<int64_t>(milliseconds));
+
+        return std::chrono::duration_cast<std::chrono::milliseconds>(tp.time_since_epoch()).count();
+    }
+
+    // If no timezone, assume UTC
+    auto tp = std::chrono::system_clock::from_time_t(std::mktime(&tm)) + std::chrono::milliseconds(static_cast<int64_t>(milliseconds));
+
+    return std::chrono::duration_cast<std::chrono::milliseconds>(tp.time_since_epoch()).count();
 }
 
 int strtoi(std::string s)

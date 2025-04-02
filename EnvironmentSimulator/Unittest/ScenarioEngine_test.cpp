@@ -5220,6 +5220,24 @@ TEST(EnvironmentTest, SecondsSinceMidnight)
     EXPECT_EQ(GetSecondsSinceMidnight(dateTime6), 43200);
 }
 
+TEST(EnvironmentTest, EpochTime)
+{
+    std::string dateTime1 = "2023-11-15T10:30:00.123+05:30";
+    EXPECT_EQ(GetEpochTimeFromString(dateTime1), 1700020800123);
+    std::string dateTime2 = "2023-11-15T00:00:00.123+05:30";
+    EXPECT_EQ(GetEpochTimeFromString(dateTime2), 1699983000123);
+    std::string dateTime3 = "2023-11-15T23:59:59.123+05:30";
+    EXPECT_EQ(GetEpochTimeFromString(dateTime3), 1700069399123);
+    std::string dateTime4 = "2023-11-15T12:00:00.000+05:30";
+    EXPECT_EQ(GetEpochTimeFromString(dateTime4), 1700026200000);
+    std::string dateTime5 = "2023-11-15T12:00:00.000-05:30";
+    EXPECT_EQ(GetEpochTimeFromString(dateTime5), 1700065800000);
+    std::string dateTime6 = "2023-11-15T12:00:00.000+00:00";
+    EXPECT_EQ(GetEpochTimeFromString(dateTime6), 1700046000000);
+    std::string dateTime7 = "2011-03-10T11:23:56.000+0100";
+    EXPECT_EQ(GetEpochTimeFromString(dateTime7), 1299752636000);
+}
+
 int main(int argc, char** argv)
 {
 #if 0  // set to 1 and modify filter to run one single test

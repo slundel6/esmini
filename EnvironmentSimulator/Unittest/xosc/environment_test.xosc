@@ -54,6 +54,7 @@
                                 <GlobalAction>
                                     <EnvironmentAction>
                                         <Environment name="weather">
+                                            <TimeOfDay animation="true" dateTime="2023-11-15T10:30:00.123+00:00"/>
                                             <Weather cloudState="overcast" temperature="300" atmosphericPressure="10000">
                                                 <Sun azimuth="0.4" intensity="10000" elevation="0.3"/>
                                                 <Fog visualRange="5000">
@@ -85,8 +86,7 @@
                             <Action name="envaction">
                                 <GlobalAction>
                                     <EnvironmentAction>
-                                        <Environment name="TimeOfDay">
-                                            <TimeOfDay animation="true" dateTime="2023-11-15T10:30:00.123+05:30"/>
+                                        <Environment name="weather2">
                                             <Weather fractionalCloudCover="elevanOktas"/>
                                         </Environment>
                                     </EnvironmentAction>
