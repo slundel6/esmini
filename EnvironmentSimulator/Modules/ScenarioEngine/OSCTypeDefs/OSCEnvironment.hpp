@@ -20,10 +20,14 @@ namespace scenarioengine
     /*
     constants
     */
-    double const OSCAtmosphericMin = 80000.0;   // Pa
-    double const OSCAtmosphericMax = 120000.0;  // Pa
-    double const OSCTemperatureMin = 170.0;     // kelvin
-    double const OSCTemperatureMax = 340.0;     // kelvin
+    double const OSCAtmosphericMin  = 80000.0;   // Pa
+    double const OSCAtmosphericMax  = 120000.0;  // Pa
+    double const OSCTemperatureMin  = 170.0;     // kelvin
+    double const OSCTemperatureMax  = 340.0;     // kelvin
+    double const OSCSunAzimuthMin   = 0.0;       // rad
+    double const OSCSunAzimuthMax   = 2 * M_PI;  // rad
+    double const OSCSunElevationMin = -M_PI;     // rad
+    double const OSCSunElevationMax = M_PI;      // rad
 
     /*
     Class PrecipitationType

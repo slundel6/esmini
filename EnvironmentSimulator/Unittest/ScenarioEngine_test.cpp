@@ -5020,7 +5020,7 @@ TEST(EnvironmentTest, Parsing)
 
     EXPECT_NEAR(oscEnv.GetSun().azimuth, sunNode.attribute("azimuth").as_double(), 1e-5);
     EXPECT_NEAR(oscEnv.GetSun().intensity, sunNode.attribute("intensity").as_double(), 1e-5);
-    EXPECT_NEAR(oscEnv.GetSun().elevation, sunNode.attribute("elevation").as_double(), 1e-5);
+    EXPECT_NEAR(oscEnv.GetSun().elevation, MIN(sunNode.attribute("elevation").as_double(), OSCSunElevationMax), 1e-5);
 
     EXPECT_NEAR(oscEnv.GetFog().visibility_range, fogNode.attribute("visualRange").as_float(), 1e-5);
     EXPECT_NEAR(oscEnv.GetFog().boundingbox->center_.x_, bbCenterNode.attribute("x").as_float(), 1e-5);
