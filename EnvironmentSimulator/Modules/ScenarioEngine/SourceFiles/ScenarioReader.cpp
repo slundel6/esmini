@@ -4944,9 +4944,10 @@ void ScenarioReader::ParseOSCEnvironment(const pugi::xml_node &xml_node, OSCEnvi
                 std::string weatherChildName(weatherChild.name());
                 if (weatherChildName == "Sun")
                 {
-                    std::string azimuth      = parameters.ReadAttribute(weatherChild, "azimuth");
-                    std::string elevation    = parameters.ReadAttribute(weatherChild, "elevation");
-                    std::string intensityStr = parameters.ReadAttribute(weatherChild, "intensity");
+                    std::string azimuth        = parameters.ReadAttribute(weatherChild, "azimuth");
+                    std::string elevation      = parameters.ReadAttribute(weatherChild, "elevation");
+                    std::string intensityStr   = parameters.ReadAttribute(weatherChild, "intensity");
+                    std::string illuminanceStr = parameters.ReadAttribute(weatherChild, "illuminance");
 
                     if (azimuth.empty() || elevation.empty())
                     {
@@ -4956,6 +4957,10 @@ void ScenarioReader::ParseOSCEnvironment(const pugi::xml_node &xml_node, OSCEnvi
                     if (!intensityStr.empty())
                     {
                         env->SetSun(Sun{std::stod(azimuth), std::stod(elevation), std::stod(intensityStr)});
+                    }
+                    else if (!illuminanceStr.empty())
+                    {
+                        env->SetSun(Sun{std::stod(azimuth), std::stod(elevation), std::stod(illuminanceStr)});
                     }
                     else
                     {
