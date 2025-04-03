@@ -139,7 +139,17 @@ public:
     /**
     Fills the Environment_condition
     */
-    int UpdateEnvironment(const OSCEnvironment& environment);
+    void UpdateEnvironment(const OSCEnvironment& environment);
+
+    /**
+    Fills the Weather_condition
+    */
+    void UpdateEnvironmentWeather(const OSCEnvironment& environment);
+
+    /**
+    Fills the TimeOfDay
+    */
+    void UpdateEnvironmentTimeOfDay(const OSCEnvironment& environment);
 
     std::vector<TrafficCommandStateChange> traffic_command_state_changes_;
 

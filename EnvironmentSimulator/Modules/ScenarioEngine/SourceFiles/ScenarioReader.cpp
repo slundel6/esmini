@@ -4964,7 +4964,7 @@ void ScenarioReader::ParseOSCEnvironment(const pugi::xml_node &xml_node, OSCEnvi
                     }
                     else
                     {
-                        env->SetSun(Sun{std::stod(azimuth), std::stod(elevation), 0.0});
+                        env->SetSun(Sun{std::stod(azimuth), std::stod(elevation), std::nullopt});
                     }
                 }
                 else if (weatherChildName == "Fog")

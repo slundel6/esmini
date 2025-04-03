@@ -167,8 +167,6 @@ double scenarioengine::OSCEnvironment::GetPrecipitationIntensity() const
 
 void OSCEnvironment::SetSun(const Sun& sun)
 {
-    LOG_INFO("Setting sun elevation: " + std::to_string(sun.elevation) + " azimuth: " + std::to_string(sun.azimuth) +
-             " intensity: " + std::to_string(sun.intensity));
     if (sun.elevation < OSCSunElevationMin || sun.elevation > OSCSunElevationMax)
     {
         LOG_WARN("Sun elevation clamped between -90.0 and 90.0 degrees");
@@ -182,9 +180,7 @@ void OSCEnvironment::SetSun(const Sun& sun)
     sunNew.elevation = CLAMP(sun.elevation, OSCSunElevationMin, OSCSunElevationMax);
     sunNew.azimuth   = CLAMP(sun.azimuth, OSCSunAzimuthMin, OSCSunAzimuthMax);
     sunNew.intensity = sun.intensity;
-    LOG_INFO("Setting clamped sun elevation: " + std::to_string(sunNew.elevation) + " azimuth: " + std::to_string(sunNew.azimuth) +
-             " intensity: " + std::to_string(sunNew.intensity));
-    sun_ = sunNew;
+    sun_             = sunNew;
 }
 
 Sun OSCEnvironment::GetSun() const
@@ -195,6 +191,16 @@ Sun OSCEnvironment::GetSun() const
 bool OSCEnvironment::IsSunSet() const
 {
     return sun_.has_value();
+}
+
+bool scenarioengine::OSCEnvironment::IsSunIntensitySet() const
+{
+    return IsSunSet() && GetSun().intensity.has_value();
+}
+
+double scenarioengine::OSCEnvironment::GetSunIntensity() const
+{
+    return GetSun().intensity.value();
 }
 
 void OSCEnvironment::SetTimeOfDay(const TimeOfDay& timeofday)

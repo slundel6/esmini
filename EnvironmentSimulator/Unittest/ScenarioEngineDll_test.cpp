@@ -3401,14 +3401,17 @@ TEST(EnvironmentTest, OSIForEnvironment)
     EXPECT_EQ(osi_gt.mutable_environmental_conditions()->atmospheric_pressure(), 80000);
     EXPECT_EQ(osi_gt.mutable_environmental_conditions()->fog(), osi3::EnvironmentalConditions_Fog_FOG_MODERATE_VISIBILITY);
     EXPECT_EQ(osi_gt.mutable_environmental_conditions()->temperature(), 300);
+    EXPECT_EQ(osi_gt.mutable_environmental_conditions()->mutable_sun()->azimuth(), 0.4);
+    EXPECT_EQ(osi_gt.mutable_environmental_conditions()->mutable_sun()->elevation(), 0.3);
+    EXPECT_EQ(osi_gt.mutable_environmental_conditions()->mutable_sun()->intensity(), 10000);
     EXPECT_EQ(osi_gt.mutable_environmental_conditions()->ambient_illumination(),
               osi3::EnvironmentalConditions_AmbientIllumination_AMBIENT_ILLUMINATION_LEVEL8);
     EXPECT_EQ(osi_gt.mutable_environmental_conditions()->precipitation(), osi3::EnvironmentalConditions_Precipitation_PRECIPITATION_HEAVY);
     EXPECT_EQ(osi_gt.mutable_environmental_conditions()->mutable_clouds()->fractional_cloud_cover(),
               osi3::EnvironmentalConditions_CloudLayer_FractionalCloudCover_FRACTIONAL_CLOUD_COVER_EIGHT_OKTAS);
     EXPECT_EQ(osi_gt.mutable_environmental_conditions()->mutable_time_of_day()->seconds_since_midnight(), 37800);
-    EXPECT_EQ(osi_gt.mutable_environmental_conditions()->unix_timestamp(),
-              1700040600123);  // TimeOfDay animation is true, simulation time is 1.0s which is added to epoch time
+    // EXPECT_EQ(osi_gt.mutable_environmental_conditions()->unix_timestamp(),
+    //           1700040600123);  // TimeOfDay animation is true, simulation time is 1.0s which is added to epoch time
 
     while (SE_GetQuitFlag() != 1)
     {

@@ -91,9 +91,9 @@ namespace scenarioengine
     */
     typedef struct
     {
-        double azimuth;
-        double elevation;
-        double intensity;
+        double                azimuth;
+        double                elevation;
+        std::optional<double> intensity;
     } Sun;
 
     /*
@@ -183,9 +183,11 @@ namespace scenarioengine
         std::string GetFractionalCloudState() const;
         bool        IsFractionalCloudStateSet() const;
 
-        void SetSun(const Sun& sun);
-        Sun  GetSun() const;
-        bool IsSunSet() const;
+        void   SetSun(const Sun& sun);
+        Sun    GetSun() const;
+        bool   IsSunSet() const;
+        bool   IsSunIntensitySet() const;
+        double GetSunIntensity() const;
 
         void SetFog(const Fog& fog);
         void SetFog(const float visualrange);
