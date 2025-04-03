@@ -147,6 +147,16 @@ public:
     void UpdateEnvironmentWeather(const OSCEnvironment& environment);
 
     /**
+    Fills the fractional cloud state
+    */
+    void UpdateEnvironmentFractionalCloudState(const OSCEnvironment& environment);
+
+    /**
+    Fills the Sun
+    */
+    void UpdateEnvironmentSun(const OSCEnvironment& environment);
+
+    /**
     Fills the TimeOfDay
     */
     void UpdateEnvironmentTimeOfDay(const OSCEnvironment& environment);

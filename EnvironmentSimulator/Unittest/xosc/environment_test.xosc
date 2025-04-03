@@ -87,7 +87,7 @@
                                 <GlobalAction>
                                     <EnvironmentAction>
                                         <Environment name="weather2">
-                                            <Weather fractionalCloudCover="elevanOktas"/>
+                                            <Weather fractionalCloudCover="oneOktas"/>
                                         </Environment>
                                     </EnvironmentAction>
                                 </GlobalAction>

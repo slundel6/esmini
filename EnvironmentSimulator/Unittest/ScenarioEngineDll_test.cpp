@@ -3424,7 +3424,7 @@ TEST(EnvironmentTest, OSIForEnvironment)
     EXPECT_EQ(osi_gt.mutable_environmental_conditions()->unix_timestamp(),
               1700040600124);  // TimeOfDay animation is true, simulation time is 1.0s which is added to epoch time
     EXPECT_EQ(osi_gt.mutable_environmental_conditions()->mutable_clouds()->fractional_cloud_cover(),
-              osi3::EnvironmentalConditions_CloudLayer_FractionalCloudCover_FRACTIONAL_CLOUD_COVER_OTHER);
+              osi3::EnvironmentalConditions_CloudLayer_FractionalCloudCover_FRACTIONAL_CLOUD_COVER_ONE_OKTAS);
 
     SE_Close();
 }

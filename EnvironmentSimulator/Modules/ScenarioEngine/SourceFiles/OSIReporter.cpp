@@ -3006,124 +3006,17 @@ void OSIReporter::UpdateEnvironmentWeather(const OSCEnvironment &environment)
         LOG_INFO("Atmospheric pressure set to {} hPa", environment.GetAtmosphericPressure());
         obj_osi_internal.dynamic_gt->mutable_environmental_conditions()->set_atmospheric_pressure(environment.GetAtmosphericPressure());
     }
-    if (environment.IsFractionalCloudStateSet())
-    {
-        if (environment.GetFractionalCloudState() == "zeroOktas")
-        {
-            obj_osi_internal.dynamic_gt->mutable_environmental_conditions()->mutable_clouds()->set_fractional_cloud_cover(
-                osi3::EnvironmentalConditions_CloudLayer_FractionalCloudCover_FRACTIONAL_CLOUD_COVER_ZERO_OKTAS);
-        }
-        else if (environment.GetFractionalCloudState() == "oneOktas")
-        {
-            obj_osi_internal.dynamic_gt->mutable_environmental_conditions()->mutable_clouds()->set_fractional_cloud_cover(
-                osi3::EnvironmentalConditions_CloudLayer_FractionalCloudCover_FRACTIONAL_CLOUD_COVER_ONE_OKTAS);
-        }
-        else if (environment.GetFractionalCloudState() == "twoOktas")
-        {
-            obj_osi_internal.dynamic_gt->mutable_environmental_conditions()->mutable_clouds()->set_fractional_cloud_cover(
-                osi3::EnvironmentalConditions_CloudLayer_FractionalCloudCover_FRACTIONAL_CLOUD_COVER_TWO_OKTAS);
-        }
-        else if (environment.GetFractionalCloudState() == "threeOktas")
-        {
-            obj_osi_internal.dynamic_gt->mutable_environmental_conditions()->mutable_clouds()->set_fractional_cloud_cover(
-                osi3::EnvironmentalConditions_CloudLayer_FractionalCloudCover_FRACTIONAL_CLOUD_COVER_THREE_OKTAS);
-        }
-        else if (environment.GetFractionalCloudState() == "fourOktas")
-        {
-            obj_osi_internal.dynamic_gt->mutable_environmental_conditions()->mutable_clouds()->set_fractional_cloud_cover(
-                osi3::EnvironmentalConditions_CloudLayer_FractionalCloudCover_FRACTIONAL_CLOUD_COVER_FOUR_OKTAS);
-        }
-        else if (environment.GetFractionalCloudState() == "fiveOktas")
-        {
-            obj_osi_internal.dynamic_gt->mutable_environmental_conditions()->mutable_clouds()->set_fractional_cloud_cover(
-                osi3::EnvironmentalConditions_CloudLayer_FractionalCloudCover_FRACTIONAL_CLOUD_COVER_FIVE_OKTAS);
-        }
-        else if (environment.GetFractionalCloudState() == "sixOktas")
-        {
-            obj_osi_internal.dynamic_gt->mutable_environmental_conditions()->mutable_clouds()->set_fractional_cloud_cover(
-                osi3::EnvironmentalConditions_CloudLayer_FractionalCloudCover_FRACTIONAL_CLOUD_COVER_SIX_OKTAS);
-        }
-        else if (environment.GetFractionalCloudState() == "sevenOktas")
-        {
-            obj_osi_internal.dynamic_gt->mutable_environmental_conditions()->mutable_clouds()->set_fractional_cloud_cover(
-                osi3::EnvironmentalConditions_CloudLayer_FractionalCloudCover_FRACTIONAL_CLOUD_COVER_SEVEN_OKTAS);
-        }
-        else if (environment.GetFractionalCloudState() == "eightOktas")
-        {
-            obj_osi_internal.dynamic_gt->mutable_environmental_conditions()->mutable_clouds()->set_fractional_cloud_cover(
-                osi3::EnvironmentalConditions_CloudLayer_FractionalCloudCover_FRACTIONAL_CLOUD_COVER_EIGHT_OKTAS);
-        }
-        else if (environment.GetFractionalCloudState() == "nineOktas")
-        {
-            obj_osi_internal.dynamic_gt->mutable_environmental_conditions()->mutable_clouds()->set_fractional_cloud_cover(
-                osi3::EnvironmentalConditions_CloudLayer_FractionalCloudCover_FRACTIONAL_CLOUD_COVER_SKY_OBSCURED);
-        }
-        else
-        {
-            obj_osi_internal.dynamic_gt->mutable_environmental_conditions()->mutable_clouds()->set_fractional_cloud_cover(
-                osi3::EnvironmentalConditions_CloudLayer_FractionalCloudCover_FRACTIONAL_CLOUD_COVER_OTHER);
-        }
-    }
     if (environment.IsTemperatureSet())
     {
         obj_osi_internal.dynamic_gt->mutable_environmental_conditions()->set_temperature(environment.GetTemperature());
     }
-    if (environment.IsSunIntensitySet())
+    if (environment.IsFractionalCloudStateSet())
     {
-        double intensity = environment.GetSunIntensity();
-        obj_osi_internal.dynamic_gt->mutable_environmental_conditions()->mutable_sun()->set_intensity(intensity);
-        obj_osi_internal.dynamic_gt->mutable_environmental_conditions()->mutable_sun()->set_azimuth(environment.GetSun().azimuth);
-        obj_osi_internal.dynamic_gt->mutable_environmental_conditions()->mutable_sun()->set_elevation(environment.GetSun().elevation);
-        if (intensity > 10000)
-        {
-            obj_osi_internal.dynamic_gt->mutable_environmental_conditions()->set_ambient_illumination(
-                osi3::EnvironmentalConditions_AmbientIllumination_AMBIENT_ILLUMINATION_LEVEL9);
-        }
-        else if (intensity > 1000)
-        {
-            obj_osi_internal.dynamic_gt->mutable_environmental_conditions()->set_ambient_illumination(
-                osi3::EnvironmentalConditions_AmbientIllumination_AMBIENT_ILLUMINATION_LEVEL8);
-        }
-        else if (intensity > 400)
-        {
-            obj_osi_internal.dynamic_gt->mutable_environmental_conditions()->set_ambient_illumination(
-                osi3::EnvironmentalConditions_AmbientIllumination_AMBIENT_ILLUMINATION_LEVEL7);
-        }
-        else if (intensity > 20)
-        {
-            obj_osi_internal.dynamic_gt->mutable_environmental_conditions()->set_ambient_illumination(
-                osi3::EnvironmentalConditions_AmbientIllumination_AMBIENT_ILLUMINATION_LEVEL6);
-        }
-        else if (intensity > 10)
-        {
-            obj_osi_internal.dynamic_gt->mutable_environmental_conditions()->set_ambient_illumination(
-                osi3::EnvironmentalConditions_AmbientIllumination_AMBIENT_ILLUMINATION_LEVEL5);
-        }
-        else if (intensity > 3)
-        {
-            obj_osi_internal.dynamic_gt->mutable_environmental_conditions()->set_ambient_illumination(
-                osi3::EnvironmentalConditions_AmbientIllumination_AMBIENT_ILLUMINATION_LEVEL4);
-        }
-        else if (intensity > 1)
-        {
-            obj_osi_internal.dynamic_gt->mutable_environmental_conditions()->set_ambient_illumination(
-                osi3::EnvironmentalConditions_AmbientIllumination_AMBIENT_ILLUMINATION_LEVEL3);
-        }
-        else if (intensity > 0.01)
-        {
-            obj_osi_internal.dynamic_gt->mutable_environmental_conditions()->set_ambient_illumination(
-                osi3::EnvironmentalConditions_AmbientIllumination_AMBIENT_ILLUMINATION_LEVEL2);
-        }
-        else if (intensity > 0)
-        {
-            obj_osi_internal.dynamic_gt->mutable_environmental_conditions()->set_ambient_illumination(
-                osi3::EnvironmentalConditions_AmbientIllumination_AMBIENT_ILLUMINATION_LEVEL1);
-        }
-        else
-        {
-            obj_osi_internal.dynamic_gt->mutable_environmental_conditions()->set_ambient_illumination(
-                osi3::EnvironmentalConditions_AmbientIllumination_AMBIENT_ILLUMINATION_OTHER);
-        }
+        UpdateEnvironmentFractionalCloudState(environment);
+    }
+    if (environment.IsSunSet())
+    {
+        UpdateEnvironmentSun(environment);
     }
     if (environment.IsFogSet())
     {
@@ -3207,6 +3100,126 @@ void OSIReporter::UpdateEnvironmentWeather(const OSCEnvironment &environment)
         {
             obj_osi_internal.dynamic_gt->mutable_environmental_conditions()->set_precipitation(
                 osi3::EnvironmentalConditions_Precipitation_PRECIPITATION_OTHER);
+        }
+    }
+}
+
+void OSIReporter::UpdateEnvironmentFractionalCloudState(const OSCEnvironment &environment)
+{
+    if (environment.GetFractionalCloudState() == "zeroOktas")
+    {
+        obj_osi_internal.dynamic_gt->mutable_environmental_conditions()->mutable_clouds()->set_fractional_cloud_cover(
+            osi3::EnvironmentalConditions_CloudLayer_FractionalCloudCover_FRACTIONAL_CLOUD_COVER_ZERO_OKTAS);
+    }
+    else if (environment.GetFractionalCloudState() == "oneOktas")
+    {
+        obj_osi_internal.dynamic_gt->mutable_environmental_conditions()->mutable_clouds()->set_fractional_cloud_cover(
+            osi3::EnvironmentalConditions_CloudLayer_FractionalCloudCover_FRACTIONAL_CLOUD_COVER_ONE_OKTAS);
+    }
+    else if (environment.GetFractionalCloudState() == "twoOktas")
+    {
+        obj_osi_internal.dynamic_gt->mutable_environmental_conditions()->mutable_clouds()->set_fractional_cloud_cover(
+            osi3::EnvironmentalConditions_CloudLayer_FractionalCloudCover_FRACTIONAL_CLOUD_COVER_TWO_OKTAS);
+    }
+    else if (environment.GetFractionalCloudState() == "threeOktas")
+    {
+        obj_osi_internal.dynamic_gt->mutable_environmental_conditions()->mutable_clouds()->set_fractional_cloud_cover(
+            osi3::EnvironmentalConditions_CloudLayer_FractionalCloudCover_FRACTIONAL_CLOUD_COVER_THREE_OKTAS);
+    }
+    else if (environment.GetFractionalCloudState() == "fourOktas")
+    {
+        obj_osi_internal.dynamic_gt->mutable_environmental_conditions()->mutable_clouds()->set_fractional_cloud_cover(
+            osi3::EnvironmentalConditions_CloudLayer_FractionalCloudCover_FRACTIONAL_CLOUD_COVER_FOUR_OKTAS);
+    }
+    else if (environment.GetFractionalCloudState() == "fiveOktas")
+    {
+        obj_osi_internal.dynamic_gt->mutable_environmental_conditions()->mutable_clouds()->set_fractional_cloud_cover(
+            osi3::EnvironmentalConditions_CloudLayer_FractionalCloudCover_FRACTIONAL_CLOUD_COVER_FIVE_OKTAS);
+    }
+    else if (environment.GetFractionalCloudState() == "sixOktas")
+    {
+        obj_osi_internal.dynamic_gt->mutable_environmental_conditions()->mutable_clouds()->set_fractional_cloud_cover(
+            osi3::EnvironmentalConditions_CloudLayer_FractionalCloudCover_FRACTIONAL_CLOUD_COVER_SIX_OKTAS);
+    }
+    else if (environment.GetFractionalCloudState() == "sevenOktas")
+    {
+        obj_osi_internal.dynamic_gt->mutable_environmental_conditions()->mutable_clouds()->set_fractional_cloud_cover(
+            osi3::EnvironmentalConditions_CloudLayer_FractionalCloudCover_FRACTIONAL_CLOUD_COVER_SEVEN_OKTAS);
+    }
+    else if (environment.GetFractionalCloudState() == "eightOktas")
+    {
+        obj_osi_internal.dynamic_gt->mutable_environmental_conditions()->mutable_clouds()->set_fractional_cloud_cover(
+            osi3::EnvironmentalConditions_CloudLayer_FractionalCloudCover_FRACTIONAL_CLOUD_COVER_EIGHT_OKTAS);
+    }
+    else if (environment.GetFractionalCloudState() == "nineOktas")
+    {
+        obj_osi_internal.dynamic_gt->mutable_environmental_conditions()->mutable_clouds()->set_fractional_cloud_cover(
+            osi3::EnvironmentalConditions_CloudLayer_FractionalCloudCover_FRACTIONAL_CLOUD_COVER_SKY_OBSCURED);
+    }
+    else
+    {
+        obj_osi_internal.dynamic_gt->mutable_environmental_conditions()->mutable_clouds()->set_fractional_cloud_cover(
+            osi3::EnvironmentalConditions_CloudLayer_FractionalCloudCover_FRACTIONAL_CLOUD_COVER_OTHER);
+    }
+}
+
+void OSIReporter::UpdateEnvironmentSun(const OSCEnvironment &environment)
+{
+    obj_osi_internal.dynamic_gt->mutable_environmental_conditions()->mutable_sun()->set_elevation(environment.GetSun().elevation);
+    obj_osi_internal.dynamic_gt->mutable_environmental_conditions()->mutable_sun()->set_azimuth(environment.GetSun().azimuth);
+    if (environment.IsSunIntensitySet())
+    {
+        double intensity = environment.GetSunIntensity();
+        obj_osi_internal.dynamic_gt->mutable_environmental_conditions()->mutable_sun()->set_intensity(intensity);
+        if (intensity > 10000)
+        {
+            obj_osi_internal.dynamic_gt->mutable_environmental_conditions()->set_ambient_illumination(
+                osi3::EnvironmentalConditions_AmbientIllumination_AMBIENT_ILLUMINATION_LEVEL9);
+        }
+        else if (intensity > 1000)
+        {
+            obj_osi_internal.dynamic_gt->mutable_environmental_conditions()->set_ambient_illumination(
+                osi3::EnvironmentalConditions_AmbientIllumination_AMBIENT_ILLUMINATION_LEVEL8);
+        }
+        else if (intensity > 400)
+        {
+            obj_osi_internal.dynamic_gt->mutable_environmental_conditions()->set_ambient_illumination(
+                osi3::EnvironmentalConditions_AmbientIllumination_AMBIENT_ILLUMINATION_LEVEL7);
+        }
+        else if (intensity > 20)
+        {
+            obj_osi_internal.dynamic_gt->mutable_environmental_conditions()->set_ambient_illumination(
+                osi3::EnvironmentalConditions_AmbientIllumination_AMBIENT_ILLUMINATION_LEVEL6);
+        }
+        else if (intensity > 10)
+        {
+            obj_osi_internal.dynamic_gt->mutable_environmental_conditions()->set_ambient_illumination(
+                osi3::EnvironmentalConditions_AmbientIllumination_AMBIENT_ILLUMINATION_LEVEL5);
+        }
+        else if (intensity > 3)
+        {
+            obj_osi_internal.dynamic_gt->mutable_environmental_conditions()->set_ambient_illumination(
+                osi3::EnvironmentalConditions_AmbientIllumination_AMBIENT_ILLUMINATION_LEVEL4);
+        }
+        else if (intensity > 1)
+        {
+            obj_osi_internal.dynamic_gt->mutable_environmental_conditions()->set_ambient_illumination(
+                osi3::EnvironmentalConditions_AmbientIllumination_AMBIENT_ILLUMINATION_LEVEL3);
+        }
+        else if (intensity > 0.01)
+        {
+            obj_osi_internal.dynamic_gt->mutable_environmental_conditions()->set_ambient_illumination(
+                osi3::EnvironmentalConditions_AmbientIllumination_AMBIENT_ILLUMINATION_LEVEL2);
+        }
+        else if (intensity > 0)
+        {
+            obj_osi_internal.dynamic_gt->mutable_environmental_conditions()->set_ambient_illumination(
+                osi3::EnvironmentalConditions_AmbientIllumination_AMBIENT_ILLUMINATION_LEVEL1);
+        }
+        else
+        {
+            obj_osi_internal.dynamic_gt->mutable_environmental_conditions()->set_ambient_illumination(
+                osi3::EnvironmentalConditions_AmbientIllumination_AMBIENT_ILLUMINATION_OTHER);
         }
     }
 }
