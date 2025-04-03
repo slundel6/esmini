@@ -77,7 +77,7 @@ namespace scenarioengine
     */
     typedef struct
     {
-        float                         visibility_range;
+        double                        visibility_range;
         std::optional<OSCBoundingBox> boundingbox;
     } Fog;
 
@@ -190,7 +190,7 @@ namespace scenarioengine
         double GetSunIntensity() const;
 
         void SetFog(const Fog& fog);
-        void SetFog(const float visualrange);
+        void SetFog(const double visualrange);
         Fog  GetFog() const;
         bool IsFogSet() const;
         bool IsFogBoundingBoxSet() const;

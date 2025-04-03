@@ -4979,11 +4979,11 @@ void ScenarioReader::ParseOSCEnvironment(const pugi::xml_node &xml_node, OSCEnvi
                     {
                         OSCBoundingBox bb;
                         ParseOSCBoundingBox(bb, weatherChild);
-                        env->SetFog(Fog{std::stof(visualRange), bb});
+                        env->SetFog(Fog{std::stod(visualRange), bb});
                     }
                     else
                     {
-                        env->SetFog(std::stof(visualRange));
+                        env->SetFog(std::stod(visualRange));
                     }
                 }
                 else if (weatherChildName == "Precipitation")

@@ -4899,9 +4899,9 @@ TEST(EnvironmentTest, Basic)
     EXPECT_TRUE(new_environment.IsFractionalCloudStateSet());
     EXPECT_TRUE(environment.IsFractionalCloudStateSet());
 
-    new_environment.SetFog(1000);
+    new_environment.SetFog(1000.0);
     environment.UpdateEnvironment(new_environment);
-    EXPECT_EQ(new_environment.GetFog().visibility_range, 1000);
+    EXPECT_EQ(new_environment.GetFog().visibility_range, 1000.0);
     EXPECT_EQ(new_environment.GetFog().visibility_range, environment.GetFog().visibility_range);
     EXPECT_TRUE(new_environment.IsFogSet());
     EXPECT_TRUE(environment.IsFogSet());

@@ -3021,42 +3021,7 @@ void OSIReporter::UpdateEnvironmentWeather(const OSCEnvironment &environment)
     if (environment.IsFogSet())
     {
         scenarioengine::Fog fog = environment.GetFog();
-        if (fog.visibility_range > 40000)
-        {
-            obj_osi_internal.dynamic_gt->mutable_environmental_conditions()->set_fog(osi3::EnvironmentalConditions_Fog_FOG_EXCELLENT_VISIBILITY);
-        }
-        else if (fog.visibility_range > 10000)
-        {
-            obj_osi_internal.dynamic_gt->mutable_environmental_conditions()->set_fog(osi3::EnvironmentalConditions_Fog_FOG_GOOD_VISIBILITY);
-        }
-        else if (fog.visibility_range > 4000)
-        {
-            obj_osi_internal.dynamic_gt->mutable_environmental_conditions()->set_fog(osi3::EnvironmentalConditions_Fog_FOG_MODERATE_VISIBILITY);
-        }
-        else if (fog.visibility_range > 2000)
-        {
-            obj_osi_internal.dynamic_gt->mutable_environmental_conditions()->set_fog(osi3::EnvironmentalConditions_Fog_FOG_POOR_VISIBILITY);
-        }
-        else if (fog.visibility_range > 1000)
-        {
-            obj_osi_internal.dynamic_gt->mutable_environmental_conditions()->set_fog(osi3::EnvironmentalConditions_Fog_FOG_MIST);
-        }
-        else if (fog.visibility_range > 200)
-        {
-            obj_osi_internal.dynamic_gt->mutable_environmental_conditions()->set_fog(osi3::EnvironmentalConditions_Fog_FOG_LIGHT);
-        }
-        else if (fog.visibility_range > 50)
-        {
-            obj_osi_internal.dynamic_gt->mutable_environmental_conditions()->set_fog(osi3::EnvironmentalConditions_Fog_FOG_THICK);
-        }
-        else if (fog.visibility_range > 0)
-        {
-            obj_osi_internal.dynamic_gt->mutable_environmental_conditions()->set_fog(osi3::EnvironmentalConditions_Fog_FOG_DENSE);
-        }
-        else
-        {
-            obj_osi_internal.dynamic_gt->mutable_environmental_conditions()->set_fog(osi3::EnvironmentalConditions_Fog_FOG_OTHER);
-        }
+        UpdateEnvironmentFog(fog.visibility_range);
     }
     if (environment.IsPrecipitationIntensitySet())
     {
@@ -3238,5 +3203,45 @@ void OSIReporter::UpdateEnvironmentTimeOfDay(const OSCEnvironment &environment)
         obj_osi_internal.dynamic_gt->mutable_environmental_conditions()->set_unix_timestamp(
             GetEpochTimeFromString(environment.GetTimeOfDay().datetime) +
             obj_osi_internal.dynamic_gt->mutable_timestamp()->seconds());  // plus simulation time, nanosec is wrong
+    }
+}
+
+void OSIReporter::UpdateEnvironmentFog(const double visibility_range)
+{
+    if (visibility_range > 40000)
+    {
+        obj_osi_internal.dynamic_gt->mutable_environmental_conditions()->set_fog(osi3::EnvironmentalConditions_Fog_FOG_EXCELLENT_VISIBILITY);
+    }
+    else if (visibility_range > 10000)
+    {
+        obj_osi_internal.dynamic_gt->mutable_environmental_conditions()->set_fog(osi3::EnvironmentalConditions_Fog_FOG_GOOD_VISIBILITY);
+    }
+    else if (visibility_range > 4000)
+    {
+        obj_osi_internal.dynamic_gt->mutable_environmental_conditions()->set_fog(osi3::EnvironmentalConditions_Fog_FOG_MODERATE_VISIBILITY);
+    }
+    else if (visibility_range > 2000)
+    {
+        obj_osi_internal.dynamic_gt->mutable_environmental_conditions()->set_fog(osi3::EnvironmentalConditions_Fog_FOG_POOR_VISIBILITY);
+    }
+    else if (visibility_range > 1000)
+    {
+        obj_osi_internal.dynamic_gt->mutable_environmental_conditions()->set_fog(osi3::EnvironmentalConditions_Fog_FOG_MIST);
+    }
+    else if (visibility_range > 200)
+    {
+        obj_osi_internal.dynamic_gt->mutable_environmental_conditions()->set_fog(osi3::EnvironmentalConditions_Fog_FOG_LIGHT);
+    }
+    else if (visibility_range > 50)
+    {
+        obj_osi_internal.dynamic_gt->mutable_environmental_conditions()->set_fog(osi3::EnvironmentalConditions_Fog_FOG_THICK);
+    }
+    else if (visibility_range > 0)
+    {
+        obj_osi_internal.dynamic_gt->mutable_environmental_conditions()->set_fog(osi3::EnvironmentalConditions_Fog_FOG_DENSE);
+    }
+    else
+    {
+        obj_osi_internal.dynamic_gt->mutable_environmental_conditions()->set_fog(osi3::EnvironmentalConditions_Fog_FOG_OTHER);
     }
 }

@@ -1773,7 +1773,7 @@ Viewer::Viewer(roadmanager::OpenDrive* odrManager,
     osgViewer_->realize();
 }
 
-int Viewer::CreateFog(double range)
+void Viewer::CreateFog(const double range)
 {
     osg::ref_ptr<osg::Fog> fog = new osg::Fog;
     fog->setMode(osg::Fog::EXP);
@@ -1782,61 +1782,17 @@ int Viewer::CreateFog(double range)
     fog->setEnd(static_cast<float>(range));
     fog->setColor(osg::Vec4(0.6f, 0.6f, 0.6f, 1.0f));
     rootnode_->getOrCreateStateSet()->setAttributeAndModes(fog.get());
-
-    return 0;
 }
 
-int Viewer::CreateFogBoundingBox(osg::PositionAttitudeTransform* parent)
+void Viewer::SetSunLight(const double sunIntensity)
 {
-    fogBoundingBox_ = new osg::PositionAttitudeTransform;
-    fogBoundingBox_->getOrCreateStateSet()->setMode(GL_RESCALE_NORMAL, osg::StateAttribute::ON);
+    float       sunIntensityNormalize = static_cast<float>(sunIntensity) / 10000;
+    osg::Light* light                 = osgViewer_->getLight();
+    light->setDiffuse(osg::Vec4(0.9 * sunIntensityNormalize - 0.1, 0.9 * sunIntensityNormalize - 0.1, 0.8 * sunIntensityNormalize - 0.1, 1));
 
-    osg::ref_ptr<osg::ShapeDrawable> box = new osg::ShapeDrawable;
-    //	box->setShape(new osg::Box(osg::Vec3(0, 0, 0), 20, 30, 40));   // center(x, y, z), x, y, z
-    box->setShape(new osg::Box());
-    box->setColor(osg::Vec4(0.0f, 0.0f, 1.0f, 1.0f));
-
-    osg::ref_ptr<osg::Geode> boxGeode = new osg::Geode;
-    boxGeode->addDrawable(box.get());
-    fogBoundingBox_->addChild(boxGeode.get());
-    fogBoundingBox_->setScale(osg::Vec3(10, 20, 30));
-    fogBoundingBox_->setPosition(osg::Vec3(0, 0, 15));
-
-    // Draw wireframe
-    osg::PolygonMode* polygonMode = new osg::PolygonMode;
-    polygonMode->setMode(osg::PolygonMode::FRONT_AND_BACK, osg::PolygonMode::LINE);
-    osg::ref_ptr<osg::StateSet> stateset = fogBoundingBox_->getOrCreateStateSet();  // Get the StateSet of the group
-    stateset->setAttributeAndModes(polygonMode, osg::StateAttribute::OVERRIDE | osg::StateAttribute::ON);
-    stateset->setDataVariance(osg::Object::DYNAMIC);
-
-    parent->addChild(fogBoundingBox_.get());
-
-    return 0;
-}
-
-int Viewer::UpdateTimeOfDay(double intensity)
-{
-    osgViewer_->getCamera()->setClearColor(
-        osg::Vec4(intensity * color_background[0], intensity * color_background[1], intensity * color_background[2], 0.0f));
-
-    osg::Light* light = osgViewer_->getLight();
-    light->setAmbient(osg::Vec4(0.4, 0.4, 0.9 * 0.4, 1));
-    light->setDiffuse(osg::Vec4(0.2, 0.8, 0.7, 1));
-
-    osgViewer_->getCamera()->setClearColor(osg::Vec4(0.5f, 0.1f, 1.0f, 0.0f));
-
-    return 0;
-}
-
-void Viewer::SetSunLight(float sunIntensity)
-{
-    sunIntensity      = sunIntensity / 10000;
-    osg::Light* light = osgViewer_->getLight();
-    light->setDiffuse(osg::Vec4(0.9 * sunIntensity - 0.1, 0.9 * sunIntensity - 0.1, 0.8 * sunIntensity - 0.1, 1));
-
-    float r = 0.5 * sunIntensity;
-    float g = 0.75 * sunIntensity;
-    float b = 0.8 * sunIntensity + 0.2;
+    float r = 0.5 * sunIntensityNormalize;
+    float g = 0.75 * sunIntensityNormalize;
+    float b = 0.8 * sunIntensityNormalize + 0.2;
 
     osgViewer_->getCamera()->setClearColor(osg::Vec4(r, g, b, 0.0f));
 }

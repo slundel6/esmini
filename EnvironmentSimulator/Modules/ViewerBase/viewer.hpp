@@ -607,10 +607,8 @@ namespace viewer
                                                                 bool                                       decoration,
                                                                 int                                        screenNum,
                                                                 bool                                       headless);
-        int                                          CreateFogBoundingBox(osg::PositionAttitudeTransform* parent);
-        int                                          CreateFog(double range);
-        int                                          UpdateTimeOfDay(double intensity);
-        void                                         SetSunLight(float sunIntensity);
+        void                                         CreateFog(const double range);
+        void                                         SetSunLight(const double sunIntensity);
 
         int                                   AddGroundSurface();
         bool                                  keyUp_;

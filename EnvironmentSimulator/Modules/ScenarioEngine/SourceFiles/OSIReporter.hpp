@@ -161,6 +161,11 @@ public:
     */
     void UpdateEnvironmentTimeOfDay(const OSCEnvironment& environment);
 
+    /**
+    Fills the Fog
+    */
+    void UpdateEnvironmentFog(const double visibility_range);
+
     std::vector<TrafficCommandStateChange> traffic_command_state_changes_;
 
     void RegisterTrafficCommandStateChange(OSCPrivateAction* action, StoryBoardElement::State state, StoryBoardElement::Transition transition)

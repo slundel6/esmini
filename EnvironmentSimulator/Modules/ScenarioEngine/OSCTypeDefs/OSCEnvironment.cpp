@@ -99,7 +99,7 @@ void OSCEnvironment::SetFog(const Fog& fog)
     fog_ = fog;
 }
 
-void OSCEnvironment::SetFog(const float visualrange)
+void OSCEnvironment::SetFog(const double visualrange)
 {
     fog_ = Fog{visualrange, std::nullopt};
 }
