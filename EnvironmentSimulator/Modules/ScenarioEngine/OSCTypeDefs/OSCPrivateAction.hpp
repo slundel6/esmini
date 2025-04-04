@@ -589,6 +589,7 @@ namespace scenarioengine
 
     private:
         double acceleration_;
+        bool   is_steering_ = false;
     };
 
     class LatLaneChangeAction : public OSCPrivateAction
