@@ -166,6 +166,11 @@ public:
     */
     void UpdateEnvironmentFog(const double visibility_range);
 
+    /**
+    Fills the precipitation
+    */
+    void UpdateEnvironmentPrecipitation(const double precipitation_intensity);
+
     std::vector<TrafficCommandStateChange> traffic_command_state_changes_;
 
     void RegisterTrafficCommandStateChange(OSCPrivateAction* action, StoryBoardElement::State state, StoryBoardElement::Transition transition)

@@ -121,7 +121,15 @@ bool scenarioengine::OSCEnvironment::IsFogBoundingBoxSet() const
 
 void OSCEnvironment::SetWind(const Wind& wind)
 {
-    wind_ = wind;
+    if (wind.direction < OSCWindDirectionMin || wind.direction > OSCWindDirectionMax)
+    {
+        LOG_WARN("Wind direction clamped between 0.0 and 360.0 degrees");
+    }
+    // Clamp the wind direction to the defined range
+    Wind windNew;
+    windNew.direction = CLAMP(wind.direction, OSCWindDirectionMin, OSCWindDirectionMax);
+    windNew.speed     = wind.speed;
+    wind_             = windNew;
 }
 
 Wind OSCEnvironment::GetWind() const

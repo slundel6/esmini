@@ -4914,6 +4914,10 @@ void ScenarioReader::ParseOSCEnvironment(const pugi::xml_node &xml_node, OSCEnvi
                 {
                     if (const auto &val = parameters.ReadAttribute(envChild, "cloudState"); !val.empty())
                     {
+                        if (GetVersionMajor() == 1 && GetVersionMinor() <= 1)
+                        {
+                            LOG_WARN("cloudState is deprecated in v1.2. Use fractionalCloudCover instead, Accepting it anyway.");
+                        }
                         scenarioengine::CloudState cloudState;
                         SelectCloudState(cloudState, val);
                         env->SetCloudState(cloudState);
@@ -5008,7 +5012,15 @@ void ScenarioReader::ParseOSCEnvironment(const pugi::xml_node &xml_node, OSCEnvi
                         continue;
                     }
 
-                    if (const auto &val = parameters.ReadAttribute(weatherChild, "precipitationIntensity"); !val.empty())
+                    if (const auto &intensity = parameters.ReadAttribute(weatherChild, "intensity"); !intensity.empty())
+                    {
+                        if (GetVersionMajor() == 1 && GetVersionMinor() <= 0)
+                        {
+                            LOG_WARN("In Precipitation, intensity is deprecated in v1.1. Use precipitationIntensity instead, Accepting it anyway.");
+                        }
+                        env->SetPrecipitation(Precipitation{std::stod(intensity), precipType});
+                    }
+                    else if (const auto &val = parameters.ReadAttribute(weatherChild, "precipitationIntensity"); !val.empty())
                     {
                         env->SetPrecipitation(Precipitation{std::stod(val), precipType});
                     }

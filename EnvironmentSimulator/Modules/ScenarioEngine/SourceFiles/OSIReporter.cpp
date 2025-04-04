@@ -3003,7 +3003,6 @@ void OSIReporter::UpdateEnvironmentWeather(const OSCEnvironment &environment)
 {
     if (environment.IsAtmosphericPressureSet())
     {
-        LOG_INFO("Atmospheric pressure set to {} hPa", environment.GetAtmosphericPressure());
         obj_osi_internal.dynamic_gt->mutable_environmental_conditions()->set_atmospheric_pressure(environment.GetAtmosphericPressure());
     }
     if (environment.IsTemperatureSet())
@@ -3025,47 +3024,12 @@ void OSIReporter::UpdateEnvironmentWeather(const OSCEnvironment &environment)
     }
     if (environment.IsPrecipitationIntensitySet())
     {
-        double precipitationintensity = environment.GetPrecipitationIntensity();
-        if (precipitationintensity > 149)
-        {
-            obj_osi_internal.dynamic_gt->mutable_environmental_conditions()->set_precipitation(
-                osi3::EnvironmentalConditions_Precipitation_PRECIPITATION_EXTREME);
-        }
-        else if (precipitationintensity > 34)
-        {
-            obj_osi_internal.dynamic_gt->mutable_environmental_conditions()->set_precipitation(
-                osi3::EnvironmentalConditions_Precipitation_PRECIPITATION_VERY_HEAVY);
-        }
-        else if (precipitationintensity > 8.1)
-        {
-            obj_osi_internal.dynamic_gt->mutable_environmental_conditions()->set_precipitation(
-                osi3::EnvironmentalConditions_Precipitation_PRECIPITATION_HEAVY);
-        }
-        else if (precipitationintensity > 1.9)
-        {
-            obj_osi_internal.dynamic_gt->mutable_environmental_conditions()->set_precipitation(
-                osi3::EnvironmentalConditions_Precipitation_PRECIPITATION_MODERATE);
-        }
-        else if (precipitationintensity > 0.5)
-        {
-            obj_osi_internal.dynamic_gt->mutable_environmental_conditions()->set_precipitation(
-                osi3::EnvironmentalConditions_Precipitation_PRECIPITATION_LIGHT);
-        }
-        else if (precipitationintensity > 0.1)
-        {
-            obj_osi_internal.dynamic_gt->mutable_environmental_conditions()->set_precipitation(
-                osi3::EnvironmentalConditions_Precipitation_PRECIPITATION_VERY_LIGHT);
-        }
-        else if (precipitationintensity > 0)
-        {
-            obj_osi_internal.dynamic_gt->mutable_environmental_conditions()->set_precipitation(
-                osi3::EnvironmentalConditions_Precipitation_PRECIPITATION_NONE);
-        }
-        else
-        {
-            obj_osi_internal.dynamic_gt->mutable_environmental_conditions()->set_precipitation(
-                osi3::EnvironmentalConditions_Precipitation_PRECIPITATION_OTHER);
-        }
+        UpdateEnvironmentPrecipitation(environment.GetPrecipitationIntensity());
+    }
+    if (environment.IsWindSet())
+    {
+        obj_osi_internal.dynamic_gt->mutable_environmental_conditions()->mutable_wind()->set_origin_direction(environment.GetWind().direction);
+        obj_osi_internal.dynamic_gt->mutable_environmental_conditions()->mutable_wind()->set_speed(environment.GetWind().speed);
     }
 }
 
@@ -3243,5 +3207,49 @@ void OSIReporter::UpdateEnvironmentFog(const double visibility_range)
     else
     {
         obj_osi_internal.dynamic_gt->mutable_environmental_conditions()->set_fog(osi3::EnvironmentalConditions_Fog_FOG_OTHER);
+    }
+}
+
+void OSIReporter::UpdateEnvironmentPrecipitation(const double precipitationintensity)
+{
+    if (precipitationintensity > 149)
+    {
+        obj_osi_internal.dynamic_gt->mutable_environmental_conditions()->set_precipitation(
+            osi3::EnvironmentalConditions_Precipitation_PRECIPITATION_EXTREME);
+    }
+    else if (precipitationintensity > 34)
+    {
+        obj_osi_internal.dynamic_gt->mutable_environmental_conditions()->set_precipitation(
+            osi3::EnvironmentalConditions_Precipitation_PRECIPITATION_VERY_HEAVY);
+    }
+    else if (precipitationintensity > 8.1)
+    {
+        obj_osi_internal.dynamic_gt->mutable_environmental_conditions()->set_precipitation(
+            osi3::EnvironmentalConditions_Precipitation_PRECIPITATION_HEAVY);
+    }
+    else if (precipitationintensity > 1.9)
+    {
+        obj_osi_internal.dynamic_gt->mutable_environmental_conditions()->set_precipitation(
+            osi3::EnvironmentalConditions_Precipitation_PRECIPITATION_MODERATE);
+    }
+    else if (precipitationintensity > 0.5)
+    {
+        obj_osi_internal.dynamic_gt->mutable_environmental_conditions()->set_precipitation(
+            osi3::EnvironmentalConditions_Precipitation_PRECIPITATION_LIGHT);
+    }
+    else if (precipitationintensity > 0.1)
+    {
+        obj_osi_internal.dynamic_gt->mutable_environmental_conditions()->set_precipitation(
+            osi3::EnvironmentalConditions_Precipitation_PRECIPITATION_VERY_LIGHT);
+    }
+    else if (precipitationintensity > 0)
+    {
+        obj_osi_internal.dynamic_gt->mutable_environmental_conditions()->set_precipitation(
+            osi3::EnvironmentalConditions_Precipitation_PRECIPITATION_NONE);
+    }
+    else
+    {
+        obj_osi_internal.dynamic_gt->mutable_environmental_conditions()->set_precipitation(
+            osi3::EnvironmentalConditions_Precipitation_PRECIPITATION_OTHER);
     }
 }

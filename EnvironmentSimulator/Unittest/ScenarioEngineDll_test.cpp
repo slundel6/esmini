@@ -3409,6 +3409,8 @@ TEST(EnvironmentTest, OSIForEnvironment)
     EXPECT_EQ(osi_gt.mutable_environmental_conditions()->precipitation(), osi3::EnvironmentalConditions_Precipitation_PRECIPITATION_HEAVY);
     EXPECT_EQ(osi_gt.mutable_environmental_conditions()->mutable_clouds()->fractional_cloud_cover(),
               osi3::EnvironmentalConditions_CloudLayer_FractionalCloudCover_FRACTIONAL_CLOUD_COVER_EIGHT_OKTAS);
+    EXPECT_EQ(osi_gt.mutable_environmental_conditions()->mutable_wind()->origin_direction(), 3.1415);
+    EXPECT_EQ(osi_gt.mutable_environmental_conditions()->mutable_wind()->speed(), 10);
     EXPECT_EQ(osi_gt.mutable_environmental_conditions()->mutable_time_of_day()->seconds_since_midnight(), 37800);
     // EXPECT_EQ(osi_gt.mutable_environmental_conditions()->unix_timestamp(),
     //           1700040600123);  // TimeOfDay animation is true, simulation time is 1.0s which is added to epoch time
@@ -3427,6 +3429,61 @@ TEST(EnvironmentTest, OSIForEnvironment)
               osi3::EnvironmentalConditions_CloudLayer_FractionalCloudCover_FRACTIONAL_CLOUD_COVER_ONE_OKTAS);
 
     SE_Close();
+}
+
+static void scenarioNameParamDeclCallback(void*)
+{
+    static int  counter       = 0;
+    int         roadId[3]     = {1, 1, 0};
+    double      simEndTime[3] = {1.04, 1.53, 1.04};
+    std::string scenario[3]   = {"../../../EnvironmentSimulator/Unittest/xodr/straight_road.xodr",
+                                 "../../../EnvironmentSimulator/Unittest/xodr/straight_2x100m_opposite.xodr",
+                                 "../../../EnvironmentSimulator/Unittest/xodr/straight_highway_500m.xodr"};
+
+    if (counter < 3)
+    {
+        SE_SetParameterString("RoadName", scenario[counter].c_str());
+        SE_SetParameterInt("RoadId", roadId[counter]);
+        SE_SetParameterDouble("SimulationEndTime", simEndTime[counter]);
+    }
+    counter++;
+}
+
+TEST(EnvironmentTest, FrictionScaleFactor)
+{
+    std::string scenario_file = "../../../EnvironmentSimulator/Unittest/xosc/environment_test.xosc";
+
+    for (int i = 0; i < 3 && SE_GetQuitFlag() != 1; i++)
+    {
+        SE_RegisterParameterDeclarationCallback(scenarioNameParamDeclCallback, 0);
+        ASSERT_EQ(SE_Init(scenario_file.c_str(), 0, 0, 0, 0), 0);
+
+        SE_StepDT(0.01f);
+        SE_StepDT(0.01f);
+        osi3::GroundTruth osi_gt;
+        int               sv_size = 0;
+        const char*       gt      = SE_GetOSIGroundTruth(&sv_size);
+        osi_gt.ParseFromArray(gt, sv_size);
+
+        if (i == 0)
+        {
+            EXPECT_EQ(osi_gt.mutable_moving_object(0)->mutable_vehicle_attributes()->mutable_wheel_data(0)->friction_coefficient(), 0.45);
+        }
+        else if (i == 1)
+        {
+            EXPECT_EQ(osi_gt.mutable_moving_object(0)->mutable_vehicle_attributes()->mutable_wheel_data(0)->friction_coefficient(), 0.9);
+        }
+        else if (i == 2)
+        {
+            SE_StepDT(1.51f);
+            gt = SE_GetOSIGroundTruth(&sv_size);
+            osi_gt.ParseFromArray(gt, sv_size);
+            EXPECT_NEAR(osi_gt.mutable_moving_object(0)->mutable_vehicle_attributes()->mutable_wheel_data(0)->friction_coefficient(), 0.72000, 1E-3);
+        }
+
+        SE_Close();
+    }
+    SE_RegisterParameterDeclarationCallback(0, 0);
 }
 
 #endif  // _USE_OSI
