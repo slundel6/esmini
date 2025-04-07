@@ -2343,8 +2343,6 @@ OSCGlobalAction *ScenarioReader::parseOSCGlobalAction(pugi::xml_node actionNode,
                     LOG_WARN("Unsupported EnvironmentAction {}", envChild.name());
                 }
             }
-
-            ParseOSCEnvironment(actionChild.child("Environment"), envAction->new_environment_);
             envAction->SetEnvironment(environment_);
             LOG_INFO("Parsing OSC Environment with node {}", actionChild.name());
 
@@ -4873,16 +4871,11 @@ static void SelectCloudState(scenarioengine::CloudState &state, const std::strin
     // Helper function for parseOSCEnvironment
     using scenarioengine::CloudState;
     std::map<std::string, CloudState> stateMap{
-        {"cloudless", CloudState::CLOUDLESS},
-        {"sunne", CloudState::SUNNY},
-        {"serene", CloudState::SERENE},
-        {"slightly_cloudy", CloudState::SLIGHTLY_CLOUDY},
-        {"light_cloudy", CloudState::LIGHT_CLOUDY},
         {"cloudy", CloudState::CLOUDY},
-        {"heavily_cloudy", CloudState::HEAVILY_CLOUDY},
-        {"almost_overcast", CloudState::ALMOST_OVERCAST},
+        {"free", CloudState::FREE},
         {"overcast", CloudState::OVERCAST},
-        {"sky_not_visible", CloudState::SKY_NOT_VISIBLE},
+        {"rainy", CloudState::RAINY},
+        {"skyOff", CloudState::SKYOFF},
     };
 
     auto it = stateMap.find(cloudStateStr);
@@ -4902,9 +4895,14 @@ void ScenarioReader::ParseOSCEnvironment(const pugi::xml_node &xml_node, OSCEnvi
     for (pugi::xml_node envChild : xml_node.children())
     {
         std::string envChildName(envChild.name());
-        if (envChildName == "TimeOfDay")
+        if (envChildName == "ParameterDeclarations")
+        {
+            parameters.addParameterDeclarations(envChild);
+        }
+        else if (envChildName == "TimeOfDay")
         {
             bool animation = (parameters.ReadAttribute(envChild, "animation") == "true") ? true : false;
+            LOG_INFO("TimeOfDay animation: {}", animation);
             if (const auto &val = parameters.ReadAttribute(envChild, "dateTime"); !val.empty())
             {
                 if (IsValidDateTimeFormat(val))
@@ -5084,4 +5082,5 @@ void ScenarioReader::ParseOSCEnvironment(const pugi::xml_node &xml_node, OSCEnvi
             LOG_WARN("Not valid environment attribute name:{}", envChildName);
         }
     }
+    parameters.RestoreParameterDeclarations();
 }

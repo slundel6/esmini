@@ -3408,7 +3408,7 @@ TEST(EnvironmentTest, OSIForEnvironment)
               osi3::EnvironmentalConditions_AmbientIllumination_AMBIENT_ILLUMINATION_LEVEL8);
     EXPECT_EQ(osi_gt.mutable_environmental_conditions()->precipitation(), osi3::EnvironmentalConditions_Precipitation_PRECIPITATION_HEAVY);
     EXPECT_EQ(osi_gt.mutable_environmental_conditions()->mutable_clouds()->fractional_cloud_cover(),
-              osi3::EnvironmentalConditions_CloudLayer_FractionalCloudCover_FRACTIONAL_CLOUD_COVER_EIGHT_OKTAS);
+              osi3::EnvironmentalConditions_CloudLayer_FractionalCloudCover_FRACTIONAL_CLOUD_COVER_ZERO_OKTAS);
     EXPECT_EQ(osi_gt.mutable_environmental_conditions()->mutable_wind()->origin_direction(), 3.1415);
     EXPECT_EQ(osi_gt.mutable_environmental_conditions()->mutable_wind()->speed(), 10);
     EXPECT_EQ(osi_gt.mutable_environmental_conditions()->mutable_time_of_day()->seconds_since_midnight(), 37800);

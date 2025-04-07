@@ -50,16 +50,11 @@ namespace scenarioengine
     */
     enum class CloudState
     {
-        CLOUDLESS,  // osc <=1.1 free
-        SUNNY,
-        SERENE,
-        SLIGHTLY_CLOUDY,
-        LIGHT_CLOUDY,  // osc <=1.1 cloudy
         CLOUDY,
-        HEAVILY_CLOUDY,  // osc <=1.1 rainy
-        ALMOST_OVERCAST,
-        OVERCAST,         // osc <=1.1 overcast
-        SKY_NOT_VISIBLE,  // osc <=1.1 sky off
+        FREE,
+        OVERCAST,
+        RAINY,
+        SKYOFF,
         OTHER
     };
 

@@ -1792,9 +1792,9 @@ void viewer::Viewer::SetSkyColour(const double sunIntensityFactor, const double 
     // LOG_INFO("SetSkyColour: FogAndCloudFactor: {}", FogAndCloudFactor);
     osg::Light* light = osgViewer_->getLight();
     light->setDiffuse(osg::Vec4(0.9 * sunIntensityFactor - 0.1, 0.9 * sunIntensityFactor - 0.1, 0.8 * sunIntensityFactor - 0.1, 1));
-    float r = sunIntensityFactor * ((1 - FogAndCloudFactor) * color_background[0] + (FogAndCloudFactor * 0.5));
-    float g = sunIntensityFactor * ((1 - FogAndCloudFactor) * color_background[1] + (FogAndCloudFactor * 0.5));
-    float b = sunIntensityFactor * ((1 - FogAndCloudFactor) * color_background[2] + (FogAndCloudFactor * 0.5));
+    float r = sunIntensityFactor * ((1 - FogAndCloudFactor) * color_background[0] + (FogAndCloudFactor * color_dark_gray[0]));
+    float g = sunIntensityFactor * ((1 - FogAndCloudFactor) * color_background[1] + (FogAndCloudFactor * color_dark_gray[1]));
+    float b = sunIntensityFactor * ((1 - FogAndCloudFactor) * color_background[2] + (FogAndCloudFactor * color_dark_gray[2]));
     // LOG_INFO("SetSkyColour: r: {}, g: {}, b: {}", r, g, b);
     osgViewer_->getCamera()->setClearColor(osg::Vec4(r, g, b, 0.0f));
 }

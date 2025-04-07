@@ -4892,7 +4892,7 @@ TEST(EnvironmentTest, Basic)
     EXPECT_TRUE(new_environment.IsTemperatureSet());
     EXPECT_TRUE(environment.IsTemperatureSet());
 
-    new_environment.SetCloudState(scenarioengine::CloudState::HEAVILY_CLOUDY);
+    new_environment.SetCloudState(scenarioengine::CloudState::RAINY);
     environment.UpdateEnvironment(new_environment);
     EXPECT_EQ(new_environment.GetFractionalCloudState(), "sixOktas");
     EXPECT_EQ(new_environment.GetFractionalCloudState(), environment.GetFractionalCloudState());
@@ -5017,7 +5017,7 @@ TEST(EnvironmentTest, Parsing)
     EXPECT_EQ(oscEnv.GetTimeOfDay().animation, todNode.attribute("animation").as_bool());
     EXPECT_EQ(oscEnv.GetTimeOfDay().datetime, todNode.attribute("dateTime").value());
 
-    EXPECT_EQ(oscEnv.GetFractionalCloudState(), "fiveOktas");
+    EXPECT_EQ(oscEnv.GetFractionalCloudState(), "fourOktas");
     EXPECT_NEAR(oscEnv.GetTemperature(), scenarioengine::OSCTemperatureMin, 1e-5);          // clamp to min
     EXPECT_NEAR(oscEnv.GetAtmosphericPressure(), scenarioengine::OSCAtmosphericMin, 1e-5);  // clamp to min
 

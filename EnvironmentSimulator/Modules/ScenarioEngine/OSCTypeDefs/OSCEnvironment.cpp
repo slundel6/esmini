@@ -62,16 +62,11 @@ void OSCEnvironment::SetFractionalCloudState(const std::string& fractionalcloudS
 void OSCEnvironment::SetCloudState(CloudState cloudstate)
 {
     std::map<CloudState, std::string> stateMap{
-        {CloudState::CLOUDLESS, "zeroOktas"},
-        {CloudState::SUNNY, "oneOktas"},
-        {CloudState::SERENE, "twoOktas"},
-        {CloudState::SLIGHTLY_CLOUDY, "threeOktas"},
-        {CloudState::LIGHT_CLOUDY, "fourOktas"},
-        {CloudState::CLOUDY, "fiveOktas"},
-        {CloudState::HEAVILY_CLOUDY, "sixOktas"},
-        {CloudState::ALMOST_OVERCAST, "sevenOktas"},
+        {CloudState::FREE, "zeroOktas"},
+        {CloudState::CLOUDY, "fourOktas"},
+        {CloudState::RAINY, "sixOktas"},
         {CloudState::OVERCAST, "eightOktas"},
-        {CloudState::SKY_NOT_VISIBLE, "nineOktas"},
+        {CloudState::SKYOFF, "nineOktas"},
     };
     auto it = stateMap.find(cloudstate);
     if (it == stateMap.end())
