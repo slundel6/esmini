@@ -30,6 +30,8 @@ namespace scenarioengine
     double const OSCSunElevationMax  = M_PI;      // rad
     double const OSCWindDirectionMin = 0.0;       // rad
     double const OSCWindDirectionMax = 2 * M_PI;  // rad
+    double const OSCSunIntensityMax  = 100000.0;  // lux
+    double const OSCSunIntensityMin  = 0.0;       // lux
 
     /*
     Class PrecipitationType
@@ -184,18 +186,21 @@ namespace scenarioengine
         void        SetFractionalCloudState(const std::string& fractionalcloudStateStr);
         std::string GetFractionalCloudState() const;
         bool        IsFractionalCloudStateSet() const;
+        double      GetFractionalCloudStateFactor() const;
 
         void   SetSun(const Sun& sun);
         Sun    GetSun() const;
         bool   IsSunSet() const;
         bool   IsSunIntensitySet() const;
         double GetSunIntensity() const;
+        double GetSunIntensityFactor() const;
 
-        void SetFog(const Fog& fog);
-        void SetFog(const double visualrange);
-        Fog  GetFog() const;
-        bool IsFogSet() const;
-        bool IsFogBoundingBoxSet() const;
+        void   SetFog(const Fog& fog);
+        void   SetFog(const double visualrange);
+        Fog    GetFog() const;
+        double GetFogVisibilityRangeFactor() const;
+        bool   IsFogSet() const;
+        bool   IsFogBoundingBoxSet() const;
 
         void          SetPrecipitation(const Precipitation& precipitation);
         Precipitation GetPrecipitation() const;

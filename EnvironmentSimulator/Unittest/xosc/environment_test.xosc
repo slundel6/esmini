@@ -59,7 +59,7 @@
                                             <TimeOfDay animation="true" dateTime="2023-11-15T10:30:00.123+00:00"/>
                                             <Weather cloudState="overcast" temperature="300" atmosphericPressure="10000">
                                                 <Sun azimuth="0.4" intensity="10000" elevation="0.3"/>
-                                                <Fog visualRange="20"/>
+                                                <Fog visualRange="6000"/>
                                                 <Precipitation precipitationType="snow" precipitationIntensity="10.0"/>
                                                 <Wind direction="3.1415" speed="10"/>
                                             </Weather>

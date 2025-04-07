@@ -1784,33 +1784,30 @@ void Viewer::CreateFog(const double range)
     rootnode_->getOrCreateStateSet()->setAttributeAndModes(fog.get());
 }
 
-void Viewer::SetSunLight(const double sunIntensity)
+void viewer::Viewer::SetSkyColour(const double sunIntensityFactor, const double fogVishualRangeFoctor, const double ClodinessFactor)
 {
-    float       sunIntensityNormalize = static_cast<float>(sunIntensity) / 10000;
-    osg::Light* light                 = osgViewer_->getLight();
-    light->setDiffuse(osg::Vec4(0.9 * sunIntensityNormalize - 0.1, 0.9 * sunIntensityNormalize - 0.1, 0.8 * sunIntensityNormalize - 0.1, 1));
-
-    float r = 0.5 * sunIntensityNormalize;
-    float g = 0.75 * sunIntensityNormalize;
-    float b = 0.8 * sunIntensityNormalize + 0.2;
-
+    // LOG_INFO("SetSkyColour: sunIntensityFactor: {}, fogVishualRangeFoctor: {}, ClodinessFactor: {}", sunIntensityFactor, fogVishualRangeFoctor,
+    // ClodinessFactor);
+    double FogAndCloudFactor = CLAMP(0.0, 1.0, fogVishualRangeFoctor + ClodinessFactor);
+    // LOG_INFO("SetSkyColour: FogAndCloudFactor: {}", FogAndCloudFactor);
+    osg::Light* light = osgViewer_->getLight();
+    light->setDiffuse(osg::Vec4(0.9 * sunIntensityFactor - 0.1, 0.9 * sunIntensityFactor - 0.1, 0.8 * sunIntensityFactor - 0.1, 1));
+    float r = sunIntensityFactor * ((1 - FogAndCloudFactor) * color_background[0] + (FogAndCloudFactor * 0.5));
+    float g = sunIntensityFactor * ((1 - FogAndCloudFactor) * color_background[1] + (FogAndCloudFactor * 0.5));
+    float b = sunIntensityFactor * ((1 - FogAndCloudFactor) * color_background[2] + (FogAndCloudFactor * 0.5));
+    // LOG_INFO("SetSkyColour: r: {}, g: {}, b: {}", r, g, b);
     osgViewer_->getCamera()->setClearColor(osg::Vec4(r, g, b, 0.0f));
 }
 
 int Viewer::CreateWeatherGroup(scenarioengine::OSCEnvironment& environment)
 {
-    // LOG_INFO("-------------------------environment action viewer----------------------------");
     weatherGroup_ = new osg::PositionAttitudeTransform;
-    // CreateFogBoundingBox(weatherGroup_);
     if (environment.IsFogSet())
     {
         CreateFog(environment.GetFog().visibility_range);
     }
 
-    if (environment.IsSunIntensitySet())
-    {
-        SetSunLight(environment.GetSunIntensity());
-    }
+    SetSkyColour(environment.GetSunIntensityFactor(), environment.GetFogVisibilityRangeFactor(), environment.GetFractionalCloudStateFactor());
 
     rootnode_->addChild(weatherGroup_);
 

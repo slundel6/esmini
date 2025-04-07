@@ -4898,10 +4898,12 @@ TEST(EnvironmentTest, Basic)
     EXPECT_EQ(new_environment.GetFractionalCloudState(), environment.GetFractionalCloudState());
     EXPECT_TRUE(new_environment.IsFractionalCloudStateSet());
     EXPECT_TRUE(environment.IsFractionalCloudStateSet());
+    EXPECT_EQ(new_environment.GetFractionalCloudStateFactor(), 0.75);
 
     new_environment.SetFog(1000.0);
     environment.UpdateEnvironment(new_environment);
     EXPECT_EQ(new_environment.GetFog().visibility_range, 1000.0);
+    EXPECT_NEAR(new_environment.GetFogVisibilityRangeFactor(), 0.00099, 1E-5);
     EXPECT_EQ(new_environment.GetFog().visibility_range, environment.GetFog().visibility_range);
     EXPECT_TRUE(new_environment.IsFogSet());
     EXPECT_TRUE(environment.IsFogSet());
@@ -4920,6 +4922,7 @@ TEST(EnvironmentTest, Basic)
     EXPECT_EQ(new_environment.GetSun().azimuth, 2);
     EXPECT_EQ(new_environment.GetSun().elevation, 1);
     EXPECT_EQ(new_environment.GetSunIntensity(), 10000);
+    EXPECT_EQ(new_environment.GetSunIntensityFactor(), 0.1);
     EXPECT_EQ(new_environment.GetSun().azimuth, environment.GetSun().azimuth);
     EXPECT_EQ(new_environment.GetSunIntensity(), environment.GetSunIntensity());
     EXPECT_EQ(new_environment.GetSun().elevation, environment.GetSun().elevation);

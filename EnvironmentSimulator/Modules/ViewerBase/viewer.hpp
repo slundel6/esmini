@@ -608,7 +608,7 @@ namespace viewer
                                                                 int                                        screenNum,
                                                                 bool                                       headless);
         void                                         CreateFog(const double range);
-        void                                         SetSunLight(const double sunIntensity);
+        void SetSkyColour(const double sunIntensityFactor, const double fogVishualRangeFoctor, const double ClodinessFactor);
 
         int                                   AddGroundSurface();
         bool                                  keyUp_;

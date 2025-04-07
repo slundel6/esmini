@@ -94,6 +94,37 @@ bool OSCEnvironment::IsFractionalCloudStateSet() const
     return fractionalcloudstate_.has_value();
 }
 
+double scenarioengine::OSCEnvironment::GetFractionalCloudStateFactor() const
+{
+    if (IsFractionalCloudStateSet())
+    {
+        std::map<std::string, double> stateFactorMap{{"zeroOktas", 0.0},
+                                                     {"oneOktas", 0.125},
+                                                     {"twoOktas", 0.25},
+                                                     {"threeOktas", 0.375},
+                                                     {"fourOktas", 0.5},
+                                                     {"fiveOktas", 0.625},
+                                                     {"sixOktas", 0.75},
+                                                     {"sevenOktas", 0.875},
+                                                     {"eightOktas", 0.95},
+                                                     {"nineOktas", 1.0}};
+
+        auto it = stateFactorMap.find(fractionalcloudstate_.value());
+        if (it != stateFactorMap.end())
+        {
+            return it->second;
+        }
+        else
+        {
+            return 0.0;  // Default to 0.0 if the state is unrecognized
+        }
+    }
+    else
+    {
+        return 0.0;  // Default to 0.0 if no fractional cloud state is set
+    }
+}
+
 void OSCEnvironment::SetFog(const Fog& fog)
 {
     fog_ = fog;
@@ -107,6 +138,18 @@ void OSCEnvironment::SetFog(const double visualrange)
 Fog OSCEnvironment::GetFog() const
 {
     return fog_.value();
+}
+
+double OSCEnvironment::GetFogVisibilityRangeFactor() const
+{
+    if (IsFogSet())
+    {
+        return (1 / (GetFog().visibility_range + 1));
+    }
+    else
+    {
+        return std::numeric_limits<double>::infinity();
+    }
 }
 
 bool OSCEnvironment::IsFogSet() const
@@ -209,6 +252,20 @@ bool scenarioengine::OSCEnvironment::IsSunIntensitySet() const
 double scenarioengine::OSCEnvironment::GetSunIntensity() const
 {
     return GetSun().intensity.value();
+}
+
+double scenarioengine::OSCEnvironment::GetSunIntensityFactor() const
+{
+    if (IsSunIntensitySet())
+    {
+        double intensity = GetSunIntensity();
+        // Normalize intensity to a factor between 0 and 1
+        return (intensity - OSCSunIntensityMin) / (OSCSunIntensityMax - OSCSunIntensityMin);
+    }
+    else
+    {
+        return 0.5;  // Default to 0.5 if no sun intensity is set
+    }
 }
 
 void OSCEnvironment::SetTimeOfDay(const TimeOfDay& timeofday)
