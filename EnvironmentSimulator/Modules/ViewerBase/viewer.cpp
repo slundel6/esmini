@@ -1780,7 +1780,7 @@ void Viewer::CreateFog(const double range)
     fog->setDensity(1 / range);
     fog->setStart(static_cast<float>(-range));
     fog->setEnd(static_cast<float>(range));
-    fog->setColor(osg::Vec4(0.6f, 0.6f, 0.6f, 1.0f));
+    fog->setColor(osg::Vec4(0.1f, 0.1f, 0.1f, 1.0f));
     rootnode_->getOrCreateStateSet()->setAttributeAndModes(fog.get());
 }
 
@@ -1799,6 +1799,7 @@ void Viewer::SetSunLight(const double sunIntensity)
 
 int Viewer::CreateWeatherGroup(scenarioengine::OSCEnvironment& environment)
 {
+    // LOG_INFO("-------------------------environment action viewer----------------------------");
     weatherGroup_ = new osg::PositionAttitudeTransform;
     // CreateFogBoundingBox(weatherGroup_);
     if (environment.IsFogSet())

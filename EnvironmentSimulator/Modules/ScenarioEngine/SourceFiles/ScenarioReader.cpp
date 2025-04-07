@@ -2149,6 +2149,7 @@ int ScenarioReader::ParseTransitionDynamics(pugi::xml_node node, OSCPrivateActio
 
 OSCGlobalAction *ScenarioReader::parseOSCGlobalAction(pugi::xml_node actionNode, Event *parent)
 {
+    LOG_INFO("Parse global Action");
     OSCGlobalAction *action = 0;
 
     if (actionNode.first_child() == 0)
@@ -2321,7 +2322,29 @@ OSCGlobalAction *ScenarioReader::parseOSCGlobalAction(pugi::xml_node actionNode,
         else if (actionChild.name() == std::string("EnvironmentAction"))
         {
             EnvironmentAction *envAction = new EnvironmentAction(parent);
-            ParseOSCEnvironment(actionChild.child("Environment"), &envAction->new_environment_);
+            for (pugi::xml_node envChild = actionChild.first_child(); envChild; envChild = envChild.next_sibling())
+            {
+                if (envChild.name() == std::string("Environment"))
+                {
+                    ParseOSCEnvironment(envChild, envAction->new_environment_);
+                }
+                else if (envChild.name() == std::string("CatalogReference"))
+                {
+                    Entry *entry = ResolveCatalogReference(envChild);
+                    if (entry == nullptr)
+                    {
+                        LOG_WARN("Ignoring CatalogReference in environment, Failed to resolve catalog reference");
+                        continue;
+                    }
+                    ParseOSCEnvironment(entry->GetNode(), envAction->new_environment_);
+                }
+                else
+                {
+                    LOG_WARN("Unsupported EnvironmentAction {}", envChild.name());
+                }
+            }
+
+            ParseOSCEnvironment(actionChild.child("Environment"), envAction->new_environment_);
             envAction->SetEnvironment(environment_);
             LOG_INFO("Parsing OSC Environment with node {}", actionChild.name());
 
@@ -4874,7 +4897,7 @@ static void SelectCloudState(scenarioengine::CloudState &state, const std::strin
     }
 }
 
-void ScenarioReader::ParseOSCEnvironment(const pugi::xml_node &xml_node, OSCEnvironment *env)
+void ScenarioReader::ParseOSCEnvironment(const pugi::xml_node &xml_node, OSCEnvironment &env)
 {
     for (pugi::xml_node envChild : xml_node.children())
     {
@@ -4886,7 +4909,7 @@ void ScenarioReader::ParseOSCEnvironment(const pugi::xml_node &xml_node, OSCEnvi
             {
                 if (IsValidDateTimeFormat(val))
                 {
-                    env->SetTimeOfDay(TimeOfDay{animation, val});
+                    env.SetTimeOfDay(TimeOfDay{animation, val});
                 }
                 else
                 {
@@ -4907,7 +4930,7 @@ void ScenarioReader::ParseOSCEnvironment(const pugi::xml_node &xml_node, OSCEnvi
                 {
                     if (const auto &val = parameters.ReadAttribute(envChild, "atmosphericPressure"); !val.empty())
                     {
-                        env->SetAtmosphericPressure(std::stod(val));
+                        env.SetAtmosphericPressure(std::stod(val));
                     }
                 }
                 else if (weatherAttrName == "cloudState")
@@ -4920,21 +4943,21 @@ void ScenarioReader::ParseOSCEnvironment(const pugi::xml_node &xml_node, OSCEnvi
                         }
                         scenarioengine::CloudState cloudState;
                         SelectCloudState(cloudState, val);
-                        env->SetCloudState(cloudState);
+                        env.SetCloudState(cloudState);
                     }
                 }
                 else if (weatherAttrName == "fractionalCloudCover")
                 {
                     if (const auto &val = parameters.ReadAttribute(envChild, "fractionalCloudCover"); !val.empty())
                     {
-                        env->SetFractionalCloudState(val);
+                        env.SetFractionalCloudState(val);
                     }
                 }
                 else if (weatherAttrName == "temperature")
                 {
                     if (const auto &val = parameters.ReadAttribute(envChild, "temperature"); !val.empty())
                     {
-                        env->SetTemperature(std::stod(val));
+                        env.SetTemperature(std::stod(val));
                     }
                 }
                 else
@@ -4960,15 +4983,15 @@ void ScenarioReader::ParseOSCEnvironment(const pugi::xml_node &xml_node, OSCEnvi
                     }
                     if (!intensityStr.empty())
                     {
-                        env->SetSun(Sun{std::stod(azimuth), std::stod(elevation), std::stod(intensityStr)});
+                        env.SetSun(Sun{std::stod(azimuth), std::stod(elevation), std::stod(intensityStr)});
                     }
                     else if (!illuminanceStr.empty())
                     {
-                        env->SetSun(Sun{std::stod(azimuth), std::stod(elevation), std::stod(illuminanceStr)});
+                        env.SetSun(Sun{std::stod(azimuth), std::stod(elevation), std::stod(illuminanceStr)});
                     }
                     else
                     {
-                        env->SetSun(Sun{std::stod(azimuth), std::stod(elevation), std::nullopt});
+                        env.SetSun(Sun{std::stod(azimuth), std::stod(elevation), std::nullopt});
                     }
                 }
                 else if (weatherChildName == "Fog")
@@ -4983,11 +5006,11 @@ void ScenarioReader::ParseOSCEnvironment(const pugi::xml_node &xml_node, OSCEnvi
                     {
                         OSCBoundingBox bb;
                         ParseOSCBoundingBox(bb, weatherChild);
-                        env->SetFog(Fog{std::stod(visualRange), bb});
+                        env.SetFog(Fog{std::stod(visualRange), bb});
                     }
                     else
                     {
-                        env->SetFog(std::stod(visualRange));
+                        env.SetFog(std::stod(visualRange));
                     }
                 }
                 else if (weatherChildName == "Precipitation")
@@ -5018,15 +5041,15 @@ void ScenarioReader::ParseOSCEnvironment(const pugi::xml_node &xml_node, OSCEnvi
                         {
                             LOG_WARN("In Precipitation, intensity is deprecated in v1.1. Use precipitationIntensity instead, Accepting it anyway.");
                         }
-                        env->SetPrecipitation(Precipitation{std::stod(intensity), precipType});
+                        env.SetPrecipitation(Precipitation{std::stod(intensity), precipType});
                     }
                     else if (const auto &val = parameters.ReadAttribute(weatherChild, "precipitationIntensity"); !val.empty())
                     {
-                        env->SetPrecipitation(Precipitation{std::stod(val), precipType});
+                        env.SetPrecipitation(Precipitation{std::stod(val), precipType});
                     }
                     else
                     {
-                        env->SetPrecipitation(Precipitation{std::nullopt, precipType});
+                        env.SetPrecipitation(Precipitation{std::nullopt, precipType});
                     }
                 }
                 else if (weatherChildName == "Wind")
@@ -5038,7 +5061,7 @@ void ScenarioReader::ParseOSCEnvironment(const pugi::xml_node &xml_node, OSCEnvi
                         LOG_WARN("Ignorning Wind in wheather, mandatory attribute direction or speed missing");
                         continue;
                     }
-                    env->SetWind(Wind{std::stod(direction), std::stod(speed)});
+                    env.SetWind(Wind{std::stod(direction), std::stod(speed)});
                 }
                 else
                 {
@@ -5054,7 +5077,7 @@ void ScenarioReader::ParseOSCEnvironment(const pugi::xml_node &xml_node, OSCEnvi
                 LOG_WARN("Ignorning {} in Envirnoment, mandatory attribute frictionScaleFactor missing", envChildName);
                 continue;
             }
-            env->SetRoadCondition(std::stod(friction));
+            env.SetRoadCondition(std::stod(friction));
         }
         else
         {
