@@ -796,11 +796,23 @@ int64_t GetEpochTimeFromString(const std::string& datetime)
         // Convert to time_t (local time) and adjust for timezone
         std::time_t time = std::mktime(&tm) - tz_offset;
 
+        // Convert local time to UTC using std::gmtime
+        std::tm* gmt_tm = std::gmtime(&time);
+
+        // We already have UTC time from std::gmtime, so adjust it by the timezone offset
+        std::time_t utc_time = std::mktime(gmt_tm) - tz_offset;
+
         // Convert to chrono time_point with milliseconds
         auto tp = std::chrono::system_clock::from_time_t(time) + std::chrono::milliseconds(static_cast<int64_t>(milliseconds));
 
         return std::chrono::duration_cast<std::chrono::milliseconds>(tp.time_since_epoch()).count();
     }
+
+    // If no timezone, assume UTC
+    std::time_t time = std::mktime(&tm);  // Local time representation
+
+    // Convert local time to UTC using std::gmtime
+    std::tm* gmt_tm = std::gmtime(&time);
 
     // If no timezone, assume UTC
     auto tp = std::chrono::system_clock::from_time_t(std::mktime(&tm)) + std::chrono::milliseconds(static_cast<int64_t>(milliseconds));
