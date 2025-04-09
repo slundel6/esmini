@@ -213,9 +213,13 @@ namespace scenarioengine
         void          SetRoadCondition(const double friction);
         RoadCondition GetRoadCondition() const;
         bool          IsRoadConditionSet() const;
+        double        GetRoadConditionFrictionScaleFactor() const;
 
         void UpdateEnvironment(const OSCEnvironment& new_environment);
         bool IsEnvironment() const;
+        bool IsEnvironmentUpdatedInViewer() const;
+        void SetEnvironmentUpdatedInViewer(const bool isEnvironmentUpdatedInViewer);
+
 
     private:
         std::optional<TimeOfDay>     timeofday_;
@@ -227,6 +231,7 @@ namespace scenarioengine
         std::optional<Precipitation> precipitation_;
         std::optional<Wind>          wind_;
         std::optional<RoadCondition> roadcondition_;
+        bool isEnvironmentUpdatedInViewer_ = false;
     };
 
 }  // namespace scenarioengine

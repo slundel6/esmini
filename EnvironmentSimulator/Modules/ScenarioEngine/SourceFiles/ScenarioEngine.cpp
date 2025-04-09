@@ -991,7 +991,7 @@ void ScenarioEngine::prepareGroundTruth(double dt)
                     // wheel.friction_coefficient = info.friction;
                     // LOG_INFO("info friction {}", info.friction);
                     wheel.friction_coefficient = environment.IsRoadConditionSet() && !std::isnan(info.friction)
-                                                     ? environment.GetRoadCondition().frictionscalefactor * info.friction
+                                                     ? environment.GetRoadConditionFrictionScaleFactor() * info.friction
                                                      : info.friction;
                     // LOG_INFO("info road condition {}", wheel.friction_coefficient);
                     // LOG_INFO("info friction condition {}",  environment.IsRoadConditionSet()? environment.GetRoadCondition().frictionscalefactor :
@@ -1003,7 +1003,7 @@ void ScenarioEngine::prepareGroundTruth(double dt)
                     // wheel.friction_coefficient = friction_global;
                     // LOG_INFO("global info friction {}", friction_global);
                     wheel.friction_coefficient = environment.IsRoadConditionSet() && !std::isnan(friction_global)
-                                                     ? environment.GetRoadCondition().frictionscalefactor * friction_global
+                                                     ? environment.GetRoadConditionFrictionScaleFactor() * friction_global
                                                      : friction_global;
                     // LOG_INFO("global road condition {}", wheel.friction_coefficient);
                     // LOG_INFO("global road friction condition {}",  environment.IsRoadConditionSet()?

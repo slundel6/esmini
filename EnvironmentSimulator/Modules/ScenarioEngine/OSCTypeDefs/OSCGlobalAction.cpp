@@ -46,37 +46,6 @@ void EnvironmentAction::Start(double simTime)
 {
     LOG_INFO("-------------------------environment action start----------------------------");
     environment_->UpdateEnvironment(new_environment_);
-    // if (new_environment_.IsRoadConditionSet())
-    // {
-    //     roadmanager::OpenDrive* odr = roadmanager::Position::GetOpenDrive();
-    //     if (std::isnan(odr->GetFriction()))
-    //     {
-    //         for (unsigned int i = 0; i < odr->GetNumOfRoads(); i++)
-    //         {
-    //             roadmanager::Road* road = odr->GetRoadByIdx(i);
-    //             for (unsigned int j = 0; j < road->GetNumberOfLaneSections(); j++)
-    //             {
-    //                 roadmanager::LaneSection* lsec = road->GetLaneSectionByIdx(j);
-    //                 for (unsigned int k = 0; k < lsec->GetNumberOfLanes(); k++)
-    //                 {
-    //                     roadmanager::Lane* lane = lsec->GetLaneByIdx(k);
-    //                     for (unsigned int l = 0; l < lane->GetNumberOfMaterials(); l++)
-    //                     {
-    //                         LOG_INFO("Set material friction {} to {}", lane->GetMaterialByIdx(l)->friction,
-    //                         new_environment_.GetRoadCondition().frictionscalefactor * lane->GetMaterialByIdx(l)->friction);
-    //                         lane->GetMaterialByIdx(l)->friction = lane->GetMaterialByIdx(l)->friction *
-    //                         new_environment_.GetRoadCondition().frictionscalefactor;
-    //                     }
-    //                 }
-    //             }
-    //         }
-    //     }
-    //     else
-    //     {
-    //         LOG_INFO("Set global road friction {} to {}", odr->GetFriction(), new_environment_.GetRoadCondition().frictionscalefactor *
-    //         odr->GetFriction()); odr->SetFriction(new_environment_.GetRoadCondition().frictionscalefactor * odr->GetFriction());
-    //     }
-    // }
     OSCAction::Start(simTime);
 }
 

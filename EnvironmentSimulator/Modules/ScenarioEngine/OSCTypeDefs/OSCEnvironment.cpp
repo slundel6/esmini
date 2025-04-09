@@ -298,6 +298,18 @@ bool OSCEnvironment::IsRoadConditionSet() const
     return roadcondition_.has_value();
 }
 
+double scenarioengine::OSCEnvironment::GetRoadConditionFrictionScaleFactor() const
+{
+    if (IsRoadConditionSet())
+    {
+        return (1 / (GetRoadCondition().frictionscalefactor+ 1));
+    }
+    else
+    {
+        return 0.0;
+    }
+}
+
 void OSCEnvironment::UpdateEnvironment(const OSCEnvironment& new_environment)
 {
     if (new_environment.IsAtmosphericPressureSet())
@@ -336,10 +348,22 @@ void OSCEnvironment::UpdateEnvironment(const OSCEnvironment& new_environment)
     {
         SetTimeOfDay(new_environment.GetTimeOfDay());
     }
+    SetEnvironmentUpdatedInViewer(new_environment.IsEnvironmentUpdatedInViewer());
 }
 
 bool OSCEnvironment::IsEnvironment() const
 {
     return IsTemperatureSet() || IsAtmosphericPressureSet() || IsFractionalCloudStateSet() || IsFogSet() || IsWindSet() || IsPrecipitationSet() ||
            IsSunSet() || IsRoadConditionSet() || IsTimeOfDaySet();
+}
+
+bool OSCEnvironment::IsEnvironmentUpdatedInViewer() const
+{
+    return isEnvironmentUpdatedInViewer_;
+}
+
+void OSCEnvironment::SetEnvironmentUpdatedInViewer(const bool isEnvironmentUpdatedInViewer)
+
+{
+    isEnvironmentUpdatedInViewer_ = isEnvironmentUpdatedInViewer;
 }

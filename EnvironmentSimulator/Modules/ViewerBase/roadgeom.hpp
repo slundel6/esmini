@@ -25,6 +25,7 @@ public:
     osg::ref_ptr<osg::Group> root_;
     osg::ref_ptr<osg::Group> rm_group_;
 
+    RoadGeom(){};
     RoadGeom(roadmanager::OpenDrive* odr, osg::Vec3d origin);
     int  AddRoadMarks(roadmanager::Lane* lane, osg::Group* group);
     void AddRoadMarkGeom(osg::ref_ptr<osg::Vec3Array> vertices, osg::ref_ptr<osg::DrawElementsUInt> indices, roadmanager::RoadMarkColor color);
