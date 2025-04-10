@@ -1810,9 +1810,9 @@ int Viewer::CreateWeatherGroup(scenarioengine::OSCEnvironment& environment)
     }
 
     SetSkyColour(environment.GetSunIntensityFactor(), environment.GetFogVisibilityRangeFactor(), environment.GetFractionalCloudStateFactor());
-    if(environment.IsRoadConditionSet())
+    if (environment.IsRoadConditionSet())
     {
-        UpdateFrictonScaleFactorInMaterial(environment.GetRoadConditionFrictionScaleFactor());
+        UpdateFrictonScaleFactorInMaterial(environment.GetRoadCondition().frictionscalefactor);
     }
 
     rootnode_->addChild(weatherGroup_);
@@ -1822,91 +1822,29 @@ int Viewer::CreateWeatherGroup(scenarioengine::OSCEnvironment& environment)
 
 void viewer::Viewer::UpdateFrictonScaleFactorInMaterial(const double factor)
 {
-    osg::ref_ptr<osg::Texture2D> tex_asphalt;
-    if (!SE_Env::Inst().GetOptions().GetOptionSet("generate_without_textures"))
+    for (auto materialList : roadGeom->GetRoadMaterialList())
     {
-        RoadGeom roadGeomNew;
-        tex_asphalt = roadGeomNew.ReadTexture("asphalt.jpg");
-    }
-
-    osg::ref_ptr<osg::Vec4Array> color_asphalt      = new osg::Vec4Array;
-
-    if (tex_asphalt)
-    {
-        color_asphalt->push_back(osg::Vec4(1.f, 1.f, 1.f, 1.0f));
-    }
-    else
-    {
-        color_asphalt->push_back(osg::Vec4(0.3f, 0.3f, 0.3f, 1.0f));
-    }
-    osg::ref_ptr<osg::Texture2D> tex = nullptr;
-    roadmanager::OpenDrive* odr = roadmanager::Position::GetOpenDrive();
-    unsigned int materialCount = 0;
-    for (unsigned int i = 0; i < odr->GetNumOfRoads(); i++)
-    {
-        roadmanager::Road* road = odr->GetRoadByIdx(i);
-        for (unsigned int j = 0; j < road->GetNumberOfLaneSections(); j++)
+        osg::Vec4 new_color = roadGeom->color_asphalt_->at(0);
+        double    friction  = std::isnan(materialList.friction) ? 1 * factor : materialList.friction * factor;
+        if (friction < FRICTION_DEFAULT - SMALL_NUMBER)  // low friction, make it blueish
         {
-            roadmanager::LaneSection* lsec = road->GetLaneSectionByIdx(j);
-            for (unsigned int k = 0; k < lsec->GetNumberOfLanes(); k++)
-            {
-                roadmanager::Lane* lane = lsec->GetLaneByIdx(k);
-                if (lane->IsType(roadmanager::Lane::LaneType::LANE_TYPE_ANY_ROAD))
-                {
-                    for (unsigned int l = 0; l < lane->GetNumberOfMaterials(); l++)
-                    {
-                        roadmanager::Lane::Material* mat = lane->GetMaterialByIdx(l);
-                        if (mat == nullptr)
-                        {
-                            continue;
-                        }
-                        LOG_INFO("Material friction {} for material->{} laneid->{} lanesection->{} road->{}", mat->friction, l, lane->GetId() , j, i);
-                        double friction = mat->friction * factor;
-                        LOG_INFO("new friction {}", friction);
-                        osg::ref_ptr<osg::Material> materialAsphalt_ = new osg::Material;
-                        osg::Vec4                   new_color        = color_asphalt->at(0);
-                        osg::ref_ptr<osg::Geometry> geom = new osg::Geometry;
-
-                        if (friction < FRICTION_DEFAULT - SMALL_NUMBER)  // low friction, make it blueish
-                        {
-                            double factor = (1.0 - friction) / FRICTION_DEFAULT;
-                            new_color[0] -= 0.75 * factor;
-                            new_color[1] -= 0.75 * factor;
-                            new_color[2] += factor;
-                        }
-                        else if (friction > FRICTION_DEFAULT + SMALL_NUMBER)  // high friction, make it redish
-                        {
-                            double factor = (MIN(friction, FRICTION_MAX) - FRICTION_DEFAULT) / (FRICTION_MAX - FRICTION_DEFAULT);
-                            new_color[0] += factor;
-                            new_color[1] -= 0.75 * factor;
-                            new_color[2] -= 0.75 * factor;
-                        }
-
-                        materialAsphalt_->setDiffuse(osg::Material::FRONT_AND_BACK, new_color);
-                        materialAsphalt_->setAmbient(osg::Material::FRONT_AND_BACK, new_color);
-                        if (environment_ != nullptr)
-                        {
-                            osg::ref_ptr<osg::StateSet> stateSet = environment_->getOrCreateStateSet();
-                            if (stateSet.valid())
-                            {
-                                stateSet->setAttributeAndModes(materialAsphalt_.get(), osg::StateAttribute::ON);
-                                if (tex_asphalt)
-                                {
-                                    tex = tex_asphalt.get();
-                                    stateSet->setTextureAttributeAndModes(0, tex.get(), osg::StateAttribute::ON);
-                                }
-                            }
-                            else
-                            {
-                                LOG_ERROR("Failed to get state set for environment");
-                            }
-                        }
-                        materialCount++;
-                        LOG_INFO("Material {} created for road {} lane {}", materialCount, i, j);
-                    }
-                }
-            }
+            double factor = (1.0 - friction) / FRICTION_DEFAULT;
+            new_color[0] -= 0.75 * factor;
+            new_color[1] -= 0.75 * factor;
+            new_color[2] += factor;
         }
+        else if (friction > FRICTION_DEFAULT + SMALL_NUMBER)  // high friction, make it redish
+        {
+            double factor = (MIN(friction, FRICTION_MAX) - FRICTION_DEFAULT) / (FRICTION_MAX - FRICTION_DEFAULT);
+            new_color[0] += factor;
+            new_color[1] -= 0.75 * factor;
+            new_color[2] -= 0.75 * factor;
+        }
+        new_color[0] = CLAMP(0.0, 1.0, new_color[0]);
+        new_color[1] = CLAMP(0.0, 1.0, new_color[1]);
+        new_color[2] = CLAMP(0.0, 1.0, new_color[2]);
+        materialList.material->setAmbient(osg::Material::FRONT_AND_BACK, new_color);
+        materialList.material->setDiffuse(osg::Material::FRONT_AND_BACK, new_color);
     }
 }
 
@@ -3785,6 +3723,16 @@ void Viewer::Frame(double time)
     {
         frameCounter_++;
     }
+}
+
+void Viewer::SetFrictionScaleFactor(const double factor)
+{
+    frictionScaleFactor_ = factor;
+}
+
+double Viewer::GetFrictionScaleFactor() const
+{
+    return frictionScaleFactor_;
 }
 
 bool ViewerEventHandler::handle(const osgGA::GUIEventAdapter& ea, osgGA::GUIActionAdapter&)

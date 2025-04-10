@@ -591,7 +591,9 @@ namespace viewer
             return osg_screenshot_event_handler_;
         }
 
-        void Frame(double time);
+        void   Frame(double time);
+        void   SetFrictionScaleFactor(const double factor);
+        double GetFrictionScaleFactor() const;
 
     private:
         bool                                         CreateRoadLines(Viewer* viewer, roadmanager::OpenDrive* od);
@@ -623,6 +625,7 @@ namespace viewer
         osgViewer::ViewerBase::ThreadingModel initialThreadingModel_;
         bool                                  stand_in_model_;
         double                                time_;
+        double                                frictionScaleFactor_ = 1.0;
 
         struct
         {

@@ -3467,18 +3467,18 @@ TEST(EnvironmentTest, FrictionScaleFactor)
 
         if (i == 0)
         {
-            EXPECT_NEAR(osi_gt.mutable_moving_object(0)->mutable_vehicle_attributes()->mutable_wheel_data(0)->friction_coefficient(), 0.263, 1E-3);
+            EXPECT_NEAR(osi_gt.mutable_moving_object(0)->mutable_vehicle_attributes()->mutable_wheel_data(0)->friction_coefficient(), 0.45000, 1E-3);
         }
         else if (i == 1)
         {
-            EXPECT_NEAR(osi_gt.mutable_moving_object(0)->mutable_vehicle_attributes()->mutable_wheel_data(0)->friction_coefficient(), 0.526, 1E-3);
+            EXPECT_NEAR(osi_gt.mutable_moving_object(0)->mutable_vehicle_attributes()->mutable_wheel_data(0)->friction_coefficient(), 0.90000, 1E-3);
         }
         else if (i == 2)
         {
             SE_StepDT(1.51f);
             gt = SE_GetOSIGroundTruth(&sv_size);
             osi_gt.ParseFromArray(gt, sv_size);
-            EXPECT_NEAR(osi_gt.mutable_moving_object(0)->mutable_vehicle_attributes()->mutable_wheel_data(0)->friction_coefficient(), 0.421, 1E-3);
+            EXPECT_NEAR(osi_gt.mutable_moving_object(0)->mutable_vehicle_attributes()->mutable_wheel_data(0)->friction_coefficient(), 0.72000, 1E-3);
         }
 
         SE_Close();

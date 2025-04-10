@@ -220,7 +220,6 @@ namespace scenarioengine
         bool IsEnvironmentUpdatedInViewer() const;
         void SetEnvironmentUpdatedInViewer(const bool isEnvironmentUpdatedInViewer);
 
-
     private:
         std::optional<TimeOfDay>     timeofday_;
         std::optional<double>        atmosphericpressure_;
@@ -231,7 +230,7 @@ namespace scenarioengine
         std::optional<Precipitation> precipitation_;
         std::optional<Wind>          wind_;
         std::optional<RoadCondition> roadcondition_;
-        bool isEnvironmentUpdatedInViewer_ = false;
+        bool                         isEnvironmentUpdatedInViewer_ = false;
     };
 
 }  // namespace scenarioengine

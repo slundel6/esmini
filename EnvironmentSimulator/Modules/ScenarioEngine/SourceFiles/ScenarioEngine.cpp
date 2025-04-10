@@ -988,26 +988,16 @@ void ScenarioEngine::prepareGroundTruth(double dt)
 
                     roadmanager::RoadLaneInfo info;
                     wp.GetRoadLaneInfo(&info);
-                    // wheel.friction_coefficient = info.friction;
-                    // LOG_INFO("info friction {}", info.friction);
                     wheel.friction_coefficient = environment.IsRoadConditionSet() && !std::isnan(info.friction)
-                                                     ? environment.GetRoadConditionFrictionScaleFactor() * info.friction
+                                                     ? environment.GetRoadCondition().frictionscalefactor * info.friction
                                                      : info.friction;
-                    // LOG_INFO("info road condition {}", wheel.friction_coefficient);
-                    // LOG_INFO("info friction condition {}",  environment.IsRoadConditionSet()? environment.GetRoadCondition().frictionscalefactor :
-                    // 10000);
                 }
                 else
                 {
                     // same friction everywhere
-                    // wheel.friction_coefficient = friction_global;
-                    // LOG_INFO("global info friction {}", friction_global);
                     wheel.friction_coefficient = environment.IsRoadConditionSet() && !std::isnan(friction_global)
-                                                     ? environment.GetRoadConditionFrictionScaleFactor() * friction_global
+                                                     ? environment.GetRoadCondition().frictionscalefactor * friction_global
                                                      : friction_global;
-                    // LOG_INFO("global road condition {}", wheel.friction_coefficient);
-                    // LOG_INFO("global road friction condition {}",  environment.IsRoadConditionSet()?
-                    // environment.GetRoadCondition().frictionscalefactor : 10000);
                 }
             }
             scenarioGateway.updateObjectWheelData(obj->id_, wheel_data);

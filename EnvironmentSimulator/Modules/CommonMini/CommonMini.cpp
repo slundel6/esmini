@@ -820,6 +820,28 @@ int64_t GetEpochTimeFromString(const std::string& datetime)
     return std::chrono::duration_cast<std::chrono::milliseconds>(tp.time_since_epoch()).count();
 }
 
+double GetSecondsToFactor(int seconds)
+{
+    // There are 24 * 60 * 60 seconds in a day
+    constexpr int secondsInDay = 86400;
+
+    // Normalize the seconds to a range of 0 to 2*pi (one full cycle)
+    double normalizedTime = (static_cast<double>(seconds) / secondsInDay) * 2.0 * M_PI;
+
+    // Shift the phase so that the peak (factor 1) is at noon (12 * 3600 seconds)
+    // Noon corresponds to the middle of the day, so we shift by pi
+    double noonInRadians    = (12.0 * 3600.0 / secondsInDay) * 2.0 * M_PI;
+    double phaseShiftedTime = normalizedTime - noonInRadians;
+
+    // Use the cosine function to create the sinusoidal shape.
+    // cos(0) = 1, which we want at noon.
+    // cos(pi) = -1, which we want at midnight (after shifting).
+    // We take the absolute value and then scale and shift to get a range of 0 to 1.
+    double factor = 0.5 * (std::cos(phaseShiftedTime) + 1.0);
+
+    return factor;
+}
+
 int strtoi(std::string s)
 {
     return atoi(s.c_str());
@@ -870,6 +892,7 @@ void SE_sleep(unsigned int msec)
 #else
 
 #include <chrono>
+#include "CommonMini.hpp"
 
 using namespace std::chrono;
 

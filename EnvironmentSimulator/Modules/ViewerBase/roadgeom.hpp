@@ -17,19 +17,31 @@
 #include <osg/Texture2D>
 #include <osg/Group>
 #include <osg/Geometry>
+#include <osg/Material>
 #include "RoadManager.hpp"
 
 class RoadGeom
 {
-public:
-    osg::ref_ptr<osg::Group> root_;
-    osg::ref_ptr<osg::Group> rm_group_;
+    typedef struct
+    {
+        osg::ref_ptr<osg::Material> material;
+        double                      friction;
+    } FrictionDetails;  // could be multiple of these per lane
 
-    RoadGeom(){};
+public:
+    osg::ref_ptr<osg::Group>     root_;
+    osg::ref_ptr<osg::Group>     rm_group_;
+    osg::ref_ptr<osg::Vec4Array> color_asphalt_ = new osg::Vec4Array;
+
     RoadGeom(roadmanager::OpenDrive* odr, osg::Vec3d origin);
     int  AddRoadMarks(roadmanager::Lane* lane, osg::Group* group);
     void AddRoadMarkGeom(osg::ref_ptr<osg::Vec3Array> vertices, osg::ref_ptr<osg::DrawElementsUInt> indices, roadmanager::RoadMarkColor color);
     osg::ref_ptr<osg::Texture2D> ReadTexture(std::string filename);
+    void                         AddRoadMaterialInList(osg::ref_ptr<osg::Material> material, double friction);
+    std::vector<FrictionDetails> GetRoadMaterialList();
+
+private:
+    std::vector<FrictionDetails> material_friction_list_;
 };
 
 #endif  // ROADGEOM_HPP_

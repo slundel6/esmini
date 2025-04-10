@@ -143,7 +143,7 @@ double OSCEnvironment::GetFogVisibilityRangeFactor() const
     }
     else
     {
-        return std::numeric_limits<double>::infinity();
+        return 0.0;
     }
 }
 
@@ -257,9 +257,13 @@ double scenarioengine::OSCEnvironment::GetSunIntensityFactor() const
         // Normalize intensity to a factor between 0 and 1
         return (intensity - OSCSunIntensityMin) / (OSCSunIntensityMax - OSCSunIntensityMin);
     }
+    else if (IsTimeOfDaySet() && GetTimeOfDay().animation)
+    {
+        return GetSecondsToFactor(static_cast<int>(GetSecondsSinceMidnight(GetTimeOfDay().datetime)));
+    }
     else
     {
-        return 0.5;  // Default to 0.5 if no sun intensity is set
+        return 1.0;  // Default to 1.0 if no sun intensity is set
     }
 }
 
@@ -296,18 +300,6 @@ RoadCondition OSCEnvironment::GetRoadCondition() const
 bool OSCEnvironment::IsRoadConditionSet() const
 {
     return roadcondition_.has_value();
-}
-
-double scenarioengine::OSCEnvironment::GetRoadConditionFrictionScaleFactor() const
-{
-    if (IsRoadConditionSet())
-    {
-        return (1 / (GetRoadCondition().frictionscalefactor+ 1));
-    }
-    else
-    {
-        return 0.0;
-    }
 }
 
 void OSCEnvironment::UpdateEnvironment(const OSCEnvironment& new_environment)

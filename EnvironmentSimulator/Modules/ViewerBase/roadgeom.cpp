@@ -86,6 +86,23 @@ osg::ref_ptr<osg::Texture2D> RoadGeom::ReadTexture(std::string filename)
     return tex;
 }
 
+void RoadGeom::AddRoadMaterialInList(osg::ref_ptr<osg::Material> material, double friction)
+{
+    if (material)
+    {
+        FrictionDetails fd;
+        fd.material = material;
+        fd.friction = friction;
+
+        material_friction_list_.push_back(fd);
+    }
+}
+
+std::vector<RoadGeom::FrictionDetails> RoadGeom::GetRoadMaterialList()
+{
+    return material_friction_list_;
+}
+
 void RoadGeom::AddRoadMarkGeom(osg::ref_ptr<osg::Vec3Array> vertices, osg::ref_ptr<osg::DrawElementsUInt> indices, roadmanager::RoadMarkColor color)
 {
     osg::ref_ptr<osg::Material>  materialRoadmark_ = new osg::Material;
@@ -346,18 +363,17 @@ RoadGeom::RoadGeom(roadmanager::OpenDrive* odr, osg::Vec3d origin)
         tex_grass   = ReadTexture("grass.jpg");
     }
 
-    osg::ref_ptr<osg::Vec4Array> color_asphalt      = new osg::Vec4Array;
     osg::ref_ptr<osg::Vec4Array> color_concrete     = new osg::Vec4Array;
     osg::ref_ptr<osg::Vec4Array> color_border_inner = new osg::Vec4Array;
     osg::ref_ptr<osg::Vec4Array> color_grass        = new osg::Vec4Array;
 
     if (tex_asphalt)
     {
-        color_asphalt->push_back(osg::Vec4(1.f, 1.f, 1.f, 1.0f));
+        color_asphalt_->push_back(osg::Vec4(1.f, 1.f, 1.f, 1.0f));
     }
     else
     {
-        color_asphalt->push_back(osg::Vec4(0.3f, 0.3f, 0.3f, 1.0f));
+        color_asphalt_->push_back(osg::Vec4(0.3f, 0.3f, 0.3f, 1.0f));
     }
 
     if (tex_grass)
@@ -766,7 +782,7 @@ RoadGeom::RoadGeom(roadmanager::OpenDrive* odr, osg::Vec3d origin)
                         if (laneForMaterial->IsType(roadmanager::Lane::LaneType::LANE_TYPE_ANY_ROAD))
                         {
                             osg::ref_ptr<osg::Material> materialAsphalt_ = new osg::Material;
-                            osg::Vec4                   new_color        = color_asphalt->at(0);
+                            osg::Vec4                   new_color        = color_asphalt_->at(0);
 
                             if (friction < friction_default - SMALL_NUMBER)  // low friction, make it blueish
                             {
@@ -791,6 +807,8 @@ RoadGeom::RoadGeom(roadmanager::OpenDrive* odr, osg::Vec3d origin)
                                 tex = tex_asphalt.get();
                             }
                             geom->getOrCreateStateSet()->setAttributeAndModes(materialAsphalt_.get());
+                            AddRoadMaterialInList(materialAsphalt_, friction);
+                            LOG_INFO("Friction value {} for road {} section {} lane {}", friction, road->GetId(), j, laneForMaterial->GetId());
                         }
                         else if (laneForMaterial->IsType(roadmanager::Lane::LaneType::LANE_TYPE_BIKING) ||
                                  laneForMaterial->IsType(roadmanager::Lane::LaneType::LANE_TYPE_SIDEWALK))
