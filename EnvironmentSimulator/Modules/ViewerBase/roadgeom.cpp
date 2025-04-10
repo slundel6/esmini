@@ -808,7 +808,6 @@ RoadGeom::RoadGeom(roadmanager::OpenDrive* odr, osg::Vec3d origin)
                             }
                             geom->getOrCreateStateSet()->setAttributeAndModes(materialAsphalt_.get());
                             AddRoadMaterialInList(materialAsphalt_, friction);
-                            LOG_INFO("Friction value {} for road {} section {} lane {}", friction, road->GetId(), j, laneForMaterial->GetId());
                         }
                         else if (laneForMaterial->IsType(roadmanager::Lane::LaneType::LANE_TYPE_BIKING) ||
                                  laneForMaterial->IsType(roadmanager::Lane::LaneType::LANE_TYPE_SIDEWALK))
