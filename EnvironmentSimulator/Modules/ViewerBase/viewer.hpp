@@ -594,6 +594,7 @@ namespace viewer
         void   Frame(double time);
         void   SetFrictionScaleFactor(const double factor);
         double GetFrictionScaleFactor() const;
+        bool   defulatClearColorUsed_ = false;
 
     private:
         bool                                         CreateRoadLines(Viewer* viewer, roadmanager::OpenDrive* od);

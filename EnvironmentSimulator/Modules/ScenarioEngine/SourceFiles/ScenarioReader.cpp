@@ -2149,7 +2149,6 @@ int ScenarioReader::ParseTransitionDynamics(pugi::xml_node node, OSCPrivateActio
 
 OSCGlobalAction *ScenarioReader::parseOSCGlobalAction(pugi::xml_node actionNode, Event *parent)
 {
-    LOG_INFO("Parse global Action");
     OSCGlobalAction *action = 0;
 
     if (actionNode.first_child() == 0)
@@ -2344,7 +2343,6 @@ OSCGlobalAction *ScenarioReader::parseOSCGlobalAction(pugi::xml_node actionNode,
                 }
             }
             envAction->SetEnvironment(environment_);
-            LOG_INFO("Parsing OSC Environment with node {}", actionChild.name());
 
             action = envAction;
         }
@@ -4902,7 +4900,6 @@ void ScenarioReader::ParseOSCEnvironment(const pugi::xml_node &xml_node, OSCEnvi
         else if (envChildName == "TimeOfDay")
         {
             bool animation = (parameters.ReadAttribute(envChild, "animation") == "true") ? true : false;
-            LOG_INFO("TimeOfDay animation: {}", animation);
             if (const auto &val = parameters.ReadAttribute(envChild, "dateTime"); !val.empty())
             {
                 if (IsValidDateTimeFormat(val))
@@ -5082,5 +5079,4 @@ void ScenarioReader::ParseOSCEnvironment(const pugi::xml_node &xml_node, OSCEnvi
             LOG_WARN("Not valid environment attribute name:{}", envChildName);
         }
     }
-    parameters.RestoreParameterDeclarations();
 }
