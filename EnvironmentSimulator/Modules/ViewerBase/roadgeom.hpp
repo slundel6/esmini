@@ -39,6 +39,7 @@ public:
     osg::ref_ptr<osg::Texture2D> ReadTexture(std::string filename);
     void                         AddRoadMaterialInList(osg::ref_ptr<osg::Material> material, double friction);
     std::vector<FrictionDetails> GetRoadMaterialList();
+    const osg::Vec4              GetFrictionColor(const double friction);
 
 private:
     std::vector<FrictionDetails> material_friction_list_;
