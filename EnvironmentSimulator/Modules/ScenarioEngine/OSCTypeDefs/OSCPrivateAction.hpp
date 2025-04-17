@@ -1295,12 +1295,12 @@ namespace scenarioengine
     class OverrideControlAction : public OSCPrivateAction
     {
     public:
-        Object::OverrideType type_;
+        Object::OverrideType overrideType_;
 
         // assume both domains
         OverrideControlAction(double value, bool active, Object::OverrideType type, StoryBoardElement* parent)
             : OSCPrivateAction(OSCPrivateAction::ActionType::OVERRIDE_CONTROLLER, parent, static_cast<unsigned int>(ControlDomains::DOMAIN_NONE)),
-              type_(type)
+              overrideType_(type)
         {
             (void)value;
             (void)active;
@@ -1316,7 +1316,7 @@ namespace scenarioengine
                                static_cast<unsigned int>(ControlDomains::DOMAIN_NONE))
         {
             SetName(action.GetName());
-            type_              = action.type_;
+            overrideType_      = action.overrideType_;
             overrideActionList = action.overrideActionList;
         }
 
