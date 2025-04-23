@@ -183,7 +183,7 @@ public:
         osi_updated_ = value;
     }
 
-    bool GetUpdated()
+    bool GetUpdated() const
     {
         return osi_updated_;
     }
@@ -193,7 +193,7 @@ public:
         osi_update_counter_ = counter;
     }
 
-    int GetCounter()
+    int GetCounter() const
     {
         return osi_update_counter_ == nullptr ? -1 : *osi_update_counter_;
     }
@@ -203,7 +203,7 @@ public:
         osi_freq_ = freq;
     }
 
-    int GetOSIFrequency()
+    int GetOSIFrequency() const
     {
         return osi_freq_;
     }
@@ -214,7 +214,7 @@ public:
     @return 0 if successful, -1 if not
     */
     int  SetOSITimeStampExplicit(unsigned long long int nanoseconds);
-    bool IsTimeStampSetExplicit()
+    bool IsTimeStampSetExplicit() const
     {
         return nanosec_ != 0xffffffffffffffff;
     }

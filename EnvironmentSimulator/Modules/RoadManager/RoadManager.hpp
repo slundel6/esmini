@@ -634,7 +634,7 @@ namespace roadmanager
         {
             repeat_ = repeat;
         }
-        bool GetRepeat()
+        bool GetRepeat() const
         {
             return repeat_;
         }
@@ -990,10 +990,10 @@ namespace roadmanager
         void SetLaneBoundary(LaneBoundaryOSI *lane_boundary);
 
         // Others
-        bool IsType(Lane::LaneType type);
-        bool IsCenter();
-        bool IsDriving();
-        bool IsOSIIntersection()
+        bool IsType(Lane::LaneType type) const;
+        bool IsCenter() const;
+        bool IsDriving() const;
+        bool IsOSIIntersection() const
         {
             return osiintersection_ != ID_UNDEFINED;
         }
@@ -1001,7 +1001,7 @@ namespace roadmanager
         {
             osiintersection_ = osi_intersection;
         }
-        id_t GetOSIIntersectionId()
+        id_t GetOSIIntersectionId() const
         {
             return osiintersection_;
         }
@@ -1146,7 +1146,7 @@ namespace roadmanager
             contact_point_type_ = contact_point_type;
         }
         RoadLink(LinkType type, pugi::xml_node node);
-        bool operator==(RoadLink &rhs);
+        bool operator==(RoadLink &rhs) const;
 
         id_t GetElementId() const
         {
@@ -1740,12 +1740,12 @@ namespace roadmanager
             restrictions_ = restrictions;
         }
 
-        Access GetAccess()
+        Access GetAccess() const
         {
             return access_;
         }
 
-        std::string GetRestrictions()
+        std::string GetRestrictions() const
         {
             return restrictions_;
         }
@@ -2075,7 +2075,7 @@ namespace roadmanager
         {
             return (i < repeats_.size()) ? repeats_[i] : 0;
         }
-        ParkingSpace GetParkingSpace()
+        ParkingSpace GetParkingSpace() const
         {
             return parking_space_;
         }
@@ -2234,7 +2234,7 @@ namespace roadmanager
         double          GetSpeedByS(double s) const;
         RoadType        GetRoadTypeByS(double s) const;
         bool            GetZAndPitchByS(double s, double *z, double *z_prim, double *z_primPrim, double *pitch, idx_t *index) const;
-        bool            UpdateZAndRollBySAndT(double s, double t, double *z, double *roadSuperElevationPrim, double *roll, idx_t *index);
+        bool            UpdateZAndRollBySAndT(double s, double t, double *z, double *roadSuperElevationPrim, double *roll, idx_t *index) const;
         unsigned int    GetNumberOfLaneSections() const
         {
             return static_cast<unsigned int>(lane_section_.size());
@@ -2782,7 +2782,7 @@ namespace roadmanager
         int                CheckConnections();
         int                CheckLink(Road *road, RoadLink *link, ContactPointType expected_contact_point_type);
         int                CheckConnectedRoad(Road *road, RoadLink *link, ContactPointType expected_contact_point_type, RoadLink *link2);
-        int                CheckJunctionConnection(Junction *junction, Connection *connection);
+        int                CheckJunctionConnection(Junction *junction, Connection *connection) const;
         static std::string ContactPointType2Str(ContactPointType type);
         static std::string ElementType2Str(RoadLink::ElementType type);
         static std::string LinkType2Str(LinkType linkType);
@@ -2830,7 +2830,7 @@ namespace roadmanager
             return versionMinor_;
         }
 
-        double GetFriction()
+        double GetFriction() const
         {
             return friction_.Get();
         }
@@ -2854,7 +2854,7 @@ namespace roadmanager
             double friction_ = FRICTION_DEFAULT;
 
             void   Set(double friction);
-            double Get();
+            double Get() const;
             void   Reset();
         };
 
@@ -3699,7 +3699,7 @@ namespace roadmanager
         */
         double GetDrivingDirection() const;
 
-        PositionType GetType()
+        PositionType GetType() const
         {
             return type_;
         }
@@ -4195,7 +4195,7 @@ namespace roadmanager
         {
             return !invalid_route_;
         }
-        bool OnRoute()
+        bool OnRoute() const
         {
             return on_route_;
         }
@@ -4258,7 +4258,7 @@ namespace roadmanager
             *this = route;
         }
 
-        void CopyTo(Route &route)
+        void CopyTo(Route &route) const
         {
             route = *this;
         }
@@ -4656,7 +4656,7 @@ namespace roadmanager
         }
         double GetStartTime();
         double GetDuration();
-        double GetEndTime()
+        double GetEndTime() const
         {
             return time_end_;
         }
@@ -4665,7 +4665,7 @@ namespace roadmanager
             time_end_ = time;
         }
         void Freeze(Position *ref_pos);
-        int  GetNumberOfSegments()
+        int  GetNumberOfSegments() const
         {
             return static_cast<int>(segments_.size());
         }
@@ -4750,16 +4750,16 @@ namespace roadmanager
         {
             return shape_->GetLength();
         }
-        double        GetTime();
-        double        GetSpeed();
-        int           GetPosMode();
-        double        GetS();
+        double        GetTime() const;
+        double        GetSpeed() const;
+        int           GetPosMode() const;
+        double        GetS() const;
         void          SetS(double s, bool evaluate = true);
         double        GetStartTime();
         double        GetDuration();
-        double        GetHTrue();
+        double        GetHTrue() const;
         bool          IsHSetExplicitly();
-        double        GetH();
+        double        GetH() const;
         void          Evaluate();  // evaluate for current s-value
         RMTrajectory *Copy();
 
