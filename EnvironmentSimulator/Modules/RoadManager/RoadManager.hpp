@@ -4612,6 +4612,8 @@ namespace roadmanager
                 }
             }
 
+            Segment &operator=(const Segment &) = delete;
+
             Position *posStart_;
             Position  posEnd_;
             double    curvStart_;
