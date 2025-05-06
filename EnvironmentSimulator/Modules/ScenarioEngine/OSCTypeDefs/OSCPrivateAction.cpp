@@ -2014,11 +2014,6 @@ void LatDistanceAction::Step(double simTime, double)
                 acceleration_ = abs(dynamics_.max_acceleration_);
             }
 
-            // Predict braking distance for new acceleration 
-            // double v_avg = lat_vel_ / 2.0; // (v0 + vfinal) / 2
-            // double a_avg = acceleration_ / 2.0; // (a0 + afinal) / 2
-            // double braking_time = (lat_vel_ - 0.0) / a_avg; // t = (v - v0) / a
-            // double braking_distance = v_avg * braking_time; // v_avg * t
             double braking_distance = lat_vel_ * lat_vel_ / (2.0 * abs(acceleration_)); // v^2 / (2 * a)
 
             // Maybe we can normalize the acceleration so it diminishes as we get closer to the target
@@ -2039,7 +2034,6 @@ void LatDistanceAction::Step(double simTime, double)
 
                 if (abs(distance_error) < 0.05)
                 {
-                    std::cout << "Smoothing acceleration" << std::endl;
                     acc_factor *= 0.2;
                 }
             }
@@ -2048,14 +2042,12 @@ void LatDistanceAction::Step(double simTime, double)
 
             lat_vel_ = ABS_LIMIT(speed_after_acc, std::min(dynamics_.max_speed_, object_->GetSpeed()));
 
-            double d_offset = lat_vel_ * dt;
-            double new_error = distance_error + d_offset; 
-
-            if (abs(lat_vel_) < 0.05 && SIGN(new_error) != SIGN(distance_error))
+            if (abs(distance_error) < 0.05 && abs(lat_vel_) < 0.1)
             {
-                acceleration_ = 0.0;
-                lat_vel_ = 0.0;
+                lat_vel_ *= 0.9; // Soft deceleration
             }
+
+            double d_offset = lat_vel_ * dt;
 
             std::cout << "Time: " << sim_time_ << std::endl;
             std::cout << "spped_after_acc: " << speed_after_acc << std::endl;
@@ -2063,7 +2055,6 @@ void LatDistanceAction::Step(double simTime, double)
             std::cout << "object_->GetSpeed(): " << object_->GetSpeed() << std::endl;
             std::cout << "Lat vel: " << lat_vel_ << std::endl;
             std::cout << "Distance error: " << distance_error << std::endl;
-            std::cout << "New error: " << new_error << std::endl;
             std::cout << "Acceleration: " << acceleration_ << std::endl;
             std::cout << "d_offset: " << d_offset << std::endl;
             std::cout << std::endl;
