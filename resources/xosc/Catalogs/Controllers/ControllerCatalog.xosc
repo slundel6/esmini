@@ -29,6 +29,17 @@
                 <Property name="speedFactor" value="$SpeedFactor" />
             </Properties>
         </Controller>
+        <Controller name="hid">
+            <ParameterDeclarations>
+                <ParameterDeclaration name="SteeringRate" parameterType="double" value="4.0" />
+                <ParameterDeclaration name="SpeedFactor" parameterType="double" value="1.0" />
+            </ParameterDeclarations>
+            <Properties>
+                <Property name="esminiController" value="HIDController" />
+                <Property name="steeringRate" value="$SteeringRate" />
+                <Property name="speedFactor" value="$SpeedFactor" />
+            </Properties>
+        </Controller>
         <Controller name="controllerRel2Abs">
             <ParameterDeclarations>
                 <ParameterDeclaration name="Horizon" parameterType="double" value="1.0" />
