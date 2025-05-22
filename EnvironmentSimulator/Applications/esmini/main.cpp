@@ -124,7 +124,7 @@ static int execute_scenario(int argc, char* argv[])
 
 int main(int argc, char* argv[])
 {
-    LOG_INFO("starting esmini");
+    LOG_INFO("starting esmini, there will be an end");
     OSCParameterDistribution& dist   = OSCParameterDistribution::Inst();
     int                       retval = 0;
 
