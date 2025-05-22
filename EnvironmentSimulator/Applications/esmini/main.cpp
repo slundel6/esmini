@@ -45,7 +45,7 @@ static int execute_scenario(int argc, char* argv[])
     SE_Options& opt        = SE_Env::Inst().GetOptions();
 
     std::unique_ptr<ScenarioPlayer> player;
-    LOG_INFO("Executing the scenario, will be completed in a few seconds...");
+    LOG_INFO("Executing the scenario, will be completed in a few seconds - please wait...");
     // Setup signal handler to catch Ctrl-C
     signal(SIGINT, signal_handler);
 
