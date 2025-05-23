@@ -1873,6 +1873,11 @@ void Viewer::SetCameraMode(int mode)
     UpdateCameraFOV();
 }
 
+int Viewer::GetCameraMode()
+{
+    return camMode_;
+}
+
 int Viewer::GetNumberOfCameraModes()
 {
     return static_cast<int>(rubberbandManipulator_->GetNumberOfCameraModes());
@@ -3443,8 +3448,23 @@ int Viewer::GetNodeMaskBit(int mask)
 
 void Viewer::SetCameraTrackNode(osg::ref_ptr<osg::Node> node, bool calcDistance)
 {
+    if (rubberbandManipulator_->GetFocusMode() == osgGA::RubberbandManipulator::FOCUS_MODE::RB_FOCUS_ALL && node != nullptr)
+    {
+        // enforce calc distance
+        calcDistance = true;
+    }
+
     rubberbandManipulator_->setTrackNode(node, calcDistance);
     nodeTrackerManipulator_->setTrackNode(node);
+
+    if (node == nullptr)
+    {
+        rubberbandManipulator_->SetFocusMode(osgGA::RubberbandManipulator::FOCUS_MODE::RB_FOCUS_ALL);
+    }
+    else
+    {
+        rubberbandManipulator_->SetFocusMode(osgGA::RubberbandManipulator::FOCUS_MODE::RB_FOCUS_ONE);
+    }
 }
 
 void Viewer::SetVehicleInFocus(int idx)
@@ -3456,9 +3476,13 @@ void Viewer::SetVehicleInFocus(int idx)
             entities_[static_cast<unsigned int>(idx)]->bbGroup_,
             (currentCarInFocus_ == -1 && rubberbandManipulator_->getMode() != osgGA::RubberbandManipulator::CAMERA_MODE::RB_MODE_TOP) ? true : false);
         rubberbandManipulator_->setTrackTransform(entities_[static_cast<unsigned int>(idx)]->txNode_);
-
-        currentCarInFocus_ = idx;
     }
+    else
+    {
+        // special mode, fit all entities in view, focus on geometric center
+        SetCameraTrackNode(nullptr, false);
+    }
+    currentCarInFocus_ = idx;
 }
 
 void SetFixCameraFlag(bool fixed)
@@ -3826,13 +3850,13 @@ bool ViewerEventHandler::handle(const osgGA::GUIEventAdapter& ea, osgGA::GUIActi
                 }
                 int idx = viewer_->currentCarInFocus_ + step;
 
-                if (idx >= static_cast<int>(viewer_->entities_.size()))
+                if (idx > static_cast<int>(viewer_->entities_.size()))
                 {
                     idx = 0;
                 }
                 else if (idx < 0)
                 {
-                    idx = static_cast<int>(viewer_->entities_.size()) - 1;
+                    idx = static_cast<int>(viewer_->entities_.size());
                 }
 
                 viewer_->SetVehicleInFocus(idx);

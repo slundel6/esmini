@@ -50,6 +50,8 @@ RubberbandManipulator::RubberbandManipulator(unsigned int mode, osg::Vec3d origi
     track_tx_       = nullptr;
     origin_         = origin;
     setMode(mode);
+    explicitCenter_.Reset();
+    focus_mode_ = FOCUS_MODE::RB_FOCUS_ONE;
 }
 
 RubberbandManipulator::~RubberbandManipulator()
@@ -113,17 +115,21 @@ void RubberbandManipulator::setMode(unsigned int mode)
 
 void RubberbandManipulator::setTrackNode(osg::ref_ptr<osg::Node> node, bool calcDistance)
 {
-    if (!node)
-    {
-        osg::notify(osg::NOTICE) << "RubberbandManipulator::setTrackBB(bb):  Unable to set tracked bounding box due to null Node" << std::endl;
-        return;
-    }
     track_node_ = node;
 
     if (calcDistance)
     {
         calculateCameraDistance();
     }
+    explicitCenter_.Reset();
+}
+
+void RubberbandManipulator::setCenterAndDistance(osg::Vec3 center, double distance)
+{
+    track_node_ = nullptr;
+    track_tx_       = nullptr;
+    _cameraDistance = distance;
+    explicitCenter_.Set(center);
 }
 
 void RubberbandManipulator::setTrackTransform(osg::ref_ptr<osg::PositionAttitudeTransform> tx)
@@ -134,10 +140,15 @@ void RubberbandManipulator::setTrackTransform(osg::ref_ptr<osg::PositionAttitude
         return;
     }
     track_tx_ = tx;
+    explicitCenter_.Reset();
 }
 
 void RubberbandManipulator::calculateCameraDistance()
 {
+    if (track_node_ == nullptr)
+    {
+        return;
+    }
     const osg::MatrixList&    m = track_node_->getWorldMatrices();
     osg::ComputeBoundsVisitor cbv;
     track_node_->accept(cbv);
@@ -301,6 +312,10 @@ void RubberbandManipulator::computeNodeCenterAndRotation(osg::Vec3d& nodeCenter,
         if (track_node_ != nullptr)
         {
             nodeCenter = track_node_->getBound().center();
+        }
+        else
+        {
+            nodeCenter = explicitCenter_.GetRef();
         }
     }
 }

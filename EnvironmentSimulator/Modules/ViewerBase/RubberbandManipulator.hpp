@@ -40,6 +40,12 @@ namespace osgGA
             RB_NUM_MODES
         };
 
+        enum class FOCUS_MODE
+        {
+            RB_FOCUS_ONE,
+            RB_FOCUS_ALL
+        };
+
         class CustomCamera
         {
         public:
@@ -87,6 +93,44 @@ namespace osgGA
             bool       ortho_;
         };
 
+        class ExplicitCenter
+        {
+        public:
+            ExplicitCenter() : set_(false)
+            {
+            }
+
+            void Set(osg::Vec3 center)
+            {
+                center_ = center;
+                set_    = true;
+            }
+
+            osg::Vec3 Get() const
+            {
+                return center_;
+            }
+
+            const osg::Vec3& GetRef() const
+            {
+                return center_;
+            }
+
+            void Reset()
+            {
+                set_ = false;
+            }
+
+            bool IsSet() const
+            {
+                return set_;
+            }
+
+        private:
+            osg::Vec3  center_;
+            bool set_;
+        } ;
+
         RubberbandManipulator(unsigned int mode, osg::Vec3d origin, double& time_ref);
 
         virtual const char* className() const
@@ -97,6 +141,7 @@ namespace osgGA
         typedef std::vector<osg::observer_ptr<osg::Node> > ObserverNodePath;
 
         void setTrackNode(osg::ref_ptr<osg::Node> node, bool calcDistance = false);
+        void setCenterAndDistance(osg::Vec3 center, double distance);
         void setTrackTransform(osg::ref_ptr<osg::PositionAttitudeTransform> tx);
 
         /** set the position of the matrix manipulator using a 4x4 Matrix.*/
@@ -151,6 +196,17 @@ namespace osgGA
             return relative_pos_;
         }
         osg::Vec3d origin_;
+        ExplicitCenter explicitCenter_;
+
+        FOCUS_MODE GetFocusMode()
+        {
+            return focus_mode_;
+        }
+
+        void SetFocusMode(FOCUS_MODE mode)
+        {
+            focus_mode_ = mode;
+        }
 
     protected:
         virtual ~RubberbandManipulator();
@@ -185,6 +241,7 @@ namespace osgGA
         unsigned int _mode;
         bool         fix_camera_;
         double&      time_ref_;
+        FOCUS_MODE   focus_mode_;
 
         std::vector<CustomCamera> customCamera_;
     };

@@ -22,10 +22,36 @@
 #include "Parameters.hpp"
 #include "vehicle.hpp"
 
+
+#ifdef _WIN32
+#include <windows.h>
+#include <mmsystem.h>
+#include <iostream>
+#else
+#include <iostream>
+#include <string>
+#include <vector>
+#include <fcntl.h>           // For open()
+#include <unistd.h>          // For read() and close()
+#include <linux/joystick.h>  // For joystick event structure and ioctl commands
+#endif
+
+
 #define CONTROLLER_HID_TYPE_NAME "HIDController"
 
 namespace scenarioengine
 {
+    enum class HID_AXIS
+    {
+        HID_R_AXIS,
+        HID_U_AXIS,
+        HID_V_AXIS,
+        HID_X_AXIS,
+        HID_Y_AXIS,
+        HID_Z_AXIS,
+        HID_NR_OF_AXIS
+    };
+
     // base class for controllers
     class ControllerHID : public Controller
     {
@@ -38,7 +64,6 @@ namespace scenarioengine
                       ControlActivationMode long_activation_mode,
                       ControlActivationMode light_activation_mode,
                       ControlActivationMode anim_activation_mode);
-        void ReportKeyEvent(int key, bool down);
 
         static const char* GetTypeNameStatic()
         {
@@ -56,14 +81,21 @@ namespace scenarioengine
         {
             return GetTypeStatic();
         }
-        int OpenHID();
+        int OpenHID(int device_id);
+        int ReadHID(double& throttle, double& steering);
+        int ParseAxis(const std::string& axis, HID_AXIS& axis_type);
 
     private:
         vehicle::Vehicle  vehicle_;
-        vehicle::THROTTLE accelerate = vehicle::THROTTLE_NONE;
-        vehicle::STEERING steer      = vehicle::STEERING_NONE;
         double            steering_rate_;
-        double            speed_factor_;
+        int               device_id_;
+        HID_AXIS          throttle_axis_;
+        HID_AXIS          steering_axis_;
+#ifdef _WIN32
+        JOYINFOEX joy_info_;
+        UINT      device_id_internal_;
+#else
+#endif
     };
 
     Controller* InstantiateControllerHID(void* args);
