@@ -104,7 +104,7 @@ void ControllerHID::Step(double timeStep)
         return;
     }
 
-    LOG_DEBUG("steering: {:.2f} throttle: {:.2f}  ", steering_, throttle_);
+    //LOG_DEBUG("steering: {:.2f} throttle: {:.2f}  ", steering_, throttle_);
 
     vehicle_.SetMaxSpeed(object_->GetMaxSpeed());
 
