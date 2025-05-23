@@ -61,7 +61,7 @@ int ControllerHID::ParseAxis(const std::string& axis, HID_AXIS& axis_type)
     return 0;
 }
 
-ControllerHID::ControllerHID(InitArgs* args) : Controller(args), steering_rate_(4.0), device_id_(0), device_id_internal_(0)
+ControllerHID::ControllerHID(InitArgs* args) : Controller(args), steering_(0.0), throttle_(0.0), steering_rate_(4.0), device_id_(0), device_id_internal_(0)
 {
     if (args && args->properties)
     {
@@ -99,17 +99,17 @@ void ControllerHID::Init()
 
 void ControllerHID::Step(double timeStep)
 {
-    double throttle, steering;
-
-    if (ReadHID(throttle, steering) != 0)
+    if (ReadHID(throttle_, steering_) != 0)
     {
         return;
     }
 
+    LOG_DEBUG("steering: {:.2f} throttle: {:.2f}  ", steering_, throttle_);
+
     vehicle_.SetMaxSpeed(object_->GetMaxSpeed());
 
     // Update vehicle motion
-    vehicle_.DrivingControlAnalog(timeStep, throttle, steering);
+    vehicle_.DrivingControlAnalog(timeStep, throttle_, steering_);
 
     gateway_->updateObjectWorldPosXYH(object_->id_, 0.0, vehicle_.posX_, vehicle_.posY_, vehicle_.heading_);
 
@@ -212,91 +212,108 @@ int ControllerHID::ReadHID(double& throttle, double& steering)
     return 0;
 }
 
+void CloseHID()
+{
+
+}
+
 #else
 
-int ControllerHID::OpenHID()
+int ControllerHID::OpenHID(int device_id)
 {
-    int             joystick_fd = -1;
-    int             js_nr       = 1;
     std::string     joystick_path;
-    struct js_event js_event;
 
-    joystick_path = "/dev/input/js" + std::to_string(js_nr);
+    joystick_path = "/dev/input/js" + std::to_string(device_id);
 
     // Try to open the device file
-    joystick_fd = open(joystick_path.c_str(), O_RDONLY | O_NONBLOCK);
-
-    if (joystick_fd == -1)
+    device_id_internal_ = open(joystick_path.c_str(), O_RDONLY | O_NONBLOCK);
+    if (device_id_internal_ < 0)
     {
         // If opening fails, it likely means the device doesn't exist
         // or we don't have permissions, so continue to the next.
+        LOG_ERROR("Joystick with device id {} not ready or not connected", device_id);
         return -1;
     }
 
     // Device opened successfully. Now query its capabilities.
     char name[128];
-    if (ioctl(joystick_fd, JSIOCGNAME(sizeof(name)), name) < 0)
+    if (ioctl(device_id_internal_, JSIOCGNAME(sizeof(name)), name) < 0)
     {
         // Fallback if name cannot be read (e.g., older kernel or device)
-        snprintf(name, sizeof(name), "Unknown Joystick %d", js_nr);
+        snprintf(name, sizeof(name), "Unknown Joystick %d", device_id);
     }
 
-    char num_axes = 0;
-    ioctl(joystick_fd, JSIOCGAXES, &num_axes);  // Get number of axes
+    int  num_axes = 0;
+    ioctl(device_id_internal_, JSIOCGAXES, &num_axes);  // Get number of axes
 
-    char num_buttons = 0;
-    ioctl(joystick_fd, JSIOCGBUTTONS, &num_buttons);  // Get number of buttons
+    int num_buttons = 0;
+    ioctl(device_id_internal_, JSIOCGBUTTONS, &num_buttons);  // Get number of buttons
 
     // Consider it a "real" joystick if it has at least one axis or one button
     if (num_axes > 0 || num_buttons > 0)
     {
-        std::cout << "Found joystick: " << joystick_path << std::endl;
-        std::cout << "  Name: " << name << std::endl;
-        std::cout << "  Axes: " << (int)num_axes << std::endl;
-        std::cout << "  Buttons: " << (int)num_buttons << std::endl;
+        printf("%d %d\n", num_axes, num_buttons);
+        LOG_DEBUG("Found {} Axis: {} Buttons: {}", joystick_path + " " + name, num_axes, num_buttons);
     }
     else
     {
         // If it has no axes or buttons, it's not a joystick for our purpose
         std::cout << "Skipping " << joystick_path << " (no axes/buttons detected)." << std::endl;
-        close(joystick_fd);  // Close this non-joystick device
-        joystick_fd = -1;    // Reset fd
+        close(device_id_internal_);  // Close this non-joystick device
+        device_id_internal_ = -1;    // Reset fd
         return -1;
     }
 
-    // Check if a joystick was found
-    if (joystick_fd == -1)
-    {
-        std::cerr << "Error: No valid joystick device found (checked /dev/input/js0 to js" << MAX_JOYSTICKS_TO_CHECK - 1 << ")." << std::endl;
-        std::cerr << "       Make sure your joystick is connected and you have read permissions." << std::endl;
-        std::cerr << "       (Try 'sudo apt install jstest-gtk' and 'jstest-gtk' to verify)." << std::endl;
-        return -1;
-    }
-
-    std::cout << "Reading input from " << joystick_path << ". Press Ctrl+C to exit." << std::endl;
-
-    // 2. Read events in a loop from the found joystick
-    while (true)
-    {
-        if (read(joystick_fd, &js_event, sizeof(struct js_event)) == sizeof(struct js_event))
-        {
-            // Mask out JS_EVENT_INIT (initial state event)
-            switch (js_event.type & ~JS_EVENT_INIT)
-            {
-                case JS_EVENT_BUTTON:
-                    std::cout << "Button " << (int)js_event.number << " " << (js_event.value ? "pressed" : "released") << std::endl;
-                    break;
-                case JS_EVENT_AXIS:
-                    std::cout << "Axis " << (int)js_event.number << " value: " << js_event.value << std::endl;
-                    break;
-            }
-        }
-        usleep(1000);  // Sleep for 1ms to prevent busy-waiting
-    }
-
-    // 3. Close the device (unreachable in this infinite loop, but good practice)
-    close(joystick_fd);
     return 0;
+}
+
+int ControllerHID::ReadHID(double& throttle, double& steering)
+{
+    struct js_event js_event;
+
+    if (read(device_id_internal_, &js_event, sizeof(struct js_event)) == static_cast<ssize_t>(sizeof(struct js_event)))
+    {
+        // Mask out JS_EVENT_INIT (initial state event)
+        switch (js_event.type & ~JS_EVENT_INIT)
+        {
+            case JS_EVENT_BUTTON:
+                LOG_DEBUG("Button {} {}", js_event.number, js_event.value ? "pressed" : "released");
+                break;
+            case JS_EVENT_AXIS:
+                LOG_DEBUG("Axis {} value: {}", js_event.number,  js_event.value);
+
+                // hard code axis
+                if (js_event.number == 0)
+                {
+                    steering = -js_event.value / 32768.0;  // Normalize to [-1, 1]
+                }
+                else if (js_event.number == 1)
+                {
+                    throttle = 1 - (js_event.value + 32768) / 65536.0;  // Normalize to [0, 1]
+                }
+                else if (js_event.number == 2)
+                {
+                    throttle = -1 + (js_event.value + 32768) / 65536.0;  // Normalize to [-1, 0]
+                }
+
+                LOG_DEBUG("In ReadHID steering: {:.2f} throttle: {:.2f}  ", steering, throttle);
+
+                // signed short axis_values[static_cast<unsigned int>(HID_AXIS::HID_NR_OF_AXIS)];
+                // if (js_event.number < static_cast<unsigned char>(HID_AXIS::HID_NR_OF_AXIS))
+                // {
+                //     LOG_INFO("num {} value {}", js_event.number, js_event.value);
+                //     axis_values[js_event.number] = js_event.value;
+                // }
+
+                break;
+        }
+    }
+    return 0;
+}
+
+void ControllerHID::CloseHID()
+{
+    close(device_id_internal_);
 }
 
 #endif

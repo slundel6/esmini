@@ -82,11 +82,14 @@ namespace scenarioengine
             return GetTypeStatic();
         }
         int OpenHID(int device_id);
+        void CloseHID();
         int ReadHID(double& throttle, double& steering);
         int ParseAxis(const std::string& axis, HID_AXIS& axis_type);
 
     private:
         vehicle::Vehicle  vehicle_;
+        double            steering_;
+        double            throttle_;
         double            steering_rate_;
         int               device_id_;
         HID_AXIS          throttle_axis_;
@@ -95,6 +98,7 @@ namespace scenarioengine
         JOYINFOEX joy_info_;
         UINT      device_id_internal_;
 #else
+        int      device_id_internal_;
 #endif
     };
 

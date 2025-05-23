@@ -24,9 +24,17 @@
             <CatalogReference catalogName="ControllerCatalog" entryName="hid">
                <ParameterAssignments>
                   <ParameterAssignment parameterRef="SteeringRate" value="6"/>
-                  <!-- Logitech Steering wheel -->
-                  <ParameterAssignment parameterRef="DeviceID" value="0"/>
+                  <!-- Logitech Steering wheel Windows -->
+                  <!-- <ParameterAssignment parameterRef="DeviceID" value="0"/>
                   <ParameterAssignment parameterRef="SteeringAxis" value="X"/>
+                  <ParameterAssignment parameterRef="ThrottleAxis" value="Y"/> -->
+                  <!-- Logitech Steering wheel Linux -->
+                  <!-- <ParameterAssignment parameterRef="DeviceID" value="2"/>
+                  <ParameterAssignment parameterRef="SteeringAxis" value="R"/>
+                  <ParameterAssignment parameterRef="ThrottleAxis" value="Y"/> -->
+                  <!-- PS4 controller Linux -->
+                  <ParameterAssignment parameterRef="DeviceID" value="2"/>
+                  <ParameterAssignment parameterRef="SteeringAxis" value="R"/>
                   <ParameterAssignment parameterRef="ThrottleAxis" value="Y"/>
                </ParameterAssignments>
             </CatalogReference>
@@ -34,28 +42,27 @@
       </ScenarioObject>
       <ScenarioObject name="Car2">
          <CatalogReference catalogName="VehicleCatalog" entryName="car_red"/>
-         <ObjectController name="hid_ctrl2">
+         <!-- <ObjectController name="hid_ctrl2">
             <CatalogReference catalogName="ControllerCatalog" entryName="hid">
                <ParameterAssignments>
                   <ParameterAssignment parameterRef="SteeringRate" value="6"/>
-                  <!-- PS4 controller -->
                   <ParameterAssignment parameterRef="DeviceID" value="1"/>
                   <ParameterAssignment parameterRef="SteeringAxis" value="X"/>
                   <ParameterAssignment parameterRef="ThrottleAxis" value="R"/>
                </ParameterAssignments>
             </CatalogReference>
-         </ObjectController>
+         </ObjectController> -->
       </ScenarioObject>
       <ScenarioObject name="Car3">
          <CatalogReference catalogName="VehicleCatalog" entryName="car_blue"/>
-         <ObjectController name="hid_ctrl3">
+         <!-- <ObjectController name="hid_ctrl3">
             <CatalogReference catalogName="ControllerCatalog" entryName="hid">
                <ParameterAssignments>
                   <ParameterAssignment parameterRef="DeviceID" value="0"/>
                   <ParameterAssignment parameterRef="SteeringRate" value="6"/>
                </ParameterAssignments>
             </CatalogReference>
-         </ObjectController>
+         </ObjectController> -->
       </ScenarioObject>
    </Entities>
    <Storyboard>
