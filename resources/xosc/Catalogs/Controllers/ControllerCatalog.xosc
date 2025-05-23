@@ -32,12 +32,16 @@
         <Controller name="hid">
             <ParameterDeclarations>
                 <ParameterDeclaration name="SteeringRate" parameterType="double" value="4.0" />
-                <ParameterDeclaration name="SpeedFactor" parameterType="double" value="1.0" />
+                <ParameterDeclaration name="DeviceID" parameterType="integer" value="0" />
+                <ParameterDeclaration name="SteeringAxis" parameterType="string" value="X" />
+                <ParameterDeclaration name="ThrottleAxis" parameterType="string" value="Z" />
             </ParameterDeclarations>
             <Properties>
                 <Property name="esminiController" value="HIDController" />
                 <Property name="steeringRate" value="$SteeringRate" />
-                <Property name="speedFactor" value="$SpeedFactor" />
+                <Property name="deviceID" value="$DeviceID" />
+                <Property name="steeringAxis" value="$SteeringAxis" />
+                <Property name="throttleAxis" value="$ThrottleAxis" />
             </Properties>
         </Controller>
         <Controller name="controllerRel2Abs">

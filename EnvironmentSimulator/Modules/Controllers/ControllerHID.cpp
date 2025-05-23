@@ -15,23 +15,8 @@
 #include "Entities.hpp"
 #include "ScenarioGateway.hpp"
 
-#ifdef _WIN32
-#include <windows.h>
-#include <mmsystem.h>
-#include <iostream>
-#else
-#include <iostream>
-#include <string>
-#include <vector>
-#include <fcntl.h>           // For open()
-#include <unistd.h>          // For read() and close()
-#include <linux/joystick.h>  // For joystick event structure and ioctl commands
-#endif
 
 using namespace scenarioengine;
-
-// Maximum number of joystick devices to check (e.g., js0 to js9)
-#define MAX_JOYSTICKS_TO_CHECK 10
 
 
 Controller* scenarioengine::InstantiateControllerHID(void* args)
@@ -41,7 +26,42 @@ Controller* scenarioengine::InstantiateControllerHID(void* args)
     return new ControllerHID(initArgs);
 }
 
-ControllerHID::ControllerHID(InitArgs* args) : Controller(args), steering_rate_(4.0), speed_factor_(1.0)
+int ControllerHID::ParseAxis(const std::string& axis, HID_AXIS& axis_type)
+{
+    if (axis == "X" || axis == "x")
+    {
+        axis_type = HID_AXIS::HID_X_AXIS;
+    }
+    else if (axis == "Y" || axis == "y")
+    {
+        axis_type = HID_AXIS::HID_Y_AXIS;
+    }
+    else if (axis == "Z" || axis == "z")
+    {
+        axis_type = HID_AXIS::HID_Z_AXIS;
+    }
+    else if (axis == "R" || axis == "r")
+    {
+        axis_type = HID_AXIS::HID_R_AXIS;
+    }
+    else if (axis == "U" || axis == "u")
+    {
+        axis_type = HID_AXIS::HID_U_AXIS;
+    }
+    else if (axis == "V" || axis == "v")
+    {
+        axis_type = HID_AXIS::HID_V_AXIS;
+    }
+    else
+    {
+        LOG_ERROR("Invalid axis type: {}", axis);
+        axis_type = HID_AXIS::HID_NR_OF_AXIS;
+        return -1;
+    }
+    return 0;
+}
+
+ControllerHID::ControllerHID(InitArgs* args) : Controller(args), steering_rate_(4.0), device_id_(0), device_id_internal_(0)
 {
     if (args && args->properties)
     {
@@ -50,9 +70,21 @@ ControllerHID::ControllerHID(InitArgs* args) : Controller(args), steering_rate_(
             steering_rate_ = strtod(args->properties->GetValueStr("steeringRate"));
         }
 
-        if (args->properties->ValueExists("speedFactor"))
+        if (args->properties->ValueExists("deviceID"))
         {
-            speed_factor_ = strtod(args->properties->GetValueStr("speedFactor"));
+            device_id_ = strtoi(args->properties->GetValueStr("deviceID"));
+        }
+
+        if (args->properties->ValueExists("steeringAxis"))
+        {
+            std::string axis = args->properties->GetValueStr("steeringAxis");
+            ParseAxis(args->properties->GetValueStr("steeringAxis"), steering_axis_);
+        }
+
+        if (args->properties->ValueExists("throttleAxis"))
+        {
+            std::string axis = args->properties->GetValueStr("throttleAxis");
+            ParseAxis(args->properties->GetValueStr("throttleAxis"), throttle_axis_);
         }
     }
     align_to_road_heading_on_deactivation_ = true;
@@ -61,52 +93,23 @@ ControllerHID::ControllerHID(InitArgs* args) : Controller(args), steering_rate_(
 
 void ControllerHID::Init()
 {
+    OpenHID(device_id_);
     Controller::Init();
 }
 
 void ControllerHID::Step(double timeStep)
 {
-    double speed_limit = object_->pos_.GetSpeedLimit();
+    double throttle, steering;
 
-    if (speed_limit < SMALL_NUMBER)
+    if (ReadHID(throttle, steering) != 0)
     {
-        // no speed limit defined, set something with regards to number of lanes
-        if (object_->pos_.GetRoadById(object_->pos_.GetTrackId())
-                ->GetNumberOfDrivingLanesSide(object_->pos_.GetS(), SIGN(object_->pos_.GetLaneId())) > 1)
-        {
-            speed_limit = 110 / 3.6;
-        }
-        else
-        {
-            speed_limit = 60 / 3.6;
-        }
+        return;
     }
-    vehicle_.SetMaxSpeed(MIN(speed_factor_ * speed_limit, object_->GetMaxSpeed()));
 
-    if (!(IsActiveOnDomains(static_cast<unsigned int>(ControlDomains::DOMAIN_LONG))))
-    {
-        // Fetch speed from Default Controller
-        vehicle_.speed_ = object_->GetSpeed();
-    }
+    vehicle_.SetMaxSpeed(object_->GetMaxSpeed());
 
     // Update vehicle motion
-    vehicle_.SetThrottleDisabled(!IsActiveOnDomains(static_cast<unsigned int>(ControlDomains::DOMAIN_LONG)));
-    vehicle_.SetSteeringDisabled(!IsActiveOnDomains(static_cast<unsigned int>(ControlDomains::DOMAIN_LAT)));
-    vehicle_.DrivingControlBinary(timeStep, accelerate, steer);
-
-    if (IsActiveOnDomains(static_cast<unsigned int>(ControlDomains::DOMAIN_LONG)) &&
-        IsNotActiveOnDomains(static_cast<unsigned int>(ControlDomains::DOMAIN_LAT)))
-    {
-        // Only longitudinal control, move along road
-        double steplen = vehicle_.speed_ * timeStep;
-
-        object_->MoveAlongS(steplen);
-
-        // Fetch updated position
-        vehicle_.posX_    = object_->pos_.GetX();
-        vehicle_.posY_    = object_->pos_.GetY();
-        vehicle_.heading_ = object_->pos_.GetH();
-    }
+    vehicle_.DrivingControlAnalog(timeStep, throttle, steering);
 
     gateway_->updateObjectWorldPosXYH(object_->id_, 0.0, vehicle_.posX_, vehicle_.posY_, vehicle_.heading_);
 
@@ -143,8 +146,6 @@ int ControllerHID::Activate(ControlActivationMode lat_activation_mode,
         vehicle_.SetSteeringRate(steering_rate_);
     }
 
-    steer      = vehicle::STEERING_NONE;
-    accelerate = vehicle::THROTTLE_NONE;
 
     object_->SetJunctionSelectorStrategy(roadmanager::Junction::JunctionStrategyType::SELECTOR_ANGLE);
     object_->SetJunctionSelectorAngle(0.0);
@@ -152,89 +153,60 @@ int ControllerHID::Activate(ControlActivationMode lat_activation_mode,
     return Controller::Activate(lat_activation_mode, long_activation_mode, light_activation_mode, anim_activation_mode);
 }
 
-void ControllerHID::ReportKeyEvent(int key, bool down)
-{
-    if (key == static_cast<int>(KeyType::KEY_Left))
-    {
-        if (down)
-        {
-            steer = vehicle::STEERING_LEFT;
-        }
-        else
-        {
-            steer = vehicle::STEERING_NONE;
-        }
-    }
-    else if (key == static_cast<int>(KeyType::KEY_Right))
-    {
-        if (down)
-        {
-            steer = vehicle::STEERING_RIGHT;
-        }
-        else
-        {
-            steer = vehicle::STEERING_NONE;
-        }
-    }
-    else if (key == static_cast<int>(KeyType::KEY_Up))
-    {
-        if (down)
-        {
-            accelerate = vehicle::THROTTLE_ACCELERATE;
-        }
-        else
-        {
-            accelerate = vehicle::THROTTLE_NONE;
-        }
-    }
-    else if (key == static_cast<int>(KeyType::KEY_Down))
-    {
-        if (down)
-        {
-            accelerate = vehicle::THROTTLE_BRAKE;
-        }
-        else
-        {
-            accelerate = vehicle::THROTTLE_NONE;
-        }
-    }
-}
-
 #ifdef _WIN32
 
-int ControllerHID::OpenHID()
+int ControllerHID::OpenHID(int device_id)
 {
     UINT numDevs = joyGetNumDevs();
     if (numDevs == 0)
     {
-        std::cerr << "No joystick devices available.\n";
-        return 1;
+        LOG_ERROR("No joystick devices available");
+        return -1;
     }
 
-    JOYINFOEX joyInfo = {};
-    joyInfo.dwSize    = sizeof(JOYINFOEX);
-    joyInfo.dwFlags   = JOY_RETURNALL;
+    joy_info_ = {};
+    joy_info_.dwSize = sizeof(JOYINFOEX);
+    joy_info_.dwFlags = JOY_RETURNALL;
 
-    UINT deviceID = JOYSTICKID1;
+    device_id_internal_ = JOYSTICKID1 + device_id;
 
-    MMRESULT res = joyGetPosEx(deviceID, &joyInfo);
+    MMRESULT res = joyGetPosEx(device_id_internal_, &joy_info_);
     if (res != JOYERR_NOERROR)
     {
-        std::cerr << "Joystick " << deviceID << " not ready or not connected.\n";
-        return 1;
+        LOG_ERROR("Joystick with device id {} not ready or not connected", device_id_internal_);
+        return -1;
     }
 
-    std::cout << "Reading joystick state (Ctrl+C to quit):\n";
+    return 0;
+}
 
-    while (true)
+int ControllerHID::ReadHID(double& throttle, double& steering)
+{
+    MMRESULT res = joyGetPosEx(device_id_internal_, &joy_info_);
+
+    DWORD axis_values[static_cast<unsigned int>(HID_AXIS::HID_NR_OF_AXIS)] =
+        {joy_info_.dwRpos, joy_info_.dwUpos, joy_info_.dwVpos, joy_info_.dwXpos, joy_info_.dwYpos, joy_info_.dwZpos};
+
+    if (res == JOYERR_NOERROR)
     {
-        res = joyGetPosEx(deviceID, &joyInfo);
-        if (res == JOYERR_NOERROR)
-        {
-            std::cout << "\rX: " << joyInfo.dwXpos << " Y: " << joyInfo.dwYpos << " Z: " << joyInfo.dwZpos << " Buttons: " << joyInfo.dwButtons
-                      << "    " << std::flush;
-        }
-        Sleep(50);
+        steering = 1.0 - static_cast<double>(axis_values[static_cast<unsigned int>(steering_axis_)]) / 32768.0;  // Normalize to [-1, 1]
+        throttle = 1.0 - static_cast<double>(axis_values[static_cast<unsigned int>(throttle_axis_)]) / 32768.0;  // Normalize to [-1, 1]
+
+        LOG_DEBUG("R: {} U: {} V: {} X: {} Y: {} Z: {} Buttons: {} -> steering: {:.2f} throttle: {:.2f}  ",
+                  joy_info_.dwRpos,
+                  joy_info_.dwUpos,
+                  joy_info_.dwVpos,
+                  joy_info_.dwXpos,
+                  joy_info_.dwYpos,
+                  joy_info_.dwZpos,
+                  joy_info_.dwButtons,
+                  steering,
+                  throttle);
+    }
+    else
+    {
+        LOG_ERROR("Error reading joystick data: %d", res);
+        return -1;
     }
 
     return 0;

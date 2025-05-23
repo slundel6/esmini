@@ -23,8 +23,11 @@
          <ObjectController name="hid_ctrl1">
             <CatalogReference catalogName="ControllerCatalog" entryName="hid">
                <ParameterAssignments>
-                  <ParameterAssignment parameterRef="SpeedFactor" value="10"/>
                   <ParameterAssignment parameterRef="SteeringRate" value="6"/>
+                  <!-- Logitech Steering wheel -->
+                  <ParameterAssignment parameterRef="DeviceID" value="0"/>
+                  <ParameterAssignment parameterRef="SteeringAxis" value="X"/>
+                  <ParameterAssignment parameterRef="ThrottleAxis" value="Y"/>
                </ParameterAssignments>
             </CatalogReference>
          </ObjectController>
@@ -34,8 +37,11 @@
          <ObjectController name="hid_ctrl2">
             <CatalogReference catalogName="ControllerCatalog" entryName="hid">
                <ParameterAssignments>
-                  <ParameterAssignment parameterRef="SpeedFactor" value="10"/>
                   <ParameterAssignment parameterRef="SteeringRate" value="6"/>
+                  <!-- PS4 controller -->
+                  <ParameterAssignment parameterRef="DeviceID" value="1"/>
+                  <ParameterAssignment parameterRef="SteeringAxis" value="X"/>
+                  <ParameterAssignment parameterRef="ThrottleAxis" value="R"/>
                </ParameterAssignments>
             </CatalogReference>
          </ObjectController>
@@ -45,7 +51,7 @@
          <ObjectController name="hid_ctrl3">
             <CatalogReference catalogName="ControllerCatalog" entryName="hid">
                <ParameterAssignments>
-                  <ParameterAssignment parameterRef="SpeedFactor" value="10"/>
+                  <ParameterAssignment parameterRef="DeviceID" value="0"/>
                   <ParameterAssignment parameterRef="SteeringRate" value="6"/>
                </ParameterAssignments>
             </CatalogReference>
@@ -77,11 +83,11 @@
                      </Position>
                   </TeleportAction>
                </PrivateAction>
-               <PrivateAction>
-                  <ControllerAction>
-                     <ActivateControllerAction objectControllerRef="hid_ctrl2" longitudinal="true" lateral="true"/>
-                  </ControllerAction>
-               </PrivateAction>
+               <!-- <PrivateAction> -->
+                  <!-- <ControllerAction> -->
+                     <!-- <ActivateControllerAction objectControllerRef="hid_ctrl2" longitudinal="true" lateral="true"/> -->
+                  <!-- </ControllerAction> -->
+               <!-- </PrivateAction> -->
             </Private>
             <Private entityRef="Car3">
                <PrivateAction>
@@ -91,11 +97,11 @@
                      </Position>
                   </TeleportAction>
                </PrivateAction>
-               <PrivateAction>
-                  <ControllerAction>
-                     <ActivateControllerAction objectControllerRef="hid_ctrl3" longitudinal="true" lateral="true"/>
-                  </ControllerAction>
-               </PrivateAction>
+               <!-- <PrivateAction> -->
+                  <!-- <ControllerAction> -->
+                     <!-- <ActivateControllerAction objectControllerRef="hid_ctrl3" longitudinal="true" lateral="true"/> -->
+                  <!-- </ControllerAction> -->
+               <!-- </PrivateAction> -->
             </Private>
          </Actions>
       </Init>
@@ -250,17 +256,7 @@
             </Condition>
          </ConditionGroup>
          <ConditionGroup>
-            <Condition name="Car1 end-of-road condition" delay="0" conditionEdge="none">
-               <ByEntityCondition>
-                  <TriggeringEntities triggeringEntitiesRule="any">
-                     <EntityRef entityRef="Car1"/>
-                  </TriggeringEntities>
-                  <EntityCondition>
-                     <EndOfRoadCondition duration="0.0"/>
-                  </EntityCondition>
-               </ByEntityCondition>
-            </Condition>
-            <Condition name="Car1 near finish line" delay="0" conditionEdge="none">
+            <Condition name="Car1 wins" delay="0" conditionEdge="none">
                <ByEntityCondition>
                   <TriggeringEntities triggeringEntitiesRule="any">
                      <EntityRef entityRef="Car1"/>
@@ -268,7 +264,7 @@
                   <EntityCondition>
                      <ReachPositionCondition tolerance="10">
                         <Position>
-                           <RoadPosition roadId="1" t="0" s="1154.4"/>
+                           <RoadPosition roadId="1" t="0" s="1154.3"/>
                         </Position>
                      </ReachPositionCondition>
                   </EntityCondition>
@@ -276,17 +272,7 @@
             </Condition>
          </ConditionGroup>
          <ConditionGroup>
-            <Condition name="Car2 end-of-road condition" delay="0" conditionEdge="none">
-               <ByEntityCondition>
-                  <TriggeringEntities triggeringEntitiesRule="any">
-                     <EntityRef entityRef="Car2"/>
-                  </TriggeringEntities>
-                  <EntityCondition>
-                     <EndOfRoadCondition duration="0.0"/>
-                  </EntityCondition>
-               </ByEntityCondition>
-            </Condition>
-            <Condition name="Car2 near finish line" delay="0" conditionEdge="none">
+            <Condition name="Car2 wins" delay="0" conditionEdge="none">
                <ByEntityCondition>
                   <TriggeringEntities triggeringEntitiesRule="any">
                      <EntityRef entityRef="Car2"/>
@@ -294,7 +280,7 @@
                   <EntityCondition>
                      <ReachPositionCondition tolerance="10">
                         <Position>
-                           <RoadPosition roadId="1" t="0" s="1154.4"/>
+                           <RoadPosition roadId="1" t="0" s="1154.3"/>
                         </Position>
                      </ReachPositionCondition>
                   </EntityCondition>
@@ -302,17 +288,7 @@
             </Condition>
          </ConditionGroup>
          <ConditionGroup>
-            <Condition name="Car3 end-of-road condition" delay="0" conditionEdge="none">
-               <ByEntityCondition>
-                  <TriggeringEntities triggeringEntitiesRule="any">
-                     <EntityRef entityRef="Car3"/>
-                  </TriggeringEntities>
-                  <EntityCondition>
-                     <EndOfRoadCondition duration="0.0"/>
-                  </EntityCondition>
-               </ByEntityCondition>
-            </Condition>
-            <Condition name="Car3 near finish line" delay="0" conditionEdge="none">
+            <Condition name="Car3 wins" delay="0" conditionEdge="none">
                <ByEntityCondition>
                   <TriggeringEntities triggeringEntitiesRule="any">
                      <EntityRef entityRef="Car3"/>
@@ -320,7 +296,7 @@
                   <EntityCondition>
                      <ReachPositionCondition tolerance="10">
                         <Position>
-                           <RoadPosition roadId="1" t="0" s="1154.4"/>
+                           <RoadPosition roadId="1" t="0" s="1154.3"/>
                         </Position>
                      </ReachPositionCondition>
                   </EntityCondition>
