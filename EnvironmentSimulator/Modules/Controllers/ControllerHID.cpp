@@ -216,7 +216,8 @@ int ControllerHID::ReadHID(double& throttle, double& steering)
         steering = 1.0 - static_cast<double>(axis_values[static_cast<unsigned int>(steering_axis_)]) / 32768.0;  // Normalize to [-1, 1]
         throttle = 1.0 - static_cast<double>(axis_values[static_cast<unsigned int>(throttle_axis_)]) / 32768.0;  // Normalize to [-1, 1]
 
-        LOG_DEBUG("R: {} U: {} V: {} X: {} Y: {} Z: {} Buttons: {} -> steering: {:.2f} throttle: {:.2f}  ",
+        LOG_DEBUG("HID ID: {} R: {} U: {} V: {} X: {} Y: {} Z: {} Buttons: {} -> steering: {:.2f} throttle: {:.2f}",
+                  device_id_,
                   joy_info_.dwRpos,
                   joy_info_.dwUpos,
                   joy_info_.dwVpos,
@@ -297,7 +298,7 @@ int ControllerHID::ReadHID(double& throttle, double& steering)
     }
 
     struct js_event js_event;
-    if (read(device_id_internal_, &js_event, sizeof(struct js_event)) == static_cast<ssize_t>(sizeof(struct js_event)))
+    while (read(device_id_internal_, &js_event, sizeof(struct js_event)) == static_cast<ssize_t>(sizeof(struct js_event)))
     {
         // Mask out JS_EVENT_INIT (initial state event)
         switch (js_event.type & ~JS_EVENT_INIT)
@@ -334,6 +335,8 @@ int ControllerHID::ReadHID(double& throttle, double& steering)
                 break;
         }
     }
+    LOG_DEBUG("HID ID: {} R: {} U: {} V: {} X: {} Y: {} Z: {} Buttons: {} -> steering: {:.2f} throttle: {:.2f}",
+        );
     return 0;
 }
 

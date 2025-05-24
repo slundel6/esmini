@@ -21,35 +21,25 @@
             </ParameterAssignments>
          </CatalogReference>
          <ObjectController name="hid_ctrl1">
-            <CatalogReference catalogName="ControllerCatalog" entryName="LogitechSteeringWheel_Windows">
+            <CatalogReference catalogName="ControllerCatalog" entryName="HoriRacingWheelAPEX_Windows">
                <ParameterAssignments>
-                  <ParameterAssignment parameterRef="DeviceID" value="0"/>
+                  <ParameterAssignment parameterRef="DeviceID" value="2"/>
                </ParameterAssignments>
             </CatalogReference>
          </ObjectController>
       </ScenarioObject>
       <ScenarioObject name="Car2">
          <CatalogReference catalogName="VehicleCatalog" entryName="car_red"/>
-         <!-- <ObjectController name="hid_ctrl2"> -->
-            <!-- <CatalogReference catalogName="ControllerCatalog" entryName="hid"> -->
-               <!-- <ParameterAssignments> -->
-                  <!-- <ParameterAssignment parameterRef="SteeringRate" value="6"/> -->
-                  <!-- <ParameterAssignment parameterRef="DeviceID" value="1"/> -->
-                  <!-- <ParameterAssignment parameterRef="SteeringAxis" value="X"/> -->
-                  <!-- <ParameterAssignment parameterRef="ThrottleAxis" value="R"/> -->
-               <!-- </ParameterAssignments> -->
-            <!-- </CatalogReference> -->
-         <!-- </ObjectController> -->
       </ScenarioObject>
       <ScenarioObject name="Car3">
          <CatalogReference catalogName="VehicleCatalog" entryName="car_blue"/>
-         <ObjectController name="hid_ctrl3">
-            <CatalogReference catalogName="ControllerCatalog" entryName="PS4Controller_Windows">
-               <ParameterAssignments>
-                  <ParameterAssignment parameterRef="DeviceID" value="1"/>
-               </ParameterAssignments>
-            </CatalogReference>
-         </ObjectController>
+         <!-- <ObjectController name="hid_ctrl3"> -->
+            <!-- <CatalogReference catalogName="ControllerCatalog" entryName="TrustGXT39_Windows"> -->
+               <!-- <ParameterAssignments> -->
+                  <!-- <ParameterAssignment parameterRef="DeviceID" value="0"/> -->
+               <!-- </ParameterAssignments> -->
+            <!-- </CatalogReference> -->
+         <!-- </ObjectController> -->
       </ScenarioObject>
    </Entities>
    <Storyboard>
@@ -266,7 +256,7 @@
                      <EntityRef entityRef="Car1"/>
                   </TriggeringEntities>
                   <EntityCondition>
-                     <ReachPositionCondition tolerance="10">
+                     <ReachPositionCondition tolerance="20">
                         <Position>
                            <RoadPosition roadId="1" t="0" s="1154.3"/>
                         </Position>
@@ -282,7 +272,7 @@
                      <EntityRef entityRef="Car2"/>
                   </TriggeringEntities>
                   <EntityCondition>
-                     <ReachPositionCondition tolerance="10">
+                     <ReachPositionCondition tolerance="20">
                         <Position>
                            <RoadPosition roadId="1" t="0" s="1154.3"/>
                         </Position>
@@ -298,7 +288,7 @@
                      <EntityRef entityRef="Car3"/>
                   </TriggeringEntities>
                   <EntityCondition>
-                     <ReachPositionCondition tolerance="10">
+                     <ReachPositionCondition tolerance="20">
                         <Position>
                            <RoadPosition roadId="1" t="0" s="1154.3"/>
                         </Position>
