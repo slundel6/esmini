@@ -116,6 +116,11 @@ ControllerHID::ControllerHID(InitArgs* args) : Controller(args)
             {
                 LOG_ERROR_AND_QUIT("Failed to initialize HID controller {} reading steeringInput", GetName());
             }
+
+            if (steering_input_ >= HID_INPUT::HID_BTN_1)
+            {
+                LOG_ERROR_AND_QUIT("Steering on button ({}) not supported. Must be on an axis.", steering_input_ - HID_INPUT::HID_BTN_1 + 1);
+            }
         }
 
         if (args->properties->ValueExists("throttleInput"))
@@ -137,8 +142,18 @@ ControllerHID::ControllerHID(InitArgs* args) : Controller(args)
         }
         else
         {
-            // brake input not specified, assume same as throttle
-            brake_input_ = throttle_input_;
+            // brake input not specified, assume same as
+            if (throttle_input_ < HID_INPUT::HID_BTN_1)
+            {
+                // throttle is an axis, use it also as brake input
+                brake_input_ = throttle_input_;
+            }
+            else
+            {
+                // throttle is a button, can't combine
+                LOG_ERROR_AND_QUIT("Throttle input is a button ({}), can only combine throttle and brake on axis. Add brake on separate button.",
+                                   throttle_input_ - HID_INPUT::HID_BTN_1 + 1);
+            }
         }
     }
 
@@ -301,13 +316,28 @@ int ControllerHID::ReadHID(double& throttle, double& steering)
 
         if (throttle_input_ == brake_input_)
         {
-            // throttle and brake on same axis
-            throttle = (values_[throttle_input_] - 32767) / 32767.0;  // Normalize to [-1, 1]
+            // throttle and brake on same axis, normalize to [-1, 1] and adjust sign for correct motion direction
+            throttle = -(values_[throttle_input_] - 32767) / 32767.0;
         }
         else
         {
+            double throttle_tmp = static_cast<double>(values_[throttle_input_]);
+            double brake_tmp    = static_cast<double>(values_[brake_input_]);
+
+            if (throttle_input_ < HID_INPUT::HID_BTN_1)
+            {
+                // throttle is an axis, scale to [0:1]
+                throttle_tmp /= 65536.0;
+            }
+
+            if (brake_input_ < HID_INPUT::HID_BTN_1)
+            {
+                // brake is an axis, scale to [0:1]
+                brake_tmp /= 65536.0;
+            }
+
             // combine throttle and brake input into throttle [-1:1]
-            throttle = (values_[throttle_input_] - values_[brake_input_]) / 65536.0;
+            throttle = throttle_tmp - brake_tmp;
         }
 
         steering = -(values_[steering_input_] - 32767) / 32767.0;  // Normalize to [-1, 1] and adjust sign for correct steering angle
@@ -406,15 +436,30 @@ int ControllerHID::ReadHID(double& throttle, double& steering)
     if (throttle_input_ == brake_input_)
     {
         // throttle and brake on same axis
-        throttle = -values_[throttle_input_] / 32767.0;  // Normalize to [-1, 1] and adjust sign for correct motion direction
+        throttle = static_cast<double>(-values_[throttle_input_]) / 32767.0;  // Normalize to [-1, 1] and adjust sign for correct motion direction
     }
     else
     {
+        double throttle_tmp = static_cast<double>(values_[throttle_input_]);
+        double brake_tmp    = static_cast<double>(values_[brake_input_]);
+
+        if (throttle_input_ < HID_INPUT::HID_BTN_1)
+        {
+            // throttle is an axis, scale to [0:1]
+            throttle_tmp /= 65536.0;
+        }
+
+        if (brake_input_ < HID_INPUT::HID_BTN_1)
+        {
+            // brake is an axis, scale to [0:1]
+            brake_tmp /= 65536.0;
+        }
+
         // combine throttle and brake input into throttle [-1:1]
-        throttle = (values_[throttle_input_] - values_[brake_input_]) / 65536.0;
+        throttle = throttle_tmp - brake_tmp;
     }
 
-    steering = -values_[steering_input_] / 32767.0;  // Normalize to [-1, 1] and adjust sign for correct steering angle
+    steering = static_cast<double>(-values_[steering_input_]) / 32767.0;  // Scale to [0:1] and adjust sign for correct steering angle
 
     return static_cast<int>(i);
 }

@@ -96,6 +96,9 @@
                 <Property name="steeringInput" value="AXIS_X" />
                 <Property name="throttleInput" value="AXIS_RY" />
                 <Property name="brakeInput" value="AXIS_RX" />
+                <!-- <Property name="throttleInput" value="BTN_8" /> -->
+                <!-- <Property name="brakeInput" value="BTN_7" /> -->
+                <!-- <Property name="throttleInput" value="AXIS_RZ" /> -->
             </Properties>
         </Controller>
         <Controller name="TrustGXT39_Windows">
@@ -154,9 +157,11 @@
                 <Property name="steeringInput" value="AXIS_X" />
                 <Property name="throttleInput" value="AXIS_RZ" />
                 <Property name="brakeInput" value="AXIS_Z" />
+                <!-- <Property name="throttleInput" value="BTN_7" /> -->
+                <!-- <Property name="brakeInput" value="BTN_6" /> -->
             </Properties>
         </Controller>
-
+        
         <Controller name="controllerRel2Abs">
             <ParameterDeclarations>
                 <ParameterDeclaration name="Horizon" parameterType="double" value="1.0" />

@@ -106,7 +106,7 @@ namespace scenarioengine
         HID_INPUT        throttle_input_     = HID_INPUT::HID_AXIS_RZ;
         HID_INPUT        brake_input_        = HID_INPUT::HID_AXIS_RZ;
         int              device_id_internal_ = -1;
-        int32_t          values_[HID_INPUT::HID_NR_OF_INPUTS];
+        int64_t          values_[HID_INPUT::HID_NR_OF_INPUTS];
 #ifdef _WIN32
         JOYINFOEX joy_info_;
 #endif
