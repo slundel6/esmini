@@ -23,16 +23,7 @@
 #include "vehicle.hpp"
 
 #ifdef _WIN32
-#include <windows.h>
 #include <mmsystem.h>
-#include <iostream>
-#elif __linux__
-#include <iostream>
-#include <string>
-#include <vector>
-#include <fcntl.h>           // For open()
-#include <unistd.h>          // For read() and close()
-#include <linux/joystick.h>  // For joystick event structure and ioctl commands
 #endif
 
 #define CONTROLLER_HID_TYPE_NAME "HIDController"
@@ -45,13 +36,14 @@ namespace scenarioengine
     public:
         enum HID_INPUT
         {
-            HID_AXIS_X       = 0,
-            HID_AXIS_Y       = 1,
-            HID_AXIS_Z       = 2,
-            HID_AXIS_RX      = 3,
-            HID_AXIS_RY      = 4,
-            HID_AXIS_RZ      = 5,
-            HID_BTN_0        = 6,  // button starts on ID 0 in Linux, 1 in Windows
+            HID_AXIS_X  = 0,
+            HID_AXIS_Y  = 1,
+            HID_AXIS_Z  = 2,
+            HID_AXIS_RX = 3,
+            HID_AXIS_RY = 4,
+            HID_AXIS_RZ = 5,
+            // buttons starts on ID 0 in Linux, 1 in Windows where first (0) is unused
+            HID_BTN_0        = 6,
             HID_BTN_1        = 7,
             HID_BTN_2        = 8,
             HID_BTN_3        = 9,
@@ -95,7 +87,7 @@ namespace scenarioengine
         int  OpenHID(int device_id);
         void CloseHID();
         int  ReadHID(double& throttle, double& steering);
-        int  ParseHIDInputType(const std::string& axis, HID_INPUT& axis_type);
+        int  ParseHIDInputType(const std::string& axis, HID_INPUT& axis_type, int& sign);
 
     private:
         vehicle::Vehicle vehicle_;
@@ -106,6 +98,9 @@ namespace scenarioengine
         HID_INPUT        steering_input_     = HID_INPUT::HID_AXIS_X;
         HID_INPUT        throttle_input_     = HID_INPUT::HID_AXIS_RZ;
         HID_INPUT        brake_input_        = HID_INPUT::HID_AXIS_RZ;
+        int              steering_sign_      = 1;
+        int              throttle_sign_      = 1;
+        int              brake_sign_         = 1;
         int              device_id_internal_ = -1;
         int64_t          values_[HID_INPUT::HID_NR_OF_INPUTS];
 #ifdef _WIN32

@@ -23,7 +23,7 @@
          <ObjectController name="hid_ctrl1">
             <CatalogReference catalogName="ControllerCatalog" entryName="LogitechSteeringWheelWingManFormulaGP_Windows">
                <ParameterAssignments>
-                  <ParameterAssignment parameterRef="DeviceID" value="3"/>
+                  <ParameterAssignment parameterRef="DeviceID" value="1"/>
                </ParameterAssignments>
             </CatalogReference>
          </ObjectController>

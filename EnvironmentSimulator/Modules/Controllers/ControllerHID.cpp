@@ -10,6 +10,18 @@
  * https://sites.google.com/view/simulationscenarios
  */
 
+#ifdef _WIN32
+#include <windows.h>
+#include <iostream>
+#elif __linux__
+#include <iostream>
+#include <string>
+#include <vector>
+#include <fcntl.h>           // For open()
+#include <unistd.h>          // For read() and close()
+#include <linux/joystick.h>  // For joystick event structure and ioctl commands
+#endif
+
 #include "ControllerHID.hpp"
 #include "CommonMini.hpp"
 #include "Entities.hpp"
@@ -24,69 +36,82 @@ Controller* scenarioengine::InstantiateControllerHID(void* args)
     return new ControllerHID(initArgs);
 }
 
-int ControllerHID::ParseHIDInputType(const std::string& type_str, HID_INPUT& type)
+int ControllerHID::ParseHIDInputType(const std::string& type_str, HID_INPUT& type, int& sign)
 {
-    if (type_str == "AXIS_X")
+    if (type_str.empty())
+    {
+        LOG_ERROR("HID input type is empty");
+        return -1;
+    }
+
+    std::string label = type_str;
+    if (type_str[0] == '-' || type_str[0] == '+')
+    {
+        label = type_str.substr(1);  // Remove leading '-' or '+' for extracting the type
+    }
+    sign = type_str[0] == '-' ? -1 : 1;
+
+    if (label == "AXIS_X")
     {
         type = HID_INPUT::HID_AXIS_X;
     }
-    else if (type_str == "AXIS_Y")
+    else if (label == "AXIS_Y")
     {
         type = HID_INPUT::HID_AXIS_Y;
     }
-    else if (type_str == "AXIS_Z")
+    else if (label == "AXIS_Z")
     {
         type = HID_INPUT::HID_AXIS_Z;
     }
-    else if (type_str == "AXIS_RX")
+    else if (label == "AXIS_RX")
     {
         type = HID_INPUT::HID_AXIS_RX;
     }
-    else if (type_str == "AXIS_RY")
+    else if (label == "AXIS_RY")
     {
         type = HID_INPUT::HID_AXIS_RY;
     }
-    else if (type_str == "AXIS_RZ")
+    else if (label == "AXIS_RZ")
     {
         type = HID_INPUT::HID_AXIS_RZ;
     }
-    else if (type_str == "BTN_0")
+    else if (label == "BTN_0")
     {
         type = HID_INPUT::HID_BTN_0;
     }
-    else if (type_str == "BTN_1")
+    else if (label == "BTN_1")
     {
         type = HID_INPUT::HID_BTN_1;
     }
-    else if (type_str == "BTN_2")
+    else if (label == "BTN_2")
     {
         type = HID_INPUT::HID_BTN_2;
     }
-    else if (type_str == "BTN_3")
+    else if (label == "BTN_3")
     {
         type = HID_INPUT::HID_BTN_3;
     }
-    else if (type_str == "BTN_4")
+    else if (label == "BTN_4")
     {
         type = HID_INPUT::HID_BTN_4;
     }
-    else if (type_str == "BTN_5")
+    else if (label == "BTN_5")
     {
         type = HID_INPUT::HID_BTN_5;
     }
-    else if (type_str == "BTN_6")
+    else if (label == "BTN_6")
     {
         type = HID_INPUT::HID_BTN_6;
     }
-    else if (type_str == "BTN_7")
+    else if (label == "BTN_7")
     {
         type = HID_INPUT::HID_BTN_7;
     }
-    else if (type_str == "BTN_8")
+    else if (label == "BTN_8")
     {
         type = HID_INPUT::HID_BTN_8;
     }
-    else if (type_str == "BTN_9")
+    else if (label == "BTN_9")
     {
         type = HID_INPUT::HID_BTN_9;
     }
@@ -113,36 +138,39 @@ ControllerHID::ControllerHID(InitArgs* args) : Controller(args)
             device_id_ = strtoi(args->properties->GetValueStr("deviceID"));
         }
 
+        int sign = 1;
         if (args->properties->ValueExists("steeringInput"))
         {
             std::string input_str = args->properties->GetValueStr("steeringInput");
-            if (ParseHIDInputType(input_str, steering_input_) != 0)
+            if (ParseHIDInputType(input_str, steering_input_, sign) != 0)
             {
                 LOG_ERROR_AND_QUIT("Failed to initialize HID controller {} reading steeringInput", GetName());
             }
-
             if (steering_input_ >= HID_INPUT::HID_BTN_0)
             {
                 LOG_ERROR_AND_QUIT("Steering on button ({}) not supported. Must be on an axis.", steering_input_ - HID_INPUT::HID_BTN_0 + 1);
             }
+            steering_sign_ = sign;
         }
 
         if (args->properties->ValueExists("throttleInput"))
         {
             std::string input_str = args->properties->GetValueStr("throttleInput");
-            if (ParseHIDInputType(input_str, throttle_input_) != 0)
+            if (ParseHIDInputType(input_str, throttle_input_, sign) != 0)
             {
                 LOG_ERROR_AND_QUIT("Failed to initialize HID controller {} reading throttleInput", GetName());
             }
+            throttle_sign_ = sign;
         }
 
         if (args->properties->ValueExists("brakeInput"))
         {
             std::string input_str = args->properties->GetValueStr("brakeInput");
-            if (ParseHIDInputType(input_str, brake_input_) != 0)
+            if (ParseHIDInputType(input_str, brake_input_, sign) != 0)
             {
                 LOG_ERROR_AND_QUIT("Failed to initialize HID controller {} reading brakeInput", GetName());
             }
+            brake_sign_ = sign;
         }
         else
         {
@@ -151,6 +179,7 @@ ControllerHID::ControllerHID(InitArgs* args) : Controller(args)
             {
                 // throttle is an axis, use it also as brake input
                 brake_input_ = throttle_input_;
+                brake_sign_  = throttle_sign_;
             }
             else
             {
@@ -316,12 +345,12 @@ int ControllerHID::ReadHID(double& throttle, double& steering)
         if (throttle_input_ == brake_input_)
         {
             // throttle and brake on same axis, normalize to [-1, 1] and adjust sign for correct motion direction
-            throttle = -(values_[throttle_input_] - 32767) / 32767.0;
+            throttle = -throttle_sign_ * (values_[throttle_input_] - 32767) / 32767.0;
         }
         else
         {
-            double throttle_tmp = static_cast<double>(values_[throttle_input_]);
-            double brake_tmp    = static_cast<double>(values_[brake_input_]);
+            double throttle_tmp = throttle_sign_ * static_cast<double>(values_[throttle_input_]);
+            double brake_tmp    = brake_sign_ * static_cast<double>(values_[brake_input_]);
 
             if (throttle_input_ < HID_INPUT::HID_BTN_0)
             {
@@ -339,7 +368,7 @@ int ControllerHID::ReadHID(double& throttle, double& steering)
             throttle = throttle_tmp - brake_tmp;
         }
 
-        steering = -(values_[steering_input_] - 32767) / 32767.0;  // Normalize to [-1, 1] and adjust sign for correct steering angle
+        steering = -steering_sign_ * (values_[steering_input_] - 32767) / 32767.0;  // Normalize to [-1, 1] and adjust sign for correct steering angle
     }
     else
     {
@@ -445,12 +474,13 @@ int ControllerHID::ReadHID(double& throttle, double& steering)
     if (throttle_input_ == brake_input_)
     {
         // throttle and brake on same axis
-        throttle = static_cast<double>(-values_[throttle_input_]) / 32767.0;  // Normalize to [-1, 1] and adjust sign for correct motion direction
+        throttle = throttle_sign_ * static_cast<double>(-values_[throttle_input_]) /
+                   32767.0;  // Normalize to [-1, 1] and adjust sign for correct motion direction
     }
     else
     {
-        double throttle_tmp = static_cast<double>(values_[throttle_input_]);
-        double brake_tmp    = static_cast<double>(values_[brake_input_]);
+        double throttle_tmp = throttle_sign_ * static_cast<double>(values_[throttle_input_]);
+        double brake_tmp    = brake_sign_ * static_cast<double>(values_[brake_input_]);
 
         if (throttle_input_ < HID_INPUT::HID_BTN_0)
         {
@@ -465,11 +495,10 @@ int ControllerHID::ReadHID(double& throttle, double& steering)
         }
 
         // combine throttle and brake input into throttle [-1:1]
-        LOG_INFO("throttle_tmp {:.2f} brake_tmp {:.2f}", throttle_tmp, brake_tmp);
         throttle = throttle_tmp - brake_tmp;
     }
 
-    steering = static_cast<double>(-values_[steering_input_]) / 32767.0;  // Scale to [0:1] and adjust sign for correct steering angle
+    steering = steering_sign_ * static_cast<double>(-values_[steering_input_]) / 32767.0;  // Scale to [0:1] and adjust sign for steering angle
 
     return static_cast<int>(i);
 }
