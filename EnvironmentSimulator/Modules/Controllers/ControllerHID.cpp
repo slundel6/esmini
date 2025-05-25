@@ -408,8 +408,12 @@ int ControllerHID::ReadHID(double& throttle, double& steering)
     }
 
     struct js_event js_event;
-    unsigned int    i = 0;
-    for (; i < 6; i++)  // consume maximum 6 HID events per step
+
+    // To avoid getting stuck reading infitite stream of input set a limit for number of read loops
+    // ensuring progress. An alternative would be, if needed, to put js reading in a separate thread.
+    unsigned int max_reads = 16;
+    unsigned int i         = 0;
+    for (; i < max_reads; i++)
     {
         if (read(device_id_internal_, &js_event, sizeof(struct js_event)) != static_cast<ssize_t>(sizeof(struct js_event)))
         {
@@ -468,7 +472,8 @@ void ControllerHID::CloseHID()
 {
     close(device_id_internal_);
 }
-#else
+
+#else  // unsupported platform, e.g. macOS
 
 int ControllerHID::OpenHID(int device_id)
 {
@@ -482,6 +487,7 @@ int ControllerHID::ReadHID(double& throttle, double& steering)
 
 void ControllerHID::CloseHID()
 {
+
 }
 
 #endif
