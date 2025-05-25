@@ -51,16 +51,17 @@ namespace scenarioengine
             HID_AXIS_RX      = 3,
             HID_AXIS_RY      = 4,
             HID_AXIS_RZ      = 5,
-            HID_BTN_1        = 6,
-            HID_BTN_2        = 7,
-            HID_BTN_3        = 8,
-            HID_BTN_4        = 9,
-            HID_BTN_5        = 10,
-            HID_BTN_6        = 11,
-            HID_BTN_7        = 12,
-            HID_BTN_8        = 13,
-            HID_BTN_9        = 14,
-            HID_NR_OF_INPUTS = 15
+            HID_BTN_0        = 6,  // button starts on ID 0 in Linux, 1 in Windows
+            HID_BTN_1        = 7,
+            HID_BTN_2        = 8,
+            HID_BTN_3        = 9,
+            HID_BTN_4        = 10,
+            HID_BTN_5        = 11,
+            HID_BTN_6        = 12,
+            HID_BTN_7        = 13,
+            HID_BTN_8        = 14,
+            HID_BTN_9        = 15,
+            HID_NR_OF_INPUTS = 16
         };
 
         ControllerHID(InitArgs* args);
