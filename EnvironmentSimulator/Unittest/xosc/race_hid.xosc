@@ -21,9 +21,10 @@
             </ParameterAssignments>
          </CatalogReference>
          <ObjectController name="hid_ctrl1">
-            <CatalogReference catalogName="ControllerCatalog" entryName="HoriRacingWheelAPEX_Windows">
+            <CatalogReference catalogName="ControllerCatalog" entryName="PS4Controller_Windows">
                <ParameterAssignments>
-                  <ParameterAssignment parameterRef="DeviceID" value="2"/>
+                  <ParameterAssignment parameterRef="DeviceID" value="1"/>
+                  <!-- <ParameterAssignment parameterRef="DeviceID" value="2"/> -->
                </ParameterAssignments>
             </CatalogReference>
          </ObjectController>
@@ -76,7 +77,7 @@
                            </SpeedActionTarget>
                        </SpeedAction>
                    </LongitudinalAction>
-               </PrivateAction>               
+               </PrivateAction>
                <!-- <PrivateAction> -->
                   <!-- <ControllerAction> -->
                      <!-- <ActivateControllerAction objectControllerRef="hid_ctrl2" longitudinal="true" lateral="true"/> -->

@@ -39,21 +39,30 @@
 
 namespace scenarioengine
 {
-    enum class HID_AXIS
-    {
-        HID_R_AXIS,
-        HID_U_AXIS,
-        HID_V_AXIS,
-        HID_X_AXIS,
-        HID_Y_AXIS,
-        HID_Z_AXIS,
-        HID_NR_OF_AXIS
-    };
-
     // base class for controllers
     class ControllerHID : public Controller
     {
     public:
+        enum HID_INPUT
+        {
+            HID_AXIS_X       = 0,
+            HID_AXIS_Y       = 1,
+            HID_AXIS_Z       = 2,
+            HID_AXIS_RX      = 3,
+            HID_AXIS_RY      = 4,
+            HID_AXIS_RZ      = 5,
+            HID_BTN_1        = 6,
+            HID_BTN_2        = 7,
+            HID_BTN_3        = 8,
+            HID_BTN_4        = 9,
+            HID_BTN_5        = 10,
+            HID_BTN_6        = 11,
+            HID_BTN_7        = 12,
+            HID_BTN_8        = 13,
+            HID_BTN_9        = 14,
+            HID_NR_OF_INPUTS = 15
+        };
+
         ControllerHID(InitArgs* args);
         ~ControllerHID() override;
 
@@ -85,17 +94,19 @@ namespace scenarioengine
         int  OpenHID(int device_id);
         void CloseHID();
         int  ReadHID(double& throttle, double& steering);
-        int  ParseAxis(const std::string& axis, HID_AXIS& axis_type);
+        int  ParseHIDInputType(const std::string& axis, HID_INPUT& axis_type);
 
     private:
         vehicle::Vehicle vehicle_;
-        double           steering_;
-        double           throttle_;
-        double           steering_rate_;
-        int              device_id_;
-        HID_AXIS         throttle_axis_;
-        HID_AXIS         steering_axis_;
-        int              device_id_internal_;
+        double           steering_           = 0.0;
+        double           throttle_           = 0.0;
+        double           steering_rate_      = 0.0;
+        int              device_id_          = 0;
+        HID_INPUT        steering_input_     = HID_INPUT::HID_AXIS_X;
+        HID_INPUT        throttle_input_     = HID_INPUT::HID_AXIS_RZ;
+        HID_INPUT        brake_input_        = HID_INPUT::HID_AXIS_RZ;
+        int              device_id_internal_ = -1;
+        int32_t          values_[HID_INPUT::HID_NR_OF_INPUTS];
 #ifdef _WIN32
         JOYINFOEX joy_info_;
 #endif

@@ -24,48 +24,78 @@ Controller* scenarioengine::InstantiateControllerHID(void* args)
     return new ControllerHID(initArgs);
 }
 
-int ControllerHID::ParseAxis(const std::string& axis, HID_AXIS& axis_type)
+int ControllerHID::ParseHIDInputType(const std::string& type_str, HID_INPUT& type)
 {
-    if (axis == "X" || axis == "x")
+    if (type_str == "AXIS_X")
     {
-        axis_type = HID_AXIS::HID_X_AXIS;
+        type = HID_INPUT::HID_AXIS_X;
     }
-    else if (axis == "Y" || axis == "y")
+    else if (type_str == "AXIS_Y")
     {
-        axis_type = HID_AXIS::HID_Y_AXIS;
+        type = HID_INPUT::HID_AXIS_Y;
     }
-    else if (axis == "Z" || axis == "z")
+    else if (type_str == "AXIS_Z")
     {
-        axis_type = HID_AXIS::HID_Z_AXIS;
+        type = HID_INPUT::HID_AXIS_Z;
     }
-    else if (axis == "R" || axis == "r")
+    else if (type_str == "AXIS_RX")
     {
-        axis_type = HID_AXIS::HID_R_AXIS;
+        type = HID_INPUT::HID_AXIS_RX;
     }
-    else if (axis == "U" || axis == "u")
+    else if (type_str == "AXIS_RY")
     {
-        axis_type = HID_AXIS::HID_U_AXIS;
+        type = HID_INPUT::HID_AXIS_RY;
     }
-    else if (axis == "V" || axis == "v")
+    else if (type_str == "AXIS_RZ")
     {
-        axis_type = HID_AXIS::HID_V_AXIS;
+        type = HID_INPUT::HID_AXIS_RZ;
+    }
+    else if (type_str == "BTN_1")
+    {
+        type = HID_INPUT::HID_BTN_1;
+    }
+    else if (type_str == "BTN_2")
+    {
+        type = HID_INPUT::HID_BTN_2;
+    }
+    else if (type_str == "BTN_3")
+    {
+        type = HID_INPUT::HID_BTN_3;
+    }
+    else if (type_str == "BTN_4")
+    {
+        type = HID_INPUT::HID_BTN_4;
+    }
+    else if (type_str == "BTN_5")
+    {
+        type = HID_INPUT::HID_BTN_5;
+    }
+    else if (type_str == "BTN_6")
+    {
+        type = HID_INPUT::HID_BTN_6;
+    }
+    else if (type_str == "BTN_7")
+    {
+        type = HID_INPUT::HID_BTN_7;
+    }
+    else if (type_str == "BTN_8")
+    {
+        type = HID_INPUT::HID_BTN_8;
+    }
+    else if (type_str == "BTN_9")
+    {
+        type = HID_INPUT::HID_BTN_9;
     }
     else
     {
-        LOG_ERROR("Invalid axis type: {}", axis);
-        axis_type = HID_AXIS::HID_NR_OF_AXIS;
+        LOG_ERROR("Invalid input type: {}", type_str);
+        type = HID_INPUT::HID_AXIS_X;
         return -1;
     }
     return 0;
 }
 
-ControllerHID::ControllerHID(InitArgs* args)
-    : Controller(args),
-      steering_(0.0),
-      throttle_(0.0),
-      steering_rate_(4.0),
-      device_id_(0),
-      device_id_internal_(-1)
+ControllerHID::ControllerHID(InitArgs* args) : Controller(args)
 {
     if (args && args->properties)
     {
@@ -79,18 +109,39 @@ ControllerHID::ControllerHID(InitArgs* args)
             device_id_ = strtoi(args->properties->GetValueStr("deviceID"));
         }
 
-        if (args->properties->ValueExists("steeringAxis"))
+        if (args->properties->ValueExists("steeringInput"))
         {
-            std::string axis = args->properties->GetValueStr("steeringAxis");
-            ParseAxis(args->properties->GetValueStr("steeringAxis"), steering_axis_);
+            std::string input_str = args->properties->GetValueStr("steeringInput");
+            if (ParseHIDInputType(input_str, steering_input_) != 0)
+            {
+                LOG_ERROR_AND_QUIT("Failed to initialize HID controller {} reading steeringInput", GetName());
+            }
         }
 
-        if (args->properties->ValueExists("throttleAxis"))
+        if (args->properties->ValueExists("throttleInput"))
         {
-            std::string axis = args->properties->GetValueStr("throttleAxis");
-            ParseAxis(args->properties->GetValueStr("throttleAxis"), throttle_axis_);
+            std::string input_str = args->properties->GetValueStr("throttleInput");
+            if (ParseHIDInputType(input_str, throttle_input_) != 0)
+            {
+                LOG_ERROR_AND_QUIT("Failed to initialize HID controller {} reading throttleInput", GetName());
+            }
+        }
+
+        if (args->properties->ValueExists("brakeInput"))
+        {
+            std::string input_str = args->properties->GetValueStr("brakeInput");
+            if (ParseHIDInputType(input_str, brake_input_) != 0)
+            {
+                LOG_ERROR_AND_QUIT("Failed to initialize HID controller {} reading brakeInput", GetName());
+            }
+        }
+        else
+        {
+            // brake input not specified, assume same as throttle
+            brake_input_ = throttle_input_;
         }
     }
+
     align_to_road_heading_on_deactivation_ = true;
     align_to_road_heading_on_activation_   = true;
 }
@@ -108,12 +159,34 @@ void ControllerHID::Init()
 
 void ControllerHID::Step(double timeStep)
 {
-    if (ReadHID(throttle_, steering_) != 0)
+    int return_val = ReadHID(throttle_, steering_);
+
+    if (return_val < 0)
     {
         return;
     }
-
-    // LOG_DEBUG("steering: {:.2f} throttle: {:.2f}  ", steering_, throttle_);
+    else if (return_val > 0)
+    {
+        LOG_DEBUG("X {} Y {} Z {} RX {} RY {} RZ {} BTN {},{},{},{},{},{},{},{},{} steering: {:.2f} throttle: {:.2f} (events: {})",
+                  values_[HID_AXIS_X],
+                  values_[HID_AXIS_Y],
+                  values_[HID_AXIS_Z],
+                  values_[HID_AXIS_RX],
+                  values_[HID_AXIS_RY],
+                  values_[HID_AXIS_RZ],
+                  values_[HID_BTN_1],
+                  values_[HID_BTN_2],
+                  values_[HID_BTN_3],
+                  values_[HID_BTN_4],
+                  values_[HID_BTN_5],
+                  values_[HID_BTN_6],
+                  values_[HID_BTN_7],
+                  values_[HID_BTN_8],
+                  values_[HID_BTN_9],
+                  steering_,
+                  throttle_,
+                  return_val);
+    }
 
     vehicle_.SetMaxSpeed(object_->GetMaxSpeed());
 
@@ -157,6 +230,9 @@ int ControllerHID::Activate(ControlActivationMode lat_activation_mode,
 
     object_->SetJunctionSelectorStrategy(roadmanager::Junction::JunctionStrategyType::SELECTOR_ANGLE);
     object_->SetJunctionSelectorAngle(0.0);
+
+    for (auto& v : values_)
+        v = 0;
 
     return Controller::Activate(lat_activation_mode, long_activation_mode, light_activation_mode, anim_activation_mode);
 }
@@ -207,26 +283,34 @@ int ControllerHID::ReadHID(double& throttle, double& steering)
     }
 
     MMRESULT res = joyGetPosEx(device_id_internal_, &joy_info_);
-
-    DWORD axis_values[static_cast<unsigned int>(HID_AXIS::HID_NR_OF_AXIS)] =
-        {joy_info_.dwRpos, joy_info_.dwUpos, joy_info_.dwVpos, joy_info_.dwXpos, joy_info_.dwYpos, joy_info_.dwZpos};
-
     if (res == JOYERR_NOERROR)
     {
-        steering = 1.0 - static_cast<double>(axis_values[static_cast<unsigned int>(steering_axis_)]) / 32768.0;  // Normalize to [-1, 1]
-        throttle = 1.0 - static_cast<double>(axis_values[static_cast<unsigned int>(throttle_axis_)]) / 32768.0;  // Normalize to [-1, 1]
+        // register axes
+        values_[HID_INPUT::HID_AXIS_X]  = joy_info_.dwXpos;
+        values_[HID_INPUT::HID_AXIS_Y]  = joy_info_.dwYpos;
+        values_[HID_INPUT::HID_AXIS_Z]  = joy_info_.dwZpos;
+        values_[HID_INPUT::HID_AXIS_RX] = joy_info_.dwVpos;
+        values_[HID_INPUT::HID_AXIS_RY] = joy_info_.dwUpos;
+        values_[HID_INPUT::HID_AXIS_RZ] = joy_info_.dwRpos;
 
-        LOG_DEBUG("HID ID: {} R: {} U: {} V: {} X: {} Y: {} Z: {} Buttons: {} -> steering: {:.2f} throttle: {:.2f}",
-                  device_id_,
-                  joy_info_.dwRpos,
-                  joy_info_.dwUpos,
-                  joy_info_.dwVpos,
-                  joy_info_.dwXpos,
-                  joy_info_.dwYpos,
-                  joy_info_.dwZpos,
-                  joy_info_.dwButtons,
-                  steering,
-                  throttle);
+        // register buttons
+        for (unsigned int i = 0; i < 9; i++)
+        {
+            values_[HID_INPUT::HID_BTN_1 + i] = joy_info_.dwButtons & (1 << i) ? 1 : 0;
+        }
+
+        if (throttle_input_ == brake_input_)
+        {
+            // throttle and brake on same axis
+            throttle = (values_[throttle_input_] - 32767) / 32767.0;  // Normalize to [-1, 1]
+        }
+        else
+        {
+            // combine throttle and brake input into throttle [-1:1]
+            throttle = (values_[throttle_input_] - values_[brake_input_]) / 65536.0;
+        }
+
+        steering = -(values_[steering_input_] - 32767) / 32767.0;  // Normalize to [-1, 1] and adjust sign for correct steering angle
     }
     else
     {
@@ -234,7 +318,7 @@ int ControllerHID::ReadHID(double& throttle, double& steering)
         return -1;
     }
 
-    return 0;
+    return 1;
 }
 
 void ControllerHID::CloseHID()
@@ -253,13 +337,11 @@ int ControllerHID::OpenHID(int device_id)
     device_id_internal_ = open(joystick_path.c_str(), O_RDONLY | O_NONBLOCK);
     if (device_id_internal_ < 0)
     {
-        // If opening fails, it likely means the device doesn't exist
-        // or we don't have permissions, so continue to the next.
         LOG_ERROR("Joystick with device id {} not ready or not connected", device_id);
         return -1;
     }
 
-    // Device opened successfully. Now query its capabilities.
+    // Device opened successfully. Now query its name.
     char name[128];
     if (ioctl(device_id_internal_, JSIOCGNAME(sizeof(name)), name) < 0)
     {
@@ -268,19 +350,17 @@ int ControllerHID::OpenHID(int device_id)
     }
 
     int num_axes = 0;
-    ioctl(device_id_internal_, JSIOCGAXES, &num_axes);  // Get number of axes
+    ioctl(device_id_internal_, JSIOCGAXES, &num_axes);
 
     int num_buttons = 0;
-    ioctl(device_id_internal_, JSIOCGBUTTONS, &num_buttons);  // Get number of buttons
+    ioctl(device_id_internal_, JSIOCGBUTTONS, &num_buttons);
 
-    // Consider it a "real" joystick if it has at least one axis or one button
     if (num_axes > 0 || num_buttons > 0)
     {
-        LOG_INFO("Opened {} Axis: {} Buttons: {}", joystick_path + " " + name, num_axes);
+        LOG_INFO("Opened {} Axis: {} Buttons: {}", joystick_path + " " + name, num_axes, num_buttons);
     }
     else
     {
-        // If it has no axes or buttons, it's not a joystick for our purpose
         LOG_ERROR("Skipping {} (no axes/buttons detected).", joystick_path + " " + name);
         close(device_id_internal_);  // Close this non-joystick device
         device_id_internal_ = -1;    // Reset fd
@@ -298,46 +378,45 @@ int ControllerHID::ReadHID(double& throttle, double& steering)
     }
 
     struct js_event js_event;
-    while (read(device_id_internal_, &js_event, sizeof(struct js_event)) == static_cast<ssize_t>(sizeof(struct js_event)))
+    unsigned int    i = 0;
+    for (; i < 6; i++)  // consume maximum 6 HID events per step
     {
-        // Mask out JS_EVENT_INIT (initial state event)
+        if (read(device_id_internal_, &js_event, sizeof(struct js_event)) != static_cast<ssize_t>(sizeof(struct js_event)))
+        {
+            break;
+        }
+
         switch (js_event.type & ~JS_EVENT_INIT)
         {
             case JS_EVENT_BUTTON:
-                LOG_DEBUG("Button {} {}", js_event.number, js_event.value ? "pressed" : "released");
+                values_[HID_BTN_1 + js_event.number - 1] = js_event.value;
                 break;
             case JS_EVENT_AXIS:
-                LOG_DEBUG("Axis {} value: {}", js_event.number, js_event.value);
-
-                // hard code axis
-                if (js_event.number == 0)
-                {
-                    steering = -js_event.value / 32768.0;  // Normalize to [-1, 1]
-                }
-                else if (js_event.number == 1)
-                {
-                    throttle = 1 - (js_event.value + 32768) / 65536.0;  // Normalize to [0, 1]
-                }
-                else if (js_event.number == 2)
-                {
-                    throttle = -1 + (js_event.value + 32768) / 65536.0;  // Normalize to [-1, 0]
-                }
-
-                LOG_DEBUG("In ReadHID steering: {:.2f} throttle: {:.2f}  ", steering, throttle);
-
-                // signed short axis_values[static_cast<unsigned int>(HID_AXIS::HID_NR_OF_AXIS)];
-                // if (js_event.number < static_cast<unsigned char>(HID_AXIS::HID_NR_OF_AXIS))
-                // {
-                //     LOG_INFO("num {} value {}", js_event.number, js_event.value);
-                //     axis_values[js_event.number] = js_event.value;
-                // }
-
+                values_[js_event.number] = js_event.value;
                 break;
         }
     }
-    LOG_DEBUG("HID ID: {} R: {} U: {} V: {} X: {} Y: {} Z: {} Buttons: {} -> steering: {:.2f} throttle: {:.2f}",
-        );
-    return 0;
+
+    if (i == 0)
+    {
+        // no input to process
+        return 0;
+    }
+
+    if (throttle_input_ == brake_input_)
+    {
+        // throttle and brake on same axis
+        throttle = -values_[throttle_input_] / 32767.0;  // Normalize to [-1, 1] and adjust sign for correct motion direction
+    }
+    else
+    {
+        // combine throttle and brake input into throttle [-1:1]
+        throttle = (values_[throttle_input_] - values_[brake_input_]) / 65536.0;
+    }
+
+    steering = -values_[steering_input_] / 32767.0;  // Normalize to [-1, 1] and adjust sign for correct steering angle
+
+    return static_cast<int>(i);
 }
 
 void ControllerHID::CloseHID()

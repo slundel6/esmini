@@ -79,10 +79,11 @@
                 <Property name="esminiController" value="HIDController" />
                 <Property name="steeringRate" value="$SteeringRate" />
                 <Property name="deviceID" value="$DeviceID" />
-                <Property name="steeringAxis" value="X" />
-                <Property name="throttleAxis" value="Z" />
+                <Property name="steeringInput" value="X" />
+                <Property name="throttleInput" value="Z" />
+                <Property name="brakeInput" value="Z" />
             </Properties>
-        </Controller>        
+        </Controller>
         <Controller name="PS4Controller_Windows">
             <ParameterDeclarations>
                 <ParameterDeclaration name="SteeringRate" parameterType="double" value="6.0" />
@@ -92,8 +93,9 @@
                 <Property name="esminiController" value="HIDController" />
                 <Property name="steeringRate" value="$SteeringRate" />
                 <Property name="deviceID" value="$DeviceID" />
-                <Property name="steeringAxis" value="X" />
-                <Property name="throttleAxis" value="R" />
+                <Property name="steeringInput" value="AXIS_X" />
+                <Property name="throttleInput" value="AXIS_RY" />
+                <Property name="brakeInput" value="AXIS_RX" />
             </Properties>
         </Controller>
         <Controller name="TrustGXT39_Windows">
@@ -105,25 +107,56 @@
                 <Property name="esminiController" value="HIDController" />
                 <Property name="steeringRate" value="$SteeringRate" />
                 <Property name="deviceID" value="$DeviceID" />
-                <Property name="steeringAxis" value="X" />
-                <Property name="throttleAxis" value="R" />
+                <Property name="steeringInput" value="AXIS_X" />
+                <Property name="throttleInput" value="AXIS_RZ" />
+                <Property name="brakeInput" value="AXIS_RZ" />
             </Properties>
         </Controller>
+
+
         <Controller name="LogitechSteeringWheel_Linux">
             <ParameterDeclarations>
                 <ParameterDeclaration name="SteeringRate" parameterType="double" value="6.0" />
                 <ParameterDeclaration name="DeviceID" parameterType="integer" value="2" />
-                <ParameterDeclaration name="SteeringAxis" parameterType="string" value="R" />
-                <ParameterDeclaration name="ThrottleAxis" parameterType="string" value="Y" />
             </ParameterDeclarations>
             <Properties>
                 <Property name="esminiController" value="HIDController" />
                 <Property name="steeringRate" value="$SteeringRate" />
                 <Property name="deviceID" value="$DeviceID" />
-                <Property name="steeringAxis" value="$SteeringAxis" />
-                <Property name="throttleAxis" value="$ThrottleAxis" />
+                <Property name="steeringInput" value="AXIS_RZ" />
+                <Property name="throttleInput" value="AXIS_Z" />
+                <Property name="brakeInput" value="AXIS_RY" />
             </Properties>
         </Controller>
+        <Controller name="TrustGXT39_Linux">
+            <ParameterDeclarations>
+                <ParameterDeclaration name="SteeringRate" parameterType="double" value="6.0" />
+                <ParameterDeclaration name="DeviceID" parameterType="integer" value="0" />
+            </ParameterDeclarations>
+            <Properties>
+                <Property name="esminiController" value="HIDController" />
+                <Property name="steeringRate" value="$SteeringRate" />
+                <Property name="deviceID" value="$DeviceID" />
+                <Property name="steeringInput" value="AXIS_X" />
+                <Property name="throttleInput" value="AXIS_RZ" />
+                <Property name="brakeInput" value="AXIS_RZ" />
+            </Properties>
+        </Controller>
+        <Controller name="PS4Controller_Linux">
+            <ParameterDeclarations>
+                <ParameterDeclaration name="SteeringRate" parameterType="double" value="6.0" />
+                <ParameterDeclaration name="DeviceID" parameterType="integer" value="0" />
+            </ParameterDeclarations>
+            <Properties>
+                <Property name="esminiController" value="HIDController" />
+                <Property name="steeringRate" value="$SteeringRate" />
+                <Property name="deviceID" value="$DeviceID" />
+                <Property name="steeringInput" value="AXIS_X" />
+                <Property name="throttleInput" value="AXIS_RZ" />
+                <Property name="brakeInput" value="AXIS_Z" />
+            </Properties>
+        </Controller>
+
         <Controller name="controllerRel2Abs">
             <ParameterDeclarations>
                 <ParameterDeclaration name="Horizon" parameterType="double" value="1.0" />
