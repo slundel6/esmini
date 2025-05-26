@@ -516,6 +516,48 @@ void ScenarioPlayer::ViewerFrame(bool init)
         }
         viewer_->SetInfoText(str_buf);
     }
+
+    if (viewer_->rubberbandManipulator_->GetFocusMode() != osgGA::RubberbandManipulator::FOCUS_MODE::RB_FOCUS_ONE)
+    {
+        // calculate center point of all entities, and set distance based on bounding box size
+        double min_x = 0.0, min_y = 0.0, max_x = 0.0, max_y = 0.0, min_z = 0.0, max_z = 0.0;
+        for (unsigned int i = 0; i < scenarioEngine->entities_.object_.size(); i++)
+        {
+            Object* e = scenarioEngine->entities_.object_[i];
+            double  x = e->pos_.GetX();
+            double  y = e->pos_.GetY();
+            double  z = e->pos_.GetZ();
+            if (i == 0)
+            {
+                min_x = max_x = x;
+                min_y = max_y = y;
+                min_z = max_z = z;
+            }
+            else
+            {
+                min_x = MIN(min_x, x);
+                max_x = MAX(max_x, x);
+                min_y = MIN(min_y, y);
+                max_y = MAX(max_y, y);
+                min_z = MIN(min_z, z);
+                max_z = MAX(max_z, z);
+            }
+        }
+
+        float center_x = static_cast<float>((min_x + max_x) / 2.0);
+        float center_y = static_cast<float>((min_y + max_y) / 2.0);
+        float center_z = static_cast<float>((min_z + max_z) / 2.0);
+        if (viewer_->rubberbandManipulator_->GetFocusMode() == osgGA::RubberbandManipulator::FOCUS_MODE::RB_FOCUS_ALL_AUTO_DIST)
+        {
+            double distance = GetLengthOfLine2D(min_x, min_y, max_x, max_y);
+            viewer_->rubberbandManipulator_->setCenterAndDistance(osg::Vec3(center_x, center_y, center_z), 20 + distance);
+        }
+        else
+        {
+            viewer_->rubberbandManipulator_->setCenter(osg::Vec3(center_x, center_y, center_z));
+        }
+    }
+
     mutex.Unlock();
 
     if (!init)
@@ -1241,7 +1283,11 @@ int ScenarioPlayer::Init()
     opt.AddOption("disable_stdout", "Prevent messages to stdout");
     opt.AddOption("enforce_generate_model", "Generate road 3D model even if SceneGraphFile is specified");
     opt.AddOption("fixed_timestep", "Run simulation decoupled from realtime, with specified timesteps", "timestep");
-    opt.AddOption("follow_object", "Set index of initial object for camera to follow (change with Tab/shift-Tab)", "index", "0", true);
+    opt.AddOption("follow_object",
+                  "Set index of initial object for camera to follow (change with Tab/shift-Tab)",
+                  "object index (-1 for all)",
+                  "0",
+                  true);
     opt.AddOption("generate_no_road_objects", "Do not generate any OpenDRIVE road objects (e.g. when part of referred 3D model)");
     opt.AddOption("generate_without_textures", "Do not apply textures on any generated road model (set colors instead as for missing textures)");
     opt.AddOption("ground_plane", "Add a large flat ground surface");
