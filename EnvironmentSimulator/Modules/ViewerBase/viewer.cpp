@@ -3448,9 +3448,9 @@ int Viewer::GetNodeMaskBit(int mask)
 
 void Viewer::SetCameraTrackNode(osg::ref_ptr<osg::Node> node, bool calcDistance)
 {
-    if (rubberbandManipulator_->GetFocusMode() == osgGA::RubberbandManipulator::FOCUS_MODE::RB_FOCUS_ALL && node != nullptr)
+    if (node != nullptr)
     {
-        // enforce calc distance
+        // enforce calc distance re-focusing on single entity
         calcDistance = true;
     }
 

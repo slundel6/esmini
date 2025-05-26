@@ -43,7 +43,8 @@ namespace osgGA
         enum class FOCUS_MODE
         {
             RB_FOCUS_ONE,
-            RB_FOCUS_ALL
+            RB_FOCUS_ALL,
+            RB_FOCUS_ALL_AUTO_DIST,
         };
 
         class CustomCamera
@@ -141,6 +142,7 @@ namespace osgGA
         typedef std::vector<osg::observer_ptr<osg::Node> > ObserverNodePath;
 
         void setTrackNode(osg::ref_ptr<osg::Node> node, bool calcDistance = false);
+        void setCenter(osg::Vec3 center);
         void setCenterAndDistance(osg::Vec3 center, double distance);
         void setTrackTransform(osg::ref_ptr<osg::PositionAttitudeTransform> tx);
 
@@ -198,15 +200,9 @@ namespace osgGA
         osg::Vec3d     origin_;
         ExplicitCenter explicitCenter_;
 
-        FOCUS_MODE GetFocusMode()
-        {
-            return focus_mode_;
-        }
-
-        void SetFocusMode(FOCUS_MODE mode)
-        {
-            focus_mode_ = mode;
-        }
+        FOCUS_MODE GetFocusMode();
+        void       SetFocusMode(FOCUS_MODE mode);
+        double     GetCameraDistance();
 
     protected:
         virtual ~RubberbandManipulator();

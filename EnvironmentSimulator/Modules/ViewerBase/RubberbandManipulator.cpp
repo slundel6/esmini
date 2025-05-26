@@ -54,6 +54,26 @@ RubberbandManipulator::RubberbandManipulator(unsigned int mode, osg::Vec3d origi
     focus_mode_ = FOCUS_MODE::RB_FOCUS_ONE;
 }
 
+RubberbandManipulator::FOCUS_MODE RubberbandManipulator::GetFocusMode()
+{
+    return focus_mode_;
+}
+
+void RubberbandManipulator::SetFocusMode(FOCUS_MODE mode)
+{
+    focus_mode_ = mode;
+    // when switching to ALL mode, reset distance to indicate it should be recalculated once
+    if (mode == FOCUS_MODE::RB_FOCUS_ALL)
+    {
+        _cameraDistance = -1.0;
+    }
+}
+
+double osgGA::RubberbandManipulator::GetCameraDistance()
+{
+    return _cameraDistance;
+}
+
 RubberbandManipulator::~RubberbandManipulator()
 {
 }
@@ -124,12 +144,17 @@ void RubberbandManipulator::setTrackNode(osg::ref_ptr<osg::Node> node, bool calc
     explicitCenter_.Reset();
 }
 
+void RubberbandManipulator::setCenter(osg::Vec3 center)
+{
+    track_node_ = nullptr;
+    track_tx_   = nullptr;
+    explicitCenter_.Set(center);
+}
+
 void RubberbandManipulator::setCenterAndDistance(osg::Vec3 center, double distance)
 {
-    track_node_     = nullptr;
-    track_tx_       = nullptr;
+    setCenter(center);
     _cameraDistance = distance;
-    explicitCenter_.Set(center);
 }
 
 void RubberbandManipulator::setTrackTransform(osg::ref_ptr<osg::PositionAttitudeTransform> tx)
@@ -235,6 +260,11 @@ bool RubberbandManipulator::handle(const GUIEventAdapter& ea, GUIActionAdapter& 
                     _cameraDistance = 1;
                 }
                 ry0 = ea.getYnormalized();
+                if (GetFocusMode() == FOCUS_MODE::RB_FOCUS_ALL_AUTO_DIST)
+                {
+                    // If focus mode is ALL, prevent distance to be automatically updated
+                    SetFocusMode(osgGA::RubberbandManipulator::FOCUS_MODE::RB_FOCUS_ALL);
+                }
             }
             break;
             return false;

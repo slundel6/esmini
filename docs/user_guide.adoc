@@ -2500,7 +2500,11 @@ If you need to inverse an axis, just put "-" in front of the axis name, e.g. `-A
 
 https://docs.google.com/spreadsheets/d/1Y-zhAOcks3-rkcVdz3EvwBqOhvOwyE20sGZJcFM1OvI/edit?usp=sharingLink[Link] to full table, including ranges.
 
-It's a bit tricky to find out ID and mappings. The next section provides some help using common tools.
+It's a bit tricky to find out ID and mappings. The next sections provides some help using common tools.
+
+To see received data from device set wsmini option `--log_level debug`.
+
+
 
 ====== Windows tools
 

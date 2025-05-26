@@ -30,7 +30,7 @@
       <ScenarioObject name="Ego">
         <CatalogReference catalogName="VehicleCatalog" entryName="$HostVehicle"/>
         <ObjectController>
-            <CatalogReference catalogName="ControllerCatalog" entryName="hid" />
+            <CatalogReference catalogName="GameControllerCatalog" entryName="LogitechSteeringWheel_Windows" />
         </ObjectController>
       </ScenarioObject>
       <ScenarioObject name="OverTaker">
