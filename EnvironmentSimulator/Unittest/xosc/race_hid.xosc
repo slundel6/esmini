@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <OpenSCENARIO>
-   <FileHeader revMajor="1" revMinor="3" date="2025-05-22T10:00:00" description="Three cars racing to end of road, using HID controllers" author="esmini team"/>
+   <FileHeader revMajor="1" revMinor="3" date="2025-05-22T10:00:00" description="Three cars racing to end of road, using HID controllers. Highscore 23.5" author="esmini team"/>
    <ParameterDeclarations/>
    <CatalogLocations>
       <VehicleCatalog>
@@ -33,8 +33,9 @@
       </ScenarioObject>
       <ScenarioObject name="Car3">
          <CatalogReference catalogName="VehicleCatalog" entryName="car_blue"/>
+         <!-- Uncomment and adjust below to add controller to the third car -->
          <!-- <ObjectController name="hid_ctrl3"> -->
-            <!-- <CatalogReference catalogName="ControllerCatalog" entryName="TrustGXT39_Windows"> -->
+            <!-- <CatalogReference catalogName="GameControllerCatalog" entryName="LogitechSteeringWheel_Windows"> -->
                <!-- <ParameterAssignments> -->
                   <!-- <ParameterAssignment parameterRef="DeviceID" value="0"/> -->
                <!-- </ParameterAssignments> -->
@@ -70,18 +71,18 @@
                <PrivateAction>
                    <LongitudinalAction>
                        <SpeedAction>
-                           <SpeedActionDynamics dynamicsShape="step" dynamicsDimension="time" value="0.0"/>
+                           <SpeedActionDynamics dynamicsShape="linear" dynamicsDimension="rate" value="5.0"/>
                            <SpeedActionTarget>
-                               <AbsoluteTargetSpeed value="5.0"/>
+                               <AbsoluteTargetSpeed value="${100/3.6}"/>
                            </SpeedActionTarget>
                        </SpeedAction>
                    </LongitudinalAction>
                </PrivateAction>
-               <!-- <PrivateAction> -->
-                  <!-- <ControllerAction> -->
-                     <!-- <ActivateControllerAction objectControllerRef="hid_ctrl2" longitudinal="true" lateral="true"/> -->
-                  <!-- </ControllerAction> -->
-               <!-- </PrivateAction> -->
+               <PrivateAction>
+                  <ControllerAction>
+                     <ActivateControllerAction objectControllerRef="hid_ctrl2" longitudinal="true" lateral="true"/>
+                  </ControllerAction>
+               </PrivateAction>
             </Private>
             <Private entityRef="Car3">
                <PrivateAction>

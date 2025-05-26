@@ -101,9 +101,9 @@
                 <Property name="esminiController" value="HIDController" />
                 <Property name="steeringRate" value="$SteeringRate" />
                 <Property name="deviceID" value="$DeviceID" />
-                <Property name="steeringInput" value="AXIS_RZ" />
-                <Property name="throttleInput" value="AXIS_Z" />
-                <Property name="brakeInput" value="AXIS_RY" />
+                <Property name="steeringInput" value="AXIS_X" />
+                <Property name="throttleInput" value="-AXIS_Y" />
+                <Property name="brakeInput" value="-AXIS_Z" />
             </Properties>
         </Controller>
         <Controller name="LogitechSteeringWheelWingManFormulaGP_Linux">
