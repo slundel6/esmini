@@ -14,7 +14,8 @@ DAT_FILENAME = 'sim.dat'
 STDOUT_FILENAME = 'stdout.txt'
 TIMEOUT = 40
 
-VALGRIND_PREFIX = ["valgrind", "--leak-check=full", "--show-leak-kinds=all"]
+VALGRIND_LEVEL_SUMMARY = ["valgrind", "--leak-check=summary", "--show-leak-kinds=definite,possible"]
+VALGRIND_LEVEL_FULL = ["valgrind", "--leak-check=full", "--show-leak-kinds=all", "--track-origins=yes", "--verbose"]
 # Add path to esmini shared library
 # needed only on Mac and Linux, Windows looks in folder of the executable
 env = os.environ.copy()
@@ -28,7 +29,7 @@ def set_timeout(timeout):
     global TIMEOUT
     TIMEOUT = timeout
 
-def run_scenario(osc_filename = None, esmini_arguments = None, xosc_str = None, application = None, ignoreReturnCode = False, measure_cpu_time = False, check_memory_leaks = False):
+def run_scenario(osc_filename = None, esmini_arguments = None, xosc_str = None, application = None, ignoreReturnCode = False, measure_cpu_time = False, check_memory_leaks_level: str = "summary"):
 
     if os.path.exists(LOG_FILENAME):
         os.remove(LOG_FILENAME)
@@ -49,14 +50,18 @@ def run_scenario(osc_filename = None, esmini_arguments = None, xosc_str = None, 
         if xosc_str is not None:
             args +=  ['--osc_str', xosc_str]
 
-    if check_memory_leaks:
-        args = VALGRIND_PREFIX + args
+    if check_memory_leaks_level == "summary":
+        args = VALGRIND_LEVEL_SUMMARY + args
+    elif check_memory_leaks_level == "full":
+        args = VALGRIND_LEVEL_FULL + args
+    else:
+        assert False, f'Unknown check_memory_leaks_level: {check_memory_leaks_level}'
+
 
     return_code = None
     cpu_times = None
 
     with open(STDOUT_FILENAME, "w") as f:
-        # print('running: {}'.format(' '.join(args)))
         process = subprocess.Popen(args, cwd=os.path.dirname(os.path.realpath(__file__)),
                             stdout=f, stderr=subprocess.STDOUT, env=env)
         ps_process = psutil.Process(process.pid)
@@ -83,8 +88,12 @@ def run_scenario(osc_filename = None, esmini_arguments = None, xosc_str = None, 
     if not ignoreReturnCode:
         assert return_code == 0
 
+    errlog = None
+    with open(STDOUT_FILENAME, 'r') as errfile:
+        errlog = errfile.read()
+
     with open(LOG_FILENAME, 'r') as logfile:
-        log = logfile.read(), time.time() - start_time, cpu_times
+        log = logfile.read(), time.time() - start_time, cpu_times, errlog
         return log
 
     assert False, 'No log file'
