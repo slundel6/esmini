@@ -21,7 +21,7 @@
             </ParameterAssignments>
          </CatalogReference>
          <ObjectController name="hid_ctrl1">
-            <CatalogReference catalogName="ControllerCatalog" entryName="LogitechSteeringWheelWingManFormulaGP_Windows">
+            <CatalogReference catalogName="GameControllerCatalog" entryName="PS4Controller_Windows">
                <ParameterAssignments>
                   <ParameterAssignment parameterRef="DeviceID" value="1"/>
                </ParameterAssignments>
