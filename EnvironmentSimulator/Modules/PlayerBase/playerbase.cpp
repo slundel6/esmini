@@ -517,7 +517,7 @@ void ScenarioPlayer::ViewerFrame(bool init)
         viewer_->SetInfoText(str_buf);
     }
 
-    if (viewer_->rubberbandManipulator_->GetFocusMode() == osgGA::RubberbandManipulator::FOCUS_MODE::RB_FOCUS_ALL)
+    if (viewer_->rubberbandManipulator_->GetFocusMode() != osgGA::RubberbandManipulator::FOCUS_MODE::RB_FOCUS_ONE)
     {
         // calculate center point of all entities, and set distance based on bounding box size
         double min_x = 0.0, min_y = 0.0, max_x = 0.0, max_y = 0.0, min_z = 0.0, max_z = 0.0;
@@ -1283,7 +1283,11 @@ int ScenarioPlayer::Init()
     opt.AddOption("disable_stdout", "Prevent messages to stdout");
     opt.AddOption("enforce_generate_model", "Generate road 3D model even if SceneGraphFile is specified");
     opt.AddOption("fixed_timestep", "Run simulation decoupled from realtime, with specified timesteps", "timestep");
-    opt.AddOption("follow_object", "Set index of initial object for camera to follow (change with Tab/shift-Tab)", "object index (-1 for all)", "0", true);
+    opt.AddOption("follow_object",
+                  "Set index of initial object for camera to follow (change with Tab/shift-Tab)",
+                  "object index (-1 for all)",
+                  "0",
+                  true);
     opt.AddOption("generate_no_road_objects", "Do not generate any OpenDRIVE road objects (e.g. when part of referred 3D model)");
     opt.AddOption("generate_without_textures", "Do not apply textures on any generated road model (set colors instead as for missing textures)");
     opt.AddOption("ground_plane", "Add a large flat ground surface");

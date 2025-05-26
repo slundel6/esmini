@@ -62,11 +62,6 @@ RubberbandManipulator::FOCUS_MODE RubberbandManipulator::GetFocusMode()
 void RubberbandManipulator::SetFocusMode(FOCUS_MODE mode)
 {
     focus_mode_ = mode;
-    // when switching to ALL mode, reset distance to indicate it should be recalculated once
-    if (mode == FOCUS_MODE::RB_FOCUS_ALL)
-    {
-        _cameraDistance = -1.0;
-    }
 }
 
 double osgGA::RubberbandManipulator::GetCameraDistance()

@@ -3459,7 +3459,7 @@ void Viewer::SetCameraTrackNode(osg::ref_ptr<osg::Node> node, bool calcDistance)
 
     if (node == nullptr)
     {
-        rubberbandManipulator_->SetFocusMode(osgGA::RubberbandManipulator::FOCUS_MODE::RB_FOCUS_ALL);
+        rubberbandManipulator_->SetFocusMode(osgGA::RubberbandManipulator::FOCUS_MODE::RB_FOCUS_ALL_AUTO_DIST);
     }
     else
     {
