@@ -10451,7 +10451,7 @@ bool Position::Delta(Position* pos_b, PositionDiff& diff, bool bothDirections, d
         diff.ds = dist;
 
         std::string roadIds;
-        LOG_DEBUG("Dist {:.2f} Path (reversed): {}", dist, pos_b->GetTrackId());
+        // LOG_DEBUG("Dist {:.2f} Path (reversed): {}", dist, pos_b->GetTrackId());
         if (path->visited_.size() > 0)
         {
             std::ostringstream  oss;
@@ -10466,7 +10466,7 @@ bool Position::Delta(Position* pos_b, PositionDiff& diff, bool bothDirections, d
             }
             roadIds = oss.str();
         }
-        LOG_DEBUG("Dist {:.2f} Path (reversed): {} {}", dist, pos_b->GetTrackId(), roadIds);
+        // LOG_DEBUG("Dist {:.2f} Path (reversed): {} {}", dist, pos_b->GetTrackId(), roadIds);
     }
     else  // no valid route found
     {
