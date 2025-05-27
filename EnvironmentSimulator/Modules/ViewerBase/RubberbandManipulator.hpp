@@ -22,6 +22,8 @@
 #define _USE_MATH_DEFINES
 #include <math.h>
 
+#define ZOOM_SCALE_DEFAULT 1.0
+
 namespace osgGA
 {
 
@@ -175,7 +177,7 @@ namespace osgGA
 
         int getMode()
         {
-            return static_cast<int>(_mode);
+            return static_cast<int>(mode_);
         }
 
         void computeNodeCenterAndRotation(osg::Vec3d& nodeCenter, osg::Quat& nodeRotation) const;
@@ -213,31 +215,32 @@ namespace osgGA
         void addEvent(const GUIEventAdapter& ea);
 
         // Internal event stack comprising last two events.
-        osg::ref_ptr<const GUIEventAdapter> _ga_t1;
-        osg::ref_ptr<const GUIEventAdapter> _ga_t0;
+        osg::ref_ptr<const GUIEventAdapter> ga_t1_;
+        osg::ref_ptr<const GUIEventAdapter> ga_t0_;
 
         /** For the give mouse movement calculate the movement of the camera.
             Return true is camera has moved and a redraw is required.*/
         bool calcMovement(double dt, bool reset);
 
-        osg::ref_ptr<osg::Node>                      _node;
+        osg::ref_ptr<osg::Node>                      node_;
         osg::ref_ptr<osg::Node>                      track_node_ = nullptr;
         osg::ref_ptr<osg::PositionAttitudeTransform> track_tx_   = nullptr;
 
-        osg::Vec3d  _eye;
-        osg::Matrix _matrix;
-        osg::Vec3d  cameraAcc;
-        osg::Vec3d  cameraVel;
+        osg::Vec3d  eye_;
+        osg::Matrix matrix_;
+        osg::Vec3d  cameraAcc_;
+        osg::Vec3d  cameraVel_;
         osg::Vec3d  relative_pos_;
 
-        double _cameraDistance;
-        double _cameraAngle;
-        double _cameraRotation;
+        double cameraBaseDistance_;
+        double cameraAngle_;
+        double cameraRotation_;
 
-        unsigned int _mode;
+        unsigned int mode_;
         bool         fix_camera_;
         double&      time_ref_;
         FOCUS_MODE   focus_mode_;
+        double       zoom_distance_ = 0.0;
 
         std::vector<CustomCamera> customCamera_;
     };
