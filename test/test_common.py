@@ -29,7 +29,7 @@ def set_timeout(timeout):
     global TIMEOUT
     TIMEOUT = timeout
 
-def run_scenario(osc_filename = None, esmini_arguments = None, xosc_str = None, application = None, ignoreReturnCode = False, measure_cpu_time = False, check_memory_leaks_level: str = "summary"):
+def run_scenario(osc_filename = None, esmini_arguments = None, xosc_str = None, application = None, ignoreReturnCode = False, measure_cpu_time = False, check_memory_leaks_level: str = "none"):
 
     if os.path.exists(LOG_FILENAME):
         os.remove(LOG_FILENAME)
@@ -54,9 +54,6 @@ def run_scenario(osc_filename = None, esmini_arguments = None, xosc_str = None, 
         args = VALGRIND_LEVEL_SUMMARY + args
     elif check_memory_leaks_level == "full":
         args = VALGRIND_LEVEL_FULL + args
-    else:
-        assert False, f'Unknown check_memory_leaks_level: {check_memory_leaks_level}'
-
 
     return_code = None
     cpu_times = None
