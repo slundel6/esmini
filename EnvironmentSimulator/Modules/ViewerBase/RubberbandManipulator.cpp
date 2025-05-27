@@ -51,17 +51,6 @@ RubberbandManipulator::RubberbandManipulator(unsigned int mode, osg::Vec3d origi
     origin_             = origin;
     setMode(mode);
     explicitCenter_.Reset();
-    focus_mode_ = FOCUS_MODE::RB_FOCUS_ONE;
-}
-
-RubberbandManipulator::FOCUS_MODE RubberbandManipulator::GetFocusMode()
-{
-    return focus_mode_;
-}
-
-void RubberbandManipulator::SetFocusMode(FOCUS_MODE mode)
-{
-    focus_mode_ = mode;
 }
 
 double osgGA::RubberbandManipulator::GetCameraDistance()
@@ -139,6 +128,11 @@ void RubberbandManipulator::setTrackNode(osg::ref_ptr<osg::Node> node, bool calc
     explicitCenter_.Reset();
 }
 
+const osg::Node* RubberbandManipulator::getTrackNode() const
+{
+    return track_node_.get();
+}
+
 void RubberbandManipulator::setCenterAndDistance(osg::Vec3 center, double distance)
 {
     track_node_ = nullptr;
@@ -149,21 +143,12 @@ void RubberbandManipulator::setCenterAndDistance(osg::Vec3 center, double distan
 
 void RubberbandManipulator::setTrackTransform(osg::ref_ptr<osg::PositionAttitudeTransform> tx)
 {
-    if (!tx)
-    {
-        osg::notify(osg::NOTICE) << "RubberbandManipulator::setTrackTX(tx):  Unable to set tracked transofmration node due to null Node" << std::endl;
-        return;
-    }
     track_tx_ = tx;
     explicitCenter_.Reset();
 }
 
 void RubberbandManipulator::calculateCameraDistance()
 {
-    if (track_node_ == nullptr)
-    {
-        return;
-    }
     const osg::MatrixList&    m = track_node_->getWorldMatrices();
     osg::ComputeBoundsVisitor cbv;
     track_node_->accept(cbv);

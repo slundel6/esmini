@@ -14,7 +14,7 @@ static const char* helpText = "\n\
 Key shortcuts \n\
     \n\
     H (shift + h): Print this help text to console \n\
-    TAB:           Move camera to next vehicle (last mode is all vehicles)\n\
+    TAB:           Move camera to next vehicle (0, 1, 2..., ALL, NONE)\n\
     Shift + TAB:   Move camera to previous vehicle \n\
     Delete:        Same as above (Shift + TAB) \n\
     Space:         Toggle pause / play \n\

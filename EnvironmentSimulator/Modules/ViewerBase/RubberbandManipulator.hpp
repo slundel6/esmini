@@ -22,8 +22,6 @@
 #define _USE_MATH_DEFINES
 #include <math.h>
 
-#define ZOOM_SCALE_DEFAULT 1.0
-
 namespace osgGA
 {
 
@@ -40,12 +38,6 @@ namespace osgGA
             RB_MODE_DRIVER,
             RB_MODE_CUSTOM,
             RB_NUM_MODES
-        };
-
-        enum class FOCUS_MODE
-        {
-            RB_FOCUS_ONE,
-            RB_FOCUS_ALL
         };
 
         class CustomCamera
@@ -142,9 +134,10 @@ namespace osgGA
 
         typedef std::vector<osg::observer_ptr<osg::Node> > ObserverNodePath;
 
-        void setTrackNode(osg::ref_ptr<osg::Node> node, bool calcDistance = false);
-        void setCenterAndDistance(osg::Vec3 center, double distance);
-        void setTrackTransform(osg::ref_ptr<osg::PositionAttitudeTransform> tx);
+        void             setTrackNode(osg::ref_ptr<osg::Node> node, bool calcDistance = false);
+        const osg::Node* getTrackNode() const;
+        void             setCenterAndDistance(osg::Vec3 center, double distance);
+        void             setTrackTransform(osg::ref_ptr<osg::PositionAttitudeTransform> tx);
 
         /** set the position of the matrix manipulator using a 4x4 Matrix.*/
         virtual void setByMatrix(const osg::Matrixd& matrix);
@@ -200,9 +193,7 @@ namespace osgGA
         osg::Vec3d     origin_;
         ExplicitCenter explicitCenter_;
 
-        FOCUS_MODE GetFocusMode();
-        void       SetFocusMode(FOCUS_MODE mode);
-        double     GetCameraDistance();
+        double GetCameraDistance();
 
     protected:
         virtual ~RubberbandManipulator();
@@ -237,7 +228,6 @@ namespace osgGA
         unsigned int mode_;
         bool         fix_camera_;
         double&      time_ref_;
-        FOCUS_MODE   focus_mode_;
         double       zoom_distance_ = 0.0;
 
         std::vector<CustomCamera> customCamera_;

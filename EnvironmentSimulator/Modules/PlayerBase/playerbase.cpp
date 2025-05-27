@@ -517,40 +517,6 @@ void ScenarioPlayer::ViewerFrame(bool init)
         viewer_->SetInfoText(str_buf);
     }
 
-    if (viewer_->rubberbandManipulator_->GetFocusMode() == osgGA::RubberbandManipulator::FOCUS_MODE::RB_FOCUS_ALL)
-    {
-        // calculate center point of all entities, and set distance based on bounding box size
-        double min_x = 0.0, min_y = 0.0, max_x = 0.0, max_y = 0.0, min_z = 0.0, max_z = 0.0;
-        for (unsigned int i = 0; i < scenarioEngine->entities_.object_.size(); i++)
-        {
-            Object* e = scenarioEngine->entities_.object_[i];
-            double  x = e->pos_.GetX();
-            double  y = e->pos_.GetY();
-            double  z = e->pos_.GetZ();
-            if (i == 0)
-            {
-                min_x = max_x = x;
-                min_y = max_y = y;
-                min_z = max_z = z;
-            }
-            else
-            {
-                min_x = MIN(min_x, x);
-                max_x = MAX(max_x, x);
-                min_y = MIN(min_y, y);
-                max_y = MAX(max_y, y);
-                min_z = MIN(min_z, z);
-                max_z = MAX(max_z, z);
-            }
-        }
-
-        float  center_x = static_cast<float>((min_x + max_x) / 2.0);
-        float  center_y = static_cast<float>((min_y + max_y) / 2.0);
-        float  center_z = static_cast<float>((min_z + max_z) / 2.0);
-        double distance = GetLengthOfLine2D(min_x, min_y, max_x, max_y);
-        viewer_->rubberbandManipulator_->setCenterAndDistance(osg::Vec3(center_x, center_y, center_z), 20 + distance);
-    }
-
     mutex.Unlock();
 
     if (!init)
@@ -1000,28 +966,51 @@ int ScenarioPlayer::InitViewer()
     // Choose vehicle to look at initially (switch with 'Tab')
     if (opt.GetOptionSet("follow_object"))
     {
+        int follow_object_idx = 0;
         LOG_INFO("Follow object {}", strtoi(opt.GetOptionArg("follow_object")));
-        viewer_->SetVehicleInFocus(strtoi(opt.GetOptionArg("follow_object")));
+        std::string follow_object = opt.GetOptionArg("follow_object");
+        if (follow_object == "ALL")
+        {
+            if (scenarioEngine->entities_.object_.size() > 0)
+            {
+                follow_object_idx = scenarioEngine->entities_.object_.size();
+            }
+        }
+        else if (follow_object == "NONE")
+        {
+            if (viewer_->environment_ != nullptr)
+            {
+                follow_object_idx = -1;
+            }
+        }
+        else
+        {
+            follow_object_idx = strtoi(opt.GetOptionArg("follow_object"));
+        }
+        viewer_->SetVehicleInFocus(follow_object_idx);
     }
     else
     {
-        viewer_->SetVehicleInFocus(0);
-    }
-
-    for (size_t i = 0; i < scenarioEngine->entities_.object_.size(); i++)
-    {
-        Object* obj = scenarioEngine->entities_.object_[i];
-
-        if (obj->IsAnyAssignedControllerOfType(Controller::Type::CONTROLLER_TYPE_INTERACTIVE) ||
-            obj->IsAnyAssignedControllerOfType(Controller::Type::CONTROLLER_TYPE_EXTERNAL) ||
-            obj->IsAnyAssignedControllerOfType(Controller::Type::CONTROLLER_TYPE_FOLLOW_GHOST))
+        for (size_t i = 0; i < scenarioEngine->entities_.object_.size(); i++)
         {
-            if (viewer_->GetEntityInFocus() == 0)
+            Object* obj = scenarioEngine->entities_.object_[i];
+
+            if (obj->IsAnyAssignedControllerOfType(Controller::Type::CONTROLLER_TYPE_INTERACTIVE) ||
+                obj->IsAnyAssignedControllerOfType(Controller::Type::CONTROLLER_TYPE_EXTERNAL) ||
+                obj->IsAnyAssignedControllerOfType(Controller::Type::CONTROLLER_TYPE_FOLLOW_GHOST))
             {
-                // Focus on first vehicle of specified types
-                viewer_->SetVehicleInFocus(static_cast<int>(i));
+                if (viewer_->GetEntityInFocus() == 0)
+                {
+                    // Focus on first vehicle of specified types
+                    viewer_->SetVehicleInFocus(static_cast<int>(i));
+                }
             }
         }
+    }
+    if (!opt.GetOptionSet("follow_object"))
+    {
+        // default to first object
+        viewer_->SetVehicleInFocus(0);
     }
 
     // Decorate window border with application name and arguments
@@ -1278,9 +1267,7 @@ int ScenarioPlayer::Init()
     opt.AddOption("fixed_timestep", "Run simulation decoupled from realtime, with specified timesteps", "timestep");
     opt.AddOption("follow_object",
                   "Set index of initial object for camera to follow (change with Tab/shift-Tab)",
-                  "object index (-1 for all)",
-                  "0",
-                  true);
+                  "object index (0, 1, 2..., ALL, NONE)");
     opt.AddOption("generate_no_road_objects", "Do not generate any OpenDRIVE road objects (e.g. when part of referred 3D model)");
     opt.AddOption("generate_without_textures", "Do not apply textures on any generated road model (set colors instead as for missing textures)");
     opt.AddOption("ground_plane", "Add a large flat ground surface");
