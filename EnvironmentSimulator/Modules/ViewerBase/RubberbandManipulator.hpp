@@ -45,8 +45,7 @@ namespace osgGA
         enum class FOCUS_MODE
         {
             RB_FOCUS_ONE,
-            RB_FOCUS_ALL,
-            RB_FOCUS_ALL_AUTO_DIST,
+            RB_FOCUS_ALL
         };
 
         class CustomCamera
@@ -144,7 +143,6 @@ namespace osgGA
         typedef std::vector<osg::observer_ptr<osg::Node> > ObserverNodePath;
 
         void setTrackNode(osg::ref_ptr<osg::Node> node, bool calcDistance = false);
-        void setCenter(osg::Vec3 center);
         void setCenterAndDistance(osg::Vec3 center, double distance);
         void setTrackTransform(osg::ref_ptr<osg::PositionAttitudeTransform> tx);
 

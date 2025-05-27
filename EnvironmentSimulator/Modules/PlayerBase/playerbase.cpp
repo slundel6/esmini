@@ -517,7 +517,7 @@ void ScenarioPlayer::ViewerFrame(bool init)
         viewer_->SetInfoText(str_buf);
     }
 
-    if (viewer_->rubberbandManipulator_->GetFocusMode() != osgGA::RubberbandManipulator::FOCUS_MODE::RB_FOCUS_ONE)
+    if (viewer_->rubberbandManipulator_->GetFocusMode() == osgGA::RubberbandManipulator::FOCUS_MODE::RB_FOCUS_ALL)
     {
         // calculate center point of all entities, and set distance based on bounding box size
         double min_x = 0.0, min_y = 0.0, max_x = 0.0, max_y = 0.0, min_z = 0.0, max_z = 0.0;
@@ -544,18 +544,11 @@ void ScenarioPlayer::ViewerFrame(bool init)
             }
         }
 
-        float center_x = static_cast<float>((min_x + max_x) / 2.0);
-        float center_y = static_cast<float>((min_y + max_y) / 2.0);
-        float center_z = static_cast<float>((min_z + max_z) / 2.0);
-        if (viewer_->rubberbandManipulator_->GetFocusMode() == osgGA::RubberbandManipulator::FOCUS_MODE::RB_FOCUS_ALL_AUTO_DIST)
-        {
-            double distance = GetLengthOfLine2D(min_x, min_y, max_x, max_y);
-            viewer_->rubberbandManipulator_->setCenterAndDistance(osg::Vec3(center_x, center_y, center_z), 20 + distance);
-        }
-        else
-        {
-            viewer_->rubberbandManipulator_->setCenter(osg::Vec3(center_x, center_y, center_z));
-        }
+        float  center_x = static_cast<float>((min_x + max_x) / 2.0);
+        float  center_y = static_cast<float>((min_y + max_y) / 2.0);
+        float  center_z = static_cast<float>((min_z + max_z) / 2.0);
+        double distance = GetLengthOfLine2D(min_x, min_y, max_x, max_y);
+        viewer_->rubberbandManipulator_->setCenterAndDistance(osg::Vec3(center_x, center_y, center_z), 20 + distance);
     }
 
     mutex.Unlock();

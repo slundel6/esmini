@@ -139,16 +139,11 @@ void RubberbandManipulator::setTrackNode(osg::ref_ptr<osg::Node> node, bool calc
     explicitCenter_.Reset();
 }
 
-void RubberbandManipulator::setCenter(osg::Vec3 center)
+void RubberbandManipulator::setCenterAndDistance(osg::Vec3 center, double distance)
 {
     track_node_ = nullptr;
     track_tx_   = nullptr;
     explicitCenter_.Set(center);
-}
-
-void RubberbandManipulator::setCenterAndDistance(osg::Vec3 center, double distance)
-{
-    setCenter(center);
     cameraBaseDistance_ = distance;
 }
 
