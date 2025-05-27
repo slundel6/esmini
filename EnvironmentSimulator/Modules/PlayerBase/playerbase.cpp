@@ -1267,7 +1267,7 @@ int ScenarioPlayer::Init()
     opt.AddOption("fixed_timestep", "Run simulation decoupled from realtime, with specified timesteps", "timestep");
     opt.AddOption("follow_object",
                   "Set index of initial object for camera to follow (change with Tab/shift-Tab)",
-                  "object index (0, 1, 2..., ALL, NONE)");
+                  "object index (0, 1, 2..., ALL, ROAD)");
     opt.AddOption("generate_no_road_objects", "Do not generate any OpenDRIVE road objects (e.g. when part of referred 3D model)");
     opt.AddOption("generate_without_textures", "Do not apply textures on any generated road model (set colors instead as for missing textures)");
     opt.AddOption("ground_plane", "Add a large flat ground surface");

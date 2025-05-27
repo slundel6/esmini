@@ -16,7 +16,7 @@ Key shortcuts \n\
     H (shift + h): Print this help text to console \n\
     Space:         Toggle pause/play simulation \n\
     Return:        Step simulation(one timestep) then pause \n\
-    TAB:           Move camera to next vehicle (0, 1, 2..., ALL, NONE)\n\
+    TAB:           Move camera to next vehicle (0, 1, 2..., ALL, ROAD)\n\
     Shift + TAB:   Move camera to previous vehicle \n\
     Delete:        Same as above (Shift + TAB) \n\
     o:             Toggle show / hide OpenDRIVE road feature lines \n\
