@@ -9,7 +9,7 @@ on:
   workflow_dispatch:
 
 jobs:
-  memory_leak_check:
+  memoryleak:
     strategy:
       matrix:
         configuration: [RelWithDebInfo]
