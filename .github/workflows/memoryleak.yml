@@ -9,7 +9,7 @@ on:
   workflow_dispatch:
 
 jobs:
-  sanitize:
+  memory_leak_check:
     strategy:
       matrix:
         configuration: [RelWithDebInfo]
@@ -57,4 +57,7 @@ jobs:
 
       - name: Run Tests
         # Use xvfb on Linux and extend timeout allowing for slow execution
-        run: ${{ matrix.os == 'ubuntu-22.04' && 'xvfb-run' || '' }} ./scripts/run_memory_leak_tests.sh
+        run: |
+         pwd
+         ls -la
+         ${{ matrix.os == 'ubuntu-22.04' && 'xvfb-run' || '' }} ./scripts/run_memory_leak_tests.sh
