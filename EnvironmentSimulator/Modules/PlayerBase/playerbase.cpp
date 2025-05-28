@@ -973,7 +973,7 @@ int ScenarioPlayer::InitViewer()
         {
             if (scenarioEngine->entities_.object_.size() > 0)
             {
-                follow_object_idx = scenarioEngine->entities_.object_.size();
+                follow_object_idx = static_cast<int>(scenarioEngine->entities_.object_.size());
             }
         }
         else if (follow_object == "NONE")
