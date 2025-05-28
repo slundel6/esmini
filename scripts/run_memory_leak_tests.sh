@@ -1,7 +1,7 @@
 #!/bin/bash
 
 timeout=600
-blacklist="cut-in_sumo.xosc sumo-test.xosc cut-in_sloppy.xosc cut-in_parameter_set.xosc"
+blacklist=(cut-in_sumo.xosc sumo-test.xosc cut-in_sloppy.xosc cut-in_parameter_set.xosc)
 
 # Run from esmini root directory: ./scripts/run_memory_leak_tests.sh
 
@@ -21,6 +21,6 @@ cd $MEMORY_TEST_FOLDER
 
 echo $'\n'Run memory tests:
 
-if ! ${PYTHON} memory_leak_test.py -t "$timeout" -b "$blacklist"; then
+if ! ${PYTHON} memory_leak_test.py -t "$timeout" -b "${blacklist[@]}"; then
     exit_with_msg "memory leak test failed"
 fi
