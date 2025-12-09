@@ -2277,10 +2277,7 @@ double LaneSection::GetCenterOffsetHeading(double s, int lane_id) const
 
 void LaneSection::AddLane(Lane* lane)
 {
-    if (lane->GetId() != 0)
-    {
-        lane->SetGlobalId();
-    }
+    lane->SetGlobalId();
 
     // Keep list sorted on lane ID, from + to -
     if (lane_.size() > 0 && lane->GetId() > lane_.back()->GetId())
