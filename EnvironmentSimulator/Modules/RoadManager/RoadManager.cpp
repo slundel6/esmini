@@ -74,10 +74,6 @@ using namespace roadmanager;
 #define TUNNEL_ROOF_THICKNESS      2.0
 #define TUNNEL_HEIGHT              4.5
 
-static id_t g_Lane_id;
-static id_t g_Laneb_id;
-static id_t g_tl_id;
-
 const char* object_type_str[] = {"barrier",   "bike",     "building",     "bus",          "car",           "crosswalk",  "gantry",
                                  "motorbike", "none",     "obstacle",     "parkingSpace", "patch",         "pedestrian", "pole",
                                  "railing",   "roadMark", "soundBarrier", "streetLamp",   "trafficIsland", "trailer",    "train",
@@ -449,7 +445,7 @@ void TrafficLight::SetTrafficLightInfo()
         {
             // Lamps stored [up, ..., down]
             double z  = GetZ() + GetZOffset() + lamp_height_ / 2 + lamp_height_ * static_cast<double>(nr_lamps_ - 1 - i);
-            id_t   id = GetNewGlobalTrafficLightId();
+            id_t   id = GetNewGlobalId();
             lamps_.emplace_back(id, GetX(), GetY(), z, lamp_width_, lamp_height_, tl_info.icons[i], tl_info.colors[i]);
         }
     }
@@ -626,27 +622,6 @@ std::string Signal::GetCombinedTypeSubtypeValueStr(std::string type, std::string
     }
 
     return str;
-}
-
-id_t roadmanager::GetNewGlobalLaneId()
-{
-    id_t returnvalue = g_Lane_id;
-    g_Lane_id++;
-    return returnvalue;
-}
-
-id_t roadmanager::GetNewGlobalLaneBoundaryId()
-{
-    id_t returnvalue = g_Laneb_id;
-    g_Laneb_id++;
-    return returnvalue;
-}
-
-id_t roadmanager::GetNewGlobalTrafficLightId()
-{
-    id_t returnvalue = g_tl_id;
-    g_tl_id++;
-    return returnvalue;
 }
 
 const char* roadmanager::ReadUserData(pugi::xml_node node, const std::string& code, const std::string& default_value)
@@ -1236,17 +1211,17 @@ void LaneLink::Print() const
 
 void Lane::SetGlobalId()
 {
-    global_id_ = GetNewGlobalLaneId();
+    g_id_ = GetNewGlobalId();
 }
 
 void LaneBoundaryOSI::SetGlobalId()
 {
-    global_id_ = GetNewGlobalLaneBoundaryId();
+    g_id_ = GetNewGlobalId();
 }
 
 void LaneRoadMarkTypeLine::SetGlobalId()
 {
-    global_id_ = GetNewGlobalLaneBoundaryId();
+    g_id_ = GetNewGlobalId();
 }
 
 LaneWidth* Lane::GetWidthByIndex(idx_t index) const
@@ -2302,7 +2277,10 @@ double LaneSection::GetCenterOffsetHeading(double s, int lane_id) const
 
 void LaneSection::AddLane(Lane* lane)
 {
-    lane->SetGlobalId();
+    if (lane->GetId() != 0)
+    {
+        lane->SetGlobalId();
+    }
 
     // Keep list sorted on lane ID, from + to -
     if (lane_.size() > 0 && lane->GetId() > lane_.back()->GetId())
@@ -2877,6 +2855,9 @@ roadmanager::RMObject::RMObject(double      s,
       pitch_(pitch),
       roll_(roll)
 {
+    // Give object a unique global id (for OSI)
+    SetGlobalId();
+
     // set defautl color based on object type
     // Set color based on object type
     if (type_ == ObjectType::BUILDING || type_ == ObjectType::BARRIER)
@@ -3546,13 +3527,6 @@ OpenDrive::OpenDrive(const char* filename) : speed_unit_(SpeedUnit::UNDEFINED)
     }
 }
 
-void OpenDrive::InitGlobalLaneIds()
-{
-    g_Lane_id  = 0;
-    g_Laneb_id = 0;
-    g_tl_id    = 0;
-}
-
 Controller* OpenDrive::GetControllerByIdx(idx_t index)
 {
     if (index < controller_.size())
@@ -3607,7 +3581,7 @@ std::string ReadAttribute(pugi::xml_node node, std::string attribute_name, bool 
 
 void OpenDrive::Clear()
 {
-    InitGlobalLaneIds();
+    ResetGlobalIdCounter();
 
     road_ids_.clear();
     junction_ids_.clear();
@@ -5494,7 +5468,7 @@ LaneRoadLaneConnection Junction::GetRoadConnectionByIdx(id_t roadId, int laneId,
 
 void Junction::SetGlobalId()
 {
-    global_id_ = GetNewGlobalLaneId();
+    global_id_ = GetNewGlobalId();
 }
 
 bool Junction::IsOsiIntersection() const
