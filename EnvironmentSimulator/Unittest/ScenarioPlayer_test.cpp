@@ -1160,7 +1160,7 @@ TEST(OSI, TestStationaryObjects)
     EXPECT_NEAR(osi_gt_ptr->stationary_object(3).base().orientation().pitch(), 0.0, 1e-3);
     EXPECT_NEAR(osi_gt_ptr->stationary_object(3).base().orientation().roll(), 0.0, 1e-3);
     ASSERT_EQ(osi_gt_ptr->stationary_object(3).source_reference().size(), 1);
-    ASSERT_EQ(osi_gt_ptr->stationary_object(3).source_reference().Get(0).identifier().size(), 1);
+    ASSERT_EQ(osi_gt_ptr->stationary_object(3).source_reference().Get(0).identifier().size(), 3);
     EXPECT_STREQ(osi_gt_ptr->stationary_object(3).source_reference().Get(0).identifier().Get(0).c_str(), "5_kalle");
 
     // verify correct location of first OSC box object
@@ -1177,8 +1177,10 @@ TEST(OSI, TestStationaryObjects)
 
     EXPECT_EQ(osi_gt_ptr->stationary_object(4).model_reference(), "");
     ASSERT_EQ(osi_gt_ptr->stationary_object(4).source_reference_size(), 1);
-    ASSERT_EQ(osi_gt_ptr->stationary_object(4).source_reference(0).identifier_size(), 1);
-    EXPECT_EQ(osi_gt_ptr->stationary_object(4).source_reference(0).identifier(0), "box_123XY");
+    ASSERT_EQ(osi_gt_ptr->stationary_object(4).source_reference(0).identifier_size(), 3);
+    EXPECT_EQ(osi_gt_ptr->stationary_object(4).source_reference(0).identifier(0), "object_type:MiscObject");
+    EXPECT_EQ(osi_gt_ptr->stationary_object(4).source_reference(0).identifier(1), "object_name:Box3");
+    EXPECT_EQ(osi_gt_ptr->stationary_object(4).source_reference(0).identifier(2), "box_123XY");
 
     // verify correct location of second OSC box object
     EXPECT_EQ(osi_gt_ptr->stationary_object(5).id().value(), 9);
@@ -1194,8 +1196,10 @@ TEST(OSI, TestStationaryObjects)
 
     EXPECT_EQ(osi_gt_ptr->stationary_object(5).model_reference(), "../models/box_cc_by.osgb");
     EXPECT_EQ(osi_gt_ptr->stationary_object(5).source_reference_size(), 1);
-    EXPECT_EQ(osi_gt_ptr->stationary_object(5).source_reference(0).identifier_size(), 1);
-    EXPECT_EQ(osi_gt_ptr->stationary_object(5).source_reference(0).identifier(0), "box_123XZ");
+    EXPECT_EQ(osi_gt_ptr->stationary_object(5).source_reference(0).identifier_size(), 3);
+    EXPECT_EQ(osi_gt_ptr->stationary_object(5).source_reference(0).identifier(0), "object_type:MiscObject");
+    EXPECT_EQ(osi_gt_ptr->stationary_object(5).source_reference(0).identifier(1), "object_name:Box4");
+    EXPECT_EQ(osi_gt_ptr->stationary_object(5).source_reference(0).identifier(2), "box_123XZ");
 
     // verify correct location of OpenDRIVE traffic sign
     EXPECT_EQ(osi_gt_ptr->traffic_sign(0).id().value(), 1);
