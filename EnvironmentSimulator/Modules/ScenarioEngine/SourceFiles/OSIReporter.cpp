@@ -207,7 +207,7 @@ void OSIReporter::ReportSensors(std::vector<ObjectSensor *> sensor)
             mobj = obj_osi_internal.sd->mutable_sensor_view(static_cast<int>(i))->mutable_global_ground_truth()->add_moving_object();
 
             // Populate sensor data
-            mobj->mutable_id()->set_value(static_cast<unsigned int>(sensor[i]->hitList_[j].obj_->g_id_));
+            mobj->mutable_id()->set_value(sensor[i]->hitList_[j].obj_->g_id_);
             mobj->mutable_base()->mutable_position()->set_x(sensor[i]->hitList_[j].x_ +
                                                             static_cast<double>(sensor[i]->hitList_[j].obj_->boundingbox_.center_.x_) *
                                                                 cos(sensor[i]->hitList_[j].yaw_));
@@ -871,7 +871,7 @@ int OSIReporter::UpdateOSIMovingObject(ObjectState *objectState)
     obj_osi_internal.mobj = obj_osi_internal.dynamic_gt->add_moving_object();
 
     // Set OSI Moving Object Mutable ID
-    obj_osi_internal.mobj->mutable_id()->set_value(static_cast<unsigned int>(objectState->state_.info.g_id));
+    obj_osi_internal.mobj->mutable_id()->set_value(objectState->state_.info.g_id);
 
     // Set OSI Moving Object Type and Classification
     std::string entity_type = "Vehicle";
