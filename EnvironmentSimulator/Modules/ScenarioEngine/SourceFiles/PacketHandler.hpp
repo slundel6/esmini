@@ -11,7 +11,8 @@
 namespace scenarioengine
 {
     class ObjectState;
-}
+    class Object;
+}  // namespace scenarioengine
 
 namespace Dat
 {
@@ -47,7 +48,8 @@ namespace Dat
         ELEM_STATE_CHANGE = 27,
         SHAPE_2D_OUTLINE  = 28,
         ENVIRONMENT       = 29,
-        PACKET_ID_SIZE    = 30  // Keep this last
+        LIGHT_STATE       = 30,
+        PACKET_ID_SIZE    = 31  // Keep this last
     };
 
     struct PacketString
@@ -108,6 +110,18 @@ namespace Dat
         double friction_scale_factor        = 1.0;
     };
 
+    struct LightState
+    {
+        int    light_type = -1;
+        bool   active     = false;
+        double r          = -1;
+        double g          = -1;
+        double b          = -1;
+        double e_r        = -1;
+        double e_g        = -1;
+        double e_b        = -1;
+    };
+
     struct PacketGeneric
     {
         PacketHeader      header;
@@ -144,6 +158,7 @@ namespace Dat
         double                  model_x_offset_    = std::nan("");
         std::string             model3d_           = {};
         std::vector<SE_Point2D> outline_2d         = {};
+        std::vector<LightState> light_state_{static_cast<size_t>(scenarioengine::Object::VehicleLightType::VEHICLE_LIGHT_SIZE), LightState{}};
     };
 
     struct ObjectStateCache  // Maybe rename to e.g. SimulationStateCache?
@@ -183,6 +198,7 @@ namespace Dat
         bool IsBoundingBoxEqual(const BoundingBox& bb, const scenarioengine::OSCBoundingBox& osc_bb) const;
         bool IsEnvironmentEqual(const Environment& env, const scenarioengine::OSCEnvironment& environment) const;
         void UpdateEnvironmentCache(const scenarioengine::OSCEnvironment& environment);
+        bool IsLightStateEqual(const LightState& ls, const scenarioengine::Object::VehicleLightStatus& osc_ls) const;
         void ResetCurrentIds();
         void CheckDeletedObjects();
 
