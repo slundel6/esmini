@@ -743,6 +743,19 @@ Vehicle *ScenarioReader::parseOSCVehicle(pugi::xml_node vehicleNode)
         vehicle->SetSourceReference(source_references);
     }
 
+    std::string color = vehicle->properties_.GetValueStr("color");
+    if (!color.empty())
+    {
+        if (color[0] != '#')
+        {
+            LOG_WARN("Property: color shall format invalid, has to be #RRGGBB, skipping");
+        }
+        else
+        {
+            vehicle->SetColor(color);
+        }
+    }
+
     std::string refpoint_x_offset = vehicle->properties_.GetValueStr("refpoint_x_offset");
     if (!refpoint_x_offset.empty())
     {
@@ -983,6 +996,19 @@ Pedestrian *ScenarioReader::parseOSCPedestrian(pugi::xml_node pedestrianNode)
     if (!source_references.empty())
     {
         pedestrian->SetSourceReference(source_references);
+    }
+
+    std::string color = pedestrian->properties_.GetValueStr("color");
+    if (!color.empty())
+    {
+        if (color[0] != '#')
+        {
+            LOG_WARN("Property: color shall format invalid, has to be #RRGGBB, skipping");
+        }
+        else
+        {
+            pedestrian->SetColor(color);
+        }
     }
 
     parameters.RestoreParameterDeclarations();

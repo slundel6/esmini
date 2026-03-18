@@ -98,6 +98,17 @@ const char* esmini_build_version(void)
     return ESMINI_BUILD_VERSION;
 }
 
+Rgb HexToRgb(const std::string& hex)
+{
+    if (hex.size() != 6)
+    {
+        LOG_WARN("Invalid size of hex string, can't convert to decimal, returning 0");
+        return {};
+    }
+    unsigned int hex_val = std::stoul(hex, nullptr, 16);
+    return {((hex_val >> 16) & 0xFF) / 255.0, ((hex_val >> 8) & 0xFF) / 255.0, (hex_val & 0xFF) / 255.0};
+}
+
 id_t GetNewGlobalId()
 {
     id_t returnvalue = global_id;
