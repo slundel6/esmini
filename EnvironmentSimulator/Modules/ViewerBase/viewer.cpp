@@ -2598,6 +2598,33 @@ EntityModel* Viewer::CreateEntityModel(std::string                    modelFilep
     // Put transform node under modelgroup
     modeltx->addChild(modelgroup);
 
+    // Load and attach shadow node alongside the model so it is present even when hide_vehicle_models_ is set
+    if (!shadow_node_)
+    {
+        LoadShadowfile(modelFilepath);
+    }
+
+    if (shadow_node_)
+    {
+        static int elev = 0;  // Avoid shadow node to flicker, put every second on slightly different Z
+        double     dx   = modelBB._max.x() - modelBB._min.x();
+        double     dy   = modelBB._max.y() - modelBB._min.y();
+        double     xc   = (modelBB._max.x() + modelBB._min.x()) / 2;
+        double     yc   = (modelBB._max.y() + modelBB._min.y()) / 2;
+
+        osg::ref_ptr<osg::PositionAttitudeTransform> shadow_tx = new osg::PositionAttitudeTransform;
+        shadow_tx->setName("shadow_tx");
+        shadow_tx->setPosition(osg::Vec3d(xc, yc, 0.05 * elev + modelBB._min.z()));
+        shadow_tx->getOrCreateStateSet()->setMode(GL_NORMALIZE, osg::StateAttribute::ON);
+        shadow_tx->setScale(osg::Vec3d(SHADOW_SCALE * (dx / 2), SHADOW_SCALE * (dy / 2), 1.0));
+        shadow_tx->addChild(shadow_node_);
+
+        shadow_tx->setNodeMask(NodeMask::NODE_MASK_ENTITY_MODEL);
+        modeltx->addChild(shadow_tx);
+
+        elev = (elev + 1) % 3;
+    }
+
     // Draw only wireframe
     osg::PolygonMode* polygonMode = new osg::PolygonMode;
     polygonMode->setMode(osg::PolygonMode::FRONT_AND_BACK, osg::PolygonMode::LINE);
@@ -2786,10 +2813,8 @@ void Viewer::RemoveCar(std::string name)
 
 osg::ref_ptr<osg::Group> Viewer::LoadEntityModel(const char* filename, osg::BoundingBox& bb)
 {
-    static int                                   elev      = 0;  // Avoid shadow node to flicker, put every second on slightly different Z
-    osg::ref_ptr<osg::PositionAttitudeTransform> shadow_tx = 0;
-    osg::ref_ptr<osg::Node>                      node;
-    osg::ref_ptr<osg::Group>                     group = new osg::Group;
+    osg::ref_ptr<osg::Node>  node;
+    osg::ref_ptr<osg::Group> group = new osg::Group;
 
     node = osgDB::readNodeFile(filename);
     if (!node)
@@ -2801,34 +2826,9 @@ osg::ref_ptr<osg::Group> Viewer::LoadEntityModel(const char* filename, osg::Boun
     node->accept(cbv);
     bb = cbv.getBoundingBox();
 
-    double xc, yc, dx, dy;
-    dx = bb._max.x() - bb._min.x();
-    dy = bb._max.y() - bb._min.y();
-    xc = (bb._max.x() + bb._min.x()) / 2;
-    yc = (bb._max.y() + bb._min.y()) / 2;
-
-    if (!shadow_node_)
-    {
-        LoadShadowfile(filename);
-    }
-
     node->setNodeMask(NodeMask::NODE_MASK_ENTITY_MODEL);
     group->addChild(node);
 
-    if (shadow_node_)
-    {
-        shadow_tx = new osg::PositionAttitudeTransform;
-        shadow_tx->setName("shadow_tx");
-        shadow_tx->setPosition(osg::Vec3d(xc, yc, 0.05 * elev + bb._min.z()));
-        shadow_tx->getOrCreateStateSet()->setMode(GL_NORMALIZE, osg::StateAttribute::ON);
-        shadow_tx->setScale(osg::Vec3d(SHADOW_SCALE * (dx / 2), SHADOW_SCALE * (dy / 2), 1.0));
-        shadow_tx->addChild(shadow_node_);
-
-        shadow_tx->setNodeMask(NodeMask::NODE_MASK_ENTITY_MODEL);
-        group->addChild(shadow_tx);
-    }
-
-    elev = (elev + 1) % 3;
     return group;
 }
 
