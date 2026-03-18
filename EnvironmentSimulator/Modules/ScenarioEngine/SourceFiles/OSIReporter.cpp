@@ -1108,6 +1108,15 @@ int OSIReporter::UpdateOSIMovingObject(const Object &obj)
     source_reference->add_identifier(fmt::format("entity_type:{}", entity_type));
     source_reference->add_identifier(fmt::format("entity_name:{}", obj.GetName()));
 
+    // Color
+    if (!obj.GetColorStr().empty())
+    {
+        auto rgb = obj.GetColorRgb();
+        obj_osi_internal.mobj->mutable_color_description()->mutable_rgb()->set_red(rgb.r);
+        obj_osi_internal.mobj->mutable_color_description()->mutable_rgb()->set_green(rgb.g);
+        obj_osi_internal.mobj->mutable_color_description()->mutable_rgb()->set_blue(rgb.b);
+    }
+
     // Set source reference if available
     if (!obj.GetSourceReference().empty())
     {
