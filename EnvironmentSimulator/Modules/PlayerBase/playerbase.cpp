@@ -409,7 +409,8 @@ void ScenarioPlayer::ViewerFrame()
                                                            obj->refpoint_x_offset_,
                                                            obj->model3d_x_offset_,
                                                            &obj->outline_2d_,
-                                                           obj->scaleMode_));
+                                                           obj->scaleMode_,
+                                                           obj->GetColor()));
 
         // Connect callback for setting transparency
         viewer::VisibilityCallback* cb = new viewer::VisibilityCallback(obj, viewer_->entities_.back());
@@ -1117,7 +1118,8 @@ int ScenarioPlayer::InitViewer()
                                                                obj->refpoint_x_offset_,
                                                                obj->model3d_x_offset_,
                                                                &obj->outline_2d_,
-                                                               obj->scaleMode_)) != 0)
+                                                               obj->scaleMode_,
+                                                               obj->GetColor())) != 0)
         {
             CloseViewer();
             return -1;

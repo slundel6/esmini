@@ -100,13 +100,38 @@ const char* esmini_build_version(void)
 
 Rgb HexToDouble(const std::string& hex, bool normalize)
 {
+    Rgb rgb = {1.0, 1.0, 1.0};
     if (hex.size() != 6)
     {
-        return {};
+        return rgb;
     }
-    double       div     = (normalize) ? 255.0 : 1.0;
-    unsigned int hex_val = std::stoul(hex, nullptr, 16);
-    return {((hex_val >> 16) & 0xFF) / div, ((hex_val >> 8) & 0xFF) / div, (hex_val & 0xFF) / div};
+
+    size_t        parsed_chars = 0;
+    unsigned long parsed_value = 0;
+
+    try
+    {
+        parsed_value = std::stoul(hex, &parsed_chars, 16);
+    }
+    catch (...)
+    {
+        return rgb;
+    }
+
+    if (parsed_chars != hex.size())
+    {
+        return rgb;
+    }
+
+    unsigned int hex_val = static_cast<unsigned int>(std::min(parsed_value, 0xFFFFFFul));
+    double       scale   = normalize ? (1.0 / 255.0) : 1.0;
+    double       max_val = normalize ? 1.0 : 255.0;
+
+    rgb = {std::clamp(static_cast<double>((hex_val >> 16) & 0xFF) * scale, 0.0, max_val),
+           std::clamp(static_cast<double>((hex_val >> 8) & 0xFF) * scale, 0.0, max_val),
+           std::clamp(static_cast<double>(hex_val & 0xFF) * scale, 0.0, max_val)};
+
+    return rgb;
 }
 
 id_t GetNewGlobalId()

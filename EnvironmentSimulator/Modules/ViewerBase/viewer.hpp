@@ -637,7 +637,8 @@ namespace viewer
                                                    double                         refpoint_x_offset,
                                                    double                         modlel_x_offset,
                                                    const std::vector<SE_Point2D>* outline,
-                                                   EntityScaleMode                scaleMode = EntityScaleMode::NONE);
+                                                   EntityScaleMode                scaleMode = EntityScaleMode::NONE,
+                                                   std::string                    bb_color  = "");
         int                      AddEntityModel(EntityModel* model);
         void                     RemoveCar(int index);
         void                     RemoveCar(std::string name);

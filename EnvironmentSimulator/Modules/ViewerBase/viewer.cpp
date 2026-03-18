@@ -2356,7 +2356,8 @@ EntityModel* Viewer::CreateEntityModel(std::string                    modelFilep
                                        double                         refpoint_x_offset,
                                        double                         model_x_offset,
                                        const std::vector<SE_Point2D>* outline,
-                                       EntityScaleMode                scaleMode)
+                                       EntityScaleMode                scaleMode,
+                                       std::string                    bb_color)
 {
     // Load 3D model
     osg::ref_ptr<osg::Group>                     group             = new osg::Group;
@@ -2404,24 +2405,36 @@ EntityModel* Viewer::CreateEntityModel(std::string                    modelFilep
     // Make sure we have a 3D model
     // Set color of vehicle based on its index
     const float(*color)[3] = nullptr;
+    float custom_color[3]  = {0.0f, 0.0f, 0.0f};
     float b                = 1.0;  // brighness
     int   index            = entities_.size() % 4;
 
-    if (index == 0)
+    if (bb_color.empty())
     {
-        color = &SE_Color::Color2RBG(SE_Color::Color::LIGHT_GRAY);
-    }
-    else if (index == 1)
-    {
-        color = &SE_Color::Color2RBG(SE_Color::Color::RED);
-    }
-    else if (index == 2)
-    {
-        color = &SE_Color::Color2RBG(SE_Color::Color::BLUE);
+        if (index == 0)
+        {
+            color = &SE_Color::Color2RBG(SE_Color::Color::LIGHT_GRAY);
+        }
+        else if (index == 1)
+        {
+            color = &SE_Color::Color2RBG(SE_Color::Color::RED);
+        }
+        else if (index == 2)
+        {
+            color = &SE_Color::Color2RBG(SE_Color::Color::BLUE);
+        }
+        else
+        {
+            color = &SE_Color::Color2RBG(SE_Color::Color::YELLOW);
+        }
     }
     else
     {
-        color = &SE_Color::Color2RBG(SE_Color::Color::YELLOW);
+        auto rgb        = HexToDouble(bb_color.substr(1), true);
+        custom_color[0] = static_cast<float>(rgb.r);
+        custom_color[1] = static_cast<float>(rgb.g);
+        custom_color[2] = static_cast<float>(rgb.b);
+        color           = &custom_color;
     }
 
     osg::Material* material = new osg::Material();
