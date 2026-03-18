@@ -1056,6 +1056,10 @@ int ScenarioPlayer::InitViewer()
         {
             view_mode = roadgeom::NodeMask::NODE_MASK_ENTITY_MODEL | roadgeom::NodeMask::NODE_MASK_ENTITY_BB;
         }
+        else if (view_mode_string == "hide_models")
+        {
+            viewer_->SetHideVehicleModels(true);
+        }
         viewer_->SetNodeMaskBits(roadgeom::NodeMask::NODE_MASK_ENTITY_MODEL | roadgeom::NodeMask::NODE_MASK_ENTITY_BB, view_mode);
     }
     else if (opt.GetOptionSet("bounding_boxes"))

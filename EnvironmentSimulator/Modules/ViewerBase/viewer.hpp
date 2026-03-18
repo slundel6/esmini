@@ -690,6 +690,10 @@ namespace viewer
         {
             return quit_request_;
         }
+        void SetHideVehicleModels(bool val)
+        {
+            hide_vehicle_models_ = val;
+        }
         void         SetInfoText(const char* text);
         void         SetNodeMaskBits(int bits);
         void         SetNodeMaskBits(int mask, int bits);
@@ -763,6 +767,7 @@ namespace viewer
         std::vector<float>                    fogColor_;
         osg::StateSet*                        axis_indicator_stateset_;
         int                                   axis_indicator_mode_ = 0;
+        bool                                  hide_vehicle_models_;
 
         struct
         {

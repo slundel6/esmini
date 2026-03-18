@@ -1627,6 +1627,7 @@ Viewer::Viewer(roadmanager::OpenDrive* odrManager,
     frictionScaleFactor_          = 1.0;  // default friction scale factor
     defaultClearColorUsed_        = false;
     fogColor_                     = {0.75f, 0.75f, 0.75f};  // Default fog color, average of color_background
+    hide_vehicle_models_          = false;
 #ifdef _USE_IMPLOT
     imguiOverlay_ = nullptr;
 #endif  // _USE_IMPLOT
@@ -2383,7 +2384,7 @@ EntityModel* Viewer::CreateEntityModel(std::string                    modelFilep
     }
 
     // First try to load 3d model
-    if (modelgroup == nullptr && !modelFilepath.empty())
+    if (modelgroup == nullptr && !modelFilepath.empty() && !hide_vehicle_models_)
     {
         modelgroup = LoadEntityModel(modelFilepath.c_str(), modelBB);
         if (modelgroup != nullptr)
@@ -2446,6 +2447,10 @@ EntityModel* Viewer::CreateEntityModel(std::string                    modelFilep
         if (modelFilepath.empty())
         {
             LOG_WARN("No filename specified for model - show as bounding box");
+        }
+        else if (hide_vehicle_models_)
+        {
+            LOG_INFO("Hiding 3D model {}, using colored boundingbox instead", FileNameOf(modelFilepath));
         }
         else
         {
