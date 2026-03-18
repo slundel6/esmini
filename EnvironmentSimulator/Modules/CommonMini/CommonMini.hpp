@@ -399,7 +399,7 @@ const char* esmini_git_rev(void);
 /**
     Convert hex to rgb color 0 -> 1
  */
-Rgb HexToRgb(const std::string& hex);
+Rgb HexToDouble(const std::string& hex, bool normalize);
 
 /**
     Increments a counter to keep ID's unique and global.

@@ -746,9 +746,9 @@ Vehicle *ScenarioReader::parseOSCVehicle(pugi::xml_node vehicleNode)
     std::string color = vehicle->properties_.GetValueStr("color");
     if (!color.empty())
     {
-        if (color[0] != '#')
+        if (color[0] != '#' || color.size() != 7)
         {
-            LOG_WARN("Property: color shall format invalid, has to be #RRGGBB, skipping");
+            LOG_ERROR("Property: color format invalid, shall be #RRGGBB, skipping");
         }
         else
         {
@@ -1001,9 +1001,9 @@ Pedestrian *ScenarioReader::parseOSCPedestrian(pugi::xml_node pedestrianNode)
     std::string color = pedestrian->properties_.GetValueStr("color");
     if (!color.empty())
     {
-        if (color[0] != '#')
+        if (color[0] != '#' || color.size() != 7)
         {
-            LOG_WARN("Property: color shall format invalid, has to be #RRGGBB, skipping");
+            LOG_ERROR("Property: color format invalid, shall be #RRGGBB, skipping");
         }
         else
         {

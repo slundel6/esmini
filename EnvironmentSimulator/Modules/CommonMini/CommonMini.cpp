@@ -98,15 +98,15 @@ const char* esmini_build_version(void)
     return ESMINI_BUILD_VERSION;
 }
 
-Rgb HexToRgb(const std::string& hex)
+Rgb HexToDouble(const std::string& hex, bool normalize)
 {
     if (hex.size() != 6)
     {
-        LOG_WARN("Invalid size of hex string, can't convert to decimal, returning 0");
         return {};
     }
+    double       div     = (normalize) ? 255.0 : 1.0;
     unsigned int hex_val = std::stoul(hex, nullptr, 16);
-    return {((hex_val >> 16) & 0xFF) / 255.0, ((hex_val >> 8) & 0xFF) / 255.0, (hex_val & 0xFF) / 255.0};
+    return {((hex_val >> 16) & 0xFF) / div, ((hex_val >> 8) & 0xFF) / div, (hex_val & 0xFF) / div};
 }
 
 id_t GetNewGlobalId()
