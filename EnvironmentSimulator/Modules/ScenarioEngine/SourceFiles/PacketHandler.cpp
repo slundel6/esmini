@@ -327,6 +327,14 @@ int Dat::DatWriter::WriteObjectStatesToDat(const std::vector<scenarioengine::Obj
             Write(PacketId::SHAPE_2D_OUTLINE, packet_shape);
         }
 
+        if (cache_it->second.bb_color.size() == 0 && obj->GetColor().size() > 0)
+        {
+            cache_it->second.bb_color = obj->GetColor();
+
+            PacketString p_str = {static_cast<unsigned int>(cache_it->second.bb_color.size()), cache_it->second.bb_color};
+            Write(PacketId::BB_COLOR, p_str);
+        }
+
         this->SetObjectIdWritten(false);  // Indicate we need to write object id for next state
     }
 

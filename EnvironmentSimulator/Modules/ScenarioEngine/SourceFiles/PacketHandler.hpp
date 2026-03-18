@@ -47,7 +47,8 @@ namespace Dat
         ELEM_STATE_CHANGE = 27,
         SHAPE_2D_OUTLINE  = 28,
         ENVIRONMENT       = 29,
-        PACKET_ID_SIZE    = 30  // Keep this last
+        BB_COLOR          = 30,
+        PACKET_ID_SIZE    = 31  // Keep this last
     };
 
     struct PacketString
@@ -144,6 +145,7 @@ namespace Dat
         double                  model_x_offset_    = std::nan("");
         std::string             model3d_           = {};
         std::vector<SE_Point2D> outline_2d         = {};
+        std::string             bb_color           = {};
     };
 
     struct ObjectStateCache  // Maybe rename to e.g. SimulationStateCache?

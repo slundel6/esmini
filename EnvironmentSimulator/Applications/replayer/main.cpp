@@ -401,6 +401,12 @@ int ParseEntities(Replay* player)
                     new_sc.outline_2d = timelines.outline_.values.front().second;
                 }
 
+                std::string bb_color = "";
+                if (!timelines.bb_color_.values.empty())
+                {
+                    bb_color = timelines.bb_color_.values.front().second;
+                }
+
                 bool found = false;
                 if ((new_sc.entityModel = viewer_->CreateEntityModel(
                          LocateFile(filename, {CombineDirectoryPathAndFilepath(res_path, "models")}, "Entity 3D model", found),
@@ -412,7 +418,8 @@ int ParseEntities(Replay* player)
                          refpoint_x_offset,
                          model_x_offset,
                          &new_sc.outline_2d,
-                         static_cast<EntityScaleMode>(timelines.scale_mode_.values.front().second))) == 0)
+                         static_cast<EntityScaleMode>(timelines.scale_mode_.values.front().second),
+                         bb_color)) == 0)
                 {
                     return -1;
                 }
@@ -443,6 +450,12 @@ int ParseEntities(Replay* player)
             }
 
 #ifdef _USE_OSG
+            if (sc == nullptr)
+            {
+                LOG_ERROR("Failed to create scenario entity");
+                return -1;
+            }
+
             if (sc->trajPoints == 0)
             {
                 sc->trajPoints = new osg::Vec3Array;
@@ -617,6 +630,7 @@ int main(int argc, char** argv)
     opt.AddOption("version", "Show version and quit");
 #ifdef _USE_OSG
     opt.AddOption("view_ghost_restart", "Ghost restarts will be shown with separate ghosts");
+    opt.AddOption("view_mode", "Entity visualization: \"model\"(default)/\"boundingbox\"/\"both\" toggle key ','", "view_mode");
     opt.AddOption("wireframe", "Global wireframe mode, toggle key 'w'");
 #endif  // _USEOSG
 
@@ -903,6 +917,26 @@ int main(int argc, char** argv)
             }
             viewer_->SetNodeMaskBits(roadgeom::NodeMask::NODE_MASK_INFO | roadgeom::NodeMask::NODE_MASK_INFO_PER_OBJ,
                                      mask * roadgeom::NodeMask::NODE_MASK_INFO);
+        }
+
+        if (opt.GetOptionSet("view_mode"))
+        {
+            // Set visual representation of entities
+            int         view_mode        = roadgeom::NodeMask::NODE_MASK_ENTITY_MODEL;
+            std::string view_mode_string = opt.GetOptionValue("view_mode");
+            if (view_mode_string == "boundingbox")
+            {
+                view_mode = roadgeom::NodeMask::NODE_MASK_ENTITY_BB;
+            }
+            else if (view_mode_string == "both")
+            {
+                view_mode = roadgeom::NodeMask::NODE_MASK_ENTITY_MODEL | roadgeom::NodeMask::NODE_MASK_ENTITY_BB;
+            }
+            else if (view_mode_string == "hide_models")
+            {
+                viewer_->SetHideVehicleModels(true);
+            }
+            viewer_->SetNodeMaskBits(roadgeom::NodeMask::NODE_MASK_ENTITY_MODEL | roadgeom::NodeMask::NODE_MASK_ENTITY_BB, view_mode);
         }
 
         viewer_->RegisterKeyEventCallback(ReportKeyEvent, player_);
