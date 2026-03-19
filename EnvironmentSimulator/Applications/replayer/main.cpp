@@ -624,7 +624,6 @@ int main(int argc, char** argv)
     opt.AddOption("time_scale", "Playback speed scale factor (1.0 == normal)", "factor");
 #ifdef _USE_OSG
     opt.AddOption("tunnel_transparency", "Set level of transparency for generated tunnels [0:1]", "transparency", "0.0");
-    opt.AddOption("view_mode", "Entity visualization: \"model\"(default)/\"boundingbox\"/\"both\"", "view_mode");
     opt.AddOption("use_signs_in_external_model", "When external scenegraph 3D model is loaded, skip creating signs from OpenDRIVE");
 #endif  // _USEOSG
     opt.AddOption("version", "Show version and quit");
@@ -919,28 +918,6 @@ int main(int argc, char** argv)
                                      mask * roadgeom::NodeMask::NODE_MASK_INFO);
         }
 
-        if (opt.GetOptionSet("view_mode"))
-        {
-            // Set visual representation of entities
-            int         view_mode        = roadgeom::NodeMask::NODE_MASK_ENTITY_MODEL;
-            std::string view_mode_string = opt.GetOptionValue("view_mode");
-            if (view_mode_string == "boundingbox")
-            {
-                view_mode = roadgeom::NodeMask::NODE_MASK_ENTITY_BB;
-            }
-            else if (view_mode_string == "both")
-            {
-                view_mode = roadgeom::NodeMask::NODE_MASK_ENTITY_MODEL | roadgeom::NodeMask::NODE_MASK_ENTITY_BB;
-            }
-            else if (view_mode_string == "filled_boundingbox")
-            {
-                view_mode = roadgeom::NodeMask::NODE_MASK_ENTITY_BB_FILLED;
-            }
-            viewer_->SetNodeMaskBits(
-                roadgeom::NodeMask::NODE_MASK_ENTITY_MODEL | roadgeom::NodeMask::NODE_MASK_ENTITY_BB | NODE_MASK_ENTITY_BB_FILLED,
-                view_mode);
-        }
-
         viewer_->RegisterKeyEventCallback(ReportKeyEvent, player_);
         viewer_->SetWindowTitle("esmini - " + FileNameWithoutExtOf(argv_[0]) + " " + (FileNameOf(opt.GetOptionValue("file"))));
 
@@ -996,17 +973,27 @@ int main(int argc, char** argv)
         }
 
         // Set visual representation of entities
-        int         view_mode        = roadgeom::NodeMask::NODE_MASK_ENTITY_MODEL;
-        std::string view_mode_string = opt.GetOptionValue("view_mode");
-        if (view_mode_string == "boundingbox")
+        if (opt.GetOptionSet("view_mode"))
         {
-            view_mode = roadgeom::NodeMask::NODE_MASK_ENTITY_BB;
+            // Set visual representation of entities
+            int         view_mode        = roadgeom::NodeMask::NODE_MASK_ENTITY_MODEL;
+            std::string view_mode_string = opt.GetOptionValue("view_mode");
+            if (view_mode_string == "boundingbox")
+            {
+                view_mode = roadgeom::NodeMask::NODE_MASK_ENTITY_BB;
+            }
+            else if (view_mode_string == "both")
+            {
+                view_mode = roadgeom::NodeMask::NODE_MASK_ENTITY_MODEL | roadgeom::NodeMask::NODE_MASK_ENTITY_BB;
+            }
+            else if (view_mode_string == "filled_boundingbox")
+            {
+                view_mode = roadgeom::NodeMask::NODE_MASK_ENTITY_BB_FILLED;
+            }
+            viewer_->SetNodeMaskBits(
+                roadgeom::NodeMask::NODE_MASK_ENTITY_MODEL | roadgeom::NodeMask::NODE_MASK_ENTITY_BB | NODE_MASK_ENTITY_BB_FILLED,
+                view_mode);
         }
-        else if (view_mode_string == "both")
-        {
-            view_mode = roadgeom::NodeMask::NODE_MASK_ENTITY_MODEL | roadgeom::NodeMask::NODE_MASK_ENTITY_BB;
-        }
-        viewer_->SetNodeMaskBits(roadgeom::NodeMask::NODE_MASK_ENTITY_MODEL | roadgeom::NodeMask::NODE_MASK_ENTITY_BB, view_mode);
 
         if (opt.GetOptionSet("hide_trajectories"))
         {
