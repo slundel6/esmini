@@ -819,7 +819,8 @@ void VisibilityCallback::operator()(osg::Node* sa, osg::NodeVisitor* nv)
     {
         if (object_->visibilityMask_ & scenarioengine::Object::Visibility::GRAPHICS)
         {
-            entity_->txNode_->getChild(0)->setNodeMask(NodeMask::NODE_MASK_ENTITY_MODEL | NodeMask::NODE_MASK_ENTITY_BB);
+            entity_->txNode_->getChild(0)->setNodeMask(NodeMask::NODE_MASK_ENTITY_MODEL | NodeMask::NODE_MASK_ENTITY_BB |
+                                                       NodeMask::NODE_MASK_ENTITY_BB_FILLED);
             if (object_->visibilityMask_ & scenarioengine::Object::Visibility::SENSORS)
             {
                 entity_->SetTransparency(0.0);
@@ -1746,6 +1747,7 @@ Viewer::Viewer(roadmanager::OpenDrive* odrManager,
     ClearNodeMaskBits(NodeMask::NODE_MASK_OBJECT_SENSORS);
     ClearNodeMaskBits(NodeMask::NODE_MASK_ODR_FEATURES);
     ClearNodeMaskBits(NodeMask::NODE_MASK_ENTITY_BB);
+    ClearNodeMaskBits(NodeMask::NODE_MASK_ENTITY_BB_FILLED);
     ClearNodeMaskBits(NodeMask::NODE_MASK_INFO_PER_OBJ);
     SetNodeMaskBits(NodeMask::NODE_MASK_ENTITY_MODEL);
     SetNodeMaskBits(NodeMask::NODE_MASK_INFO);
@@ -2384,7 +2386,7 @@ EntityModel* Viewer::CreateEntityModel(std::string                    modelFilep
     }
 
     // First try to load 3d model
-    if (modelgroup == nullptr && !modelFilepath.empty() && !hide_vehicle_models_)
+    if (modelgroup == nullptr && !modelFilepath.empty())
     {
         modelgroup = LoadEntityModel(modelFilepath.c_str(), modelBB);
         if (modelgroup != nullptr)
@@ -2484,13 +2486,15 @@ EntityModel* Viewer::CreateEntityModel(std::string                    modelFilep
         // and extract the OSG bounding box
         osg::ComputeBoundsVisitor cbv;
         geode->accept(cbv);
-        modelBB    = cbv.getBoundingBox();
-        modelgroup = geode;
+        modelBB            = cbv.getBoundingBox();
+        modelgroup         = geode;
+        use_standin_model_ = true;
     }
 
     // Then create a bounding box visual representation and any specified outline
-    bbGroup                          = new osg::Group;
-    osg::ref_ptr<osg::Geode> bbGeode = new osg::Geode;
+    bbGroup                                = new osg::Group;
+    osg::ref_ptr<osg::Geode> bbGeode       = new osg::Geode;
+    osg::ref_ptr<osg::Geode> bbFilledGeode = new osg::Geode;
 
     // Create 2D shape outline, if specified
     if (outline != nullptr)
@@ -2506,6 +2510,11 @@ EntityModel* Viewer::CreateEntityModel(std::string                    modelFilep
                                         boundingBox->dimensions_.height_ < static_cast<float>(SMALL_NUMBER)))
         {
             bbGeode->addDrawable(
+                new osg::ShapeDrawable(new osg::Box(osg::Vec3(boundingBox->center_.x_, boundingBox->center_.y_, boundingBox->center_.z_),
+                                                    boundingBox->dimensions_.length_,
+                                                    boundingBox->dimensions_.width_,
+                                                    boundingBox->dimensions_.height_)));
+            bbFilledGeode->addDrawable(
                 new osg::ShapeDrawable(new osg::Box(osg::Vec3(boundingBox->center_.x_, boundingBox->center_.y_, boundingBox->center_.z_),
                                                     boundingBox->dimensions_.length_,
                                                     boundingBox->dimensions_.width_,
@@ -2526,6 +2535,11 @@ EntityModel* Viewer::CreateEntityModel(std::string                    modelFilep
 
             // No bounding box specified. Create a bounding box of typical car dimension.
             bbGeode->addDrawable(new osg::ShapeDrawable(
+                new osg::Box(osg::Vec3(static_cast<float>(carStdOrig[0]), static_cast<float>(carStdOrig[1]), static_cast<float>(carStdOrig[2])),
+                             static_cast<float>(carStdDim[0]),
+                             static_cast<float>(carStdDim[1]),
+                             static_cast<float>(carStdDim[2]))));
+            bbFilledGeode->addDrawable(new osg::ShapeDrawable(
                 new osg::Box(osg::Vec3(static_cast<float>(carStdOrig[0]), static_cast<float>(carStdOrig[1]), static_cast<float>(carStdOrig[2])),
                              static_cast<float>(carStdDim[0]),
                              static_cast<float>(carStdDim[1]),
@@ -2554,6 +2568,11 @@ EntityModel* Viewer::CreateEntityModel(std::string                    modelFilep
 
         // Create visual model of object bounding box, copy values from model bounding box
         bbGeode->addDrawable(
+            new osg::ShapeDrawable(new osg::Box(osg::Vec3(modelBB.center().x() - model_x_offset, modelBB.center().y(), modelBB.center().z()),
+                                                modelBB._max.x() - modelBB._min.x(),
+                                                modelBB._max.y() - modelBB._min.y(),
+                                                modelBB._max.z() - modelBB._min.z())));
+        bbFilledGeode->addDrawable(
             new osg::ShapeDrawable(new osg::Box(osg::Vec3(modelBB.center().x() - model_x_offset, modelBB.center().y(), modelBB.center().z()),
                                                 modelBB._max.x() - modelBB._min.x(),
                                                 modelBB._max.y() - modelBB._min.y(),
@@ -2632,11 +2651,20 @@ EntityModel* Viewer::CreateEntityModel(std::string                    modelFilep
     stateset->setAttributeAndModes(polygonMode, osg::StateAttribute::OVERRIDE | osg::StateAttribute::ON);
     stateset->setMode(GL_LIGHTING, osg::StateAttribute::OFF | osg::StateAttribute::OVERRIDE);
     bbGeode->setNodeMask(NodeMask::NODE_MASK_ENTITY_BB);
+    if (!use_standin_model_)
+    {
+        bbFilledGeode->setNodeMask(NodeMask::NODE_MASK_ENTITY_BB_FILLED);
+        bbFilledGeode->getOrCreateStateSet()->setAttribute(material);
+    }
 
     osg::ref_ptr<osg::Geode> center = new osg::Geode;
     center->addDrawable(new osg::ShapeDrawable(new osg::Sphere(osg::Vec3(0.0f, 0.0f, 0.0f), 0.2f)));
     center->setNodeMask(NodeMask::NODE_MASK_ENTITY_BB);
 
+    if (!use_standin_model_)
+    {
+        bbGroup->addChild(bbFilledGeode);
+    }
     bbGroup->addChild(bbGeode);
     bbGroup->addChild(center);
     bbGroup->getOrCreateStateSet()->setAttribute(material);
@@ -3977,13 +4005,37 @@ bool ViewerEventHandler::handle(const osgGA::GUIEventAdapter& ea, osgGA::GUIActi
         {
             if (ea.getEventType() & osgGA::GUIEventAdapter::KEYDOWN)
             {
-                int mask =
-                    viewer_->GetNodeMaskBit(NodeMask::NODE_MASK_ENTITY_MODEL | NodeMask::NODE_MASK_ENTITY_BB) / NodeMask::NODE_MASK_ENTITY_MODEL;
+                const int entity_mask = NodeMask::NODE_MASK_ENTITY_MODEL | NodeMask::NODE_MASK_ENTITY_BB | NodeMask::NODE_MASK_ENTITY_BB_FILLED;
+                int       mask        = viewer_->GetNodeMaskBit(entity_mask);
 
-                // Toggle between modes: 0: none, 1: model only, 2: bounding box, 3. model + Bounding box
-                mask = ((mask + 1) % 4) * NodeMask::NODE_MASK_ENTITY_MODEL;
+                // Toggle order: 0: none, 1: model only, 2: bounding box, 3: model + bounding box, 4: filled bounding box
+                switch (mask)
+                {
+                    case NodeMask::NODE_MASK_NONE:
+                        mask = NodeMask::NODE_MASK_ENTITY_MODEL;
+                        break;
+                    case NodeMask::NODE_MASK_ENTITY_MODEL:
+                        mask = NodeMask::NODE_MASK_ENTITY_BB;
+                        break;
+                    case NodeMask::NODE_MASK_ENTITY_BB:
+                        mask = NodeMask::NODE_MASK_ENTITY_MODEL | NodeMask::NODE_MASK_ENTITY_BB;
+                        break;
+                    case (NodeMask::NODE_MASK_ENTITY_MODEL | NodeMask::NODE_MASK_ENTITY_BB):
+                        if (viewer_->GetUseStandinModel())
+                        {
+                            mask = NodeMask::NODE_MASK_NONE;
+                        }
+                        else
+                        {
+                            mask = NodeMask::NODE_MASK_ENTITY_BB_FILLED;
+                        }
+                        break;
+                    default:
+                        mask = NodeMask::NODE_MASK_NONE;
+                        break;
+                }
 
-                viewer_->SetNodeMaskBits(NodeMask::NODE_MASK_ENTITY_MODEL | NodeMask::NODE_MASK_ENTITY_BB, mask);
+                viewer_->SetNodeMaskBits(entity_mask, mask);
             }
         }
         break;

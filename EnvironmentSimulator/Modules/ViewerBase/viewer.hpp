@@ -736,6 +736,10 @@ namespace viewer
         void   CycleAxisIndicatorMode();
         void   CreateFog(const double range, const double sunIntensityFactor, const double cloudinessFactor);
         void   SetSkyColor(const double sunIntensityFactor, const double fogVisualRangeFactor, const double cloudinessFactor);
+        bool   GetUseStandinModel() const
+        {
+            return use_standin_model_;
+        }
 
     private:
         int        CreateTunnels(roadmanager::OpenDrive* od);
@@ -768,6 +772,7 @@ namespace viewer
         osg::StateSet*                        axis_indicator_stateset_;
         int                                   axis_indicator_mode_ = 0;
         bool                                  hide_vehicle_models_;
+        bool                                  use_standin_model_ = false;
 
         struct
         {
