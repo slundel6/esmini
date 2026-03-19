@@ -1109,10 +1109,9 @@ int OSIReporter::UpdateOSIMovingObject(const Object &obj)
     source_reference->add_identifier(fmt::format("entity_name:{}", obj.GetName()));
 
     // Color
-    std::string color = obj.GetColor();
-    if (!color.empty())
+    if (!obj.GetColorStr().empty())
     {
-        auto rgb = HexToDouble(color.substr(1), true);
+        auto rgb = obj.GetColorRgb();
         obj_osi_internal.mobj->mutable_color_description()->mutable_rgb()->set_red(rgb.r);
         obj_osi_internal.mobj->mutable_color_description()->mutable_rgb()->set_green(rgb.g);
         obj_osi_internal.mobj->mutable_color_description()->mutable_rgb()->set_blue(rgb.b);

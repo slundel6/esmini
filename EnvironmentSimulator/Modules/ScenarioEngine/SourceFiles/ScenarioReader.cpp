@@ -752,7 +752,7 @@ Vehicle *ScenarioReader::parseOSCVehicle(pugi::xml_node vehicleNode)
         }
         else
         {
-            vehicle->SetColor(color);
+            vehicle->SetColor(color.substr(1));
         }
     }
 
@@ -1007,7 +1007,7 @@ Pedestrian *ScenarioReader::parseOSCPedestrian(pugi::xml_node pedestrianNode)
         }
         else
         {
-            pedestrian->SetColor(color);
+            pedestrian->SetColor(color.substr(1));
         }
     }
 
