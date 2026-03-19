@@ -2360,7 +2360,8 @@ EntityModel* Viewer::CreateEntityModel(std::string                    modelFilep
                                        double                         model_x_offset,
                                        const std::vector<SE_Point2D>* outline,
                                        EntityScaleMode                scaleMode,
-                                       std::string                    bb_color)
+                                       std::string                    bb_color,
+                                       bool                           is_trailer)
 {
     // Load 3D model
     osg::ref_ptr<osg::Group>                     group             = new osg::Group;
@@ -2619,7 +2620,16 @@ EntityModel* Viewer::CreateEntityModel(std::string                    modelFilep
     if (shadow_node_)
     {
         static int elev = 0;  // Avoid shadow node to flicker, put every second on slightly different Z
-        LOG_INFO("Elev: {}", elev);
+
+        if (is_trailer)
+        {
+            elev = (elev + 1) % 3;
+        }
+        else
+        {
+            elev = 0;
+        }
+
         float dx = modelBB._max.x() - modelBB._min.x();
         float dy = modelBB._max.y() - modelBB._min.y();
         float xc = (modelBB._max.x() + modelBB._min.x()) / 2.0f;
@@ -2634,8 +2644,6 @@ EntityModel* Viewer::CreateEntityModel(std::string                    modelFilep
 
         shadow_tx->setNodeMask(NodeMask::NODE_MASK_ENTITY_MODEL | NodeMask::NODE_MASK_ENTITY_BB_FILLED);
         modeltx->addChild(shadow_tx);
-
-        elev = (elev + 1) % 3;
     }
 
     // Draw only wireframe

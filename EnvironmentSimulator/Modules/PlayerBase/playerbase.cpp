@@ -410,7 +410,8 @@ void ScenarioPlayer::ViewerFrame()
                                                            obj->model3d_x_offset_,
                                                            &obj->outline_2d_,
                                                            obj->scaleMode_,
-                                                           obj->GetColorStr()));
+                                                           obj->GetColorStr(),
+                                                           obj->TowVehicle() != nullptr));
 
         // Connect callback for setting transparency
         viewer::VisibilityCallback* cb = new viewer::VisibilityCallback(obj, viewer_->entities_.back());
@@ -1056,11 +1057,12 @@ int ScenarioPlayer::InitViewer()
         {
             view_mode = roadgeom::NodeMask::NODE_MASK_ENTITY_MODEL | roadgeom::NodeMask::NODE_MASK_ENTITY_BB;
         }
-        else if (view_mode_string == "hide_models")
+        else if (view_mode_string == "filled_boundingbox")
         {
-            viewer_->SetHideVehicleModels(true);
+            view_mode = roadgeom::NodeMask::NODE_MASK_ENTITY_BB_FILLED;
         }
-        viewer_->SetNodeMaskBits(roadgeom::NodeMask::NODE_MASK_ENTITY_MODEL | roadgeom::NodeMask::NODE_MASK_ENTITY_BB, view_mode);
+        viewer_->SetNodeMaskBits(roadgeom::NodeMask::NODE_MASK_ENTITY_MODEL | roadgeom::NodeMask::NODE_MASK_ENTITY_BB | NODE_MASK_ENTITY_BB_FILLED,
+                                 view_mode);
     }
     else if (opt.GetOptionSet("bounding_boxes"))
     {
@@ -1123,7 +1125,8 @@ int ScenarioPlayer::InitViewer()
                                                                obj->model3d_x_offset_,
                                                                &obj->outline_2d_,
                                                                obj->scaleMode_,
-                                                               obj->GetColorStr())) != 0)
+                                                               obj->GetColorStr(),
+                                                               obj->TowVehicle() != nullptr)) != 0)
         {
             CloseViewer();
             return -1;

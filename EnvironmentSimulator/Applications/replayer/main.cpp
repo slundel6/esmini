@@ -932,11 +932,13 @@ int main(int argc, char** argv)
             {
                 view_mode = roadgeom::NodeMask::NODE_MASK_ENTITY_MODEL | roadgeom::NodeMask::NODE_MASK_ENTITY_BB;
             }
-            else if (view_mode_string == "hide_models")
+            else if (view_mode_string == "filled_boundingbox")
             {
-                viewer_->SetHideVehicleModels(true);
+                view_mode = roadgeom::NodeMask::NODE_MASK_ENTITY_BB_FILLED;
             }
-            viewer_->SetNodeMaskBits(roadgeom::NodeMask::NODE_MASK_ENTITY_MODEL | roadgeom::NodeMask::NODE_MASK_ENTITY_BB, view_mode);
+            viewer_->SetNodeMaskBits(
+                roadgeom::NodeMask::NODE_MASK_ENTITY_MODEL | roadgeom::NodeMask::NODE_MASK_ENTITY_BB | NODE_MASK_ENTITY_BB_FILLED,
+                view_mode);
         }
 
         viewer_->RegisterKeyEventCallback(ReportKeyEvent, player_);
