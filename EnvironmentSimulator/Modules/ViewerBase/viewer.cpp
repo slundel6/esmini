@@ -2373,6 +2373,8 @@ EntityModel* Viewer::CreateEntityModel(std::string                    modelFilep
     std::vector<std::string>                     file_name_candidates;
     double                                       carStdDim[]  = {4.5, 1.8, 1.5};
     double                                       carStdOrig[] = {1.5, 0.0, 0.75};
+    osg::Vec3d                                   bbCenter(carStdOrig[0], carStdOrig[1], carStdOrig[2]);
+    osg::Vec3d                                   bbDimensions(carStdDim[0], carStdDim[1], carStdDim[2]);
     std::string                                  filepath;
 
     // Check if model already loaded
@@ -2509,6 +2511,9 @@ EntityModel* Viewer::CreateEntityModel(std::string                    modelFilep
         if (boundingBox != nullptr && !(boundingBox->dimensions_.length_ < SMALL_NUMBER && boundingBox->dimensions_.width_ < SMALL_NUMBER &&
                                         boundingBox->dimensions_.height_ < SMALL_NUMBER))
         {
+            bbCenter.set(boundingBox->center_.x_, boundingBox->center_.y_, boundingBox->center_.z_);
+            bbDimensions.set(boundingBox->dimensions_.length_, boundingBox->dimensions_.width_, boundingBox->dimensions_.height_);
+
             osg::ref_ptr<osg::Box> sharedBox = new osg::Box(osg::Vec3(static_cast<float>(boundingBox->center_.x_),
                                                                       static_cast<float>(boundingBox->center_.y_),
                                                                       static_cast<float>(boundingBox->center_.z_)),
@@ -2564,10 +2569,11 @@ EntityModel* Viewer::CreateEntityModel(std::string                    modelFilep
         modeltx->setPosition(osg::Vec3(static_cast<float>(model_x_offset - refpoint_x_offset), 0.0f, 0.0f));
 
         // Create visual model of object bounding box, copy values from model bounding box
-        osg::ref_ptr<osg::Box> sharedBox = new osg::Box(osg::Vec3(modelBB.center().x() - model_x_offset, modelBB.center().y(), modelBB.center().z()),
-                                                        modelBB._max.x() - modelBB._min.x(),
-                                                        modelBB._max.y() - modelBB._min.y(),
-                                                        modelBB._max.z() - modelBB._min.z());
+        bbCenter.set(modelBB.center().x() - model_x_offset, modelBB.center().y(), modelBB.center().z());
+        bbDimensions.set(modelBB._max.x() - modelBB._min.x(), modelBB._max.y() - modelBB._min.y(), modelBB._max.z() - modelBB._min.z());
+
+        osg::ref_ptr<osg::Box> sharedBox =
+            new osg::Box(osg::Vec3(bbCenter.x(), bbCenter.y(), bbCenter.z()), bbDimensions.x(), bbDimensions.y(), bbDimensions.z());
 
         bbGeode->addDrawable(new osg::ShapeDrawable(sharedBox.get()));
         bbFilledGeode->addDrawable(new osg::ShapeDrawable(sharedBox.get()));
@@ -2630,10 +2636,11 @@ EntityModel* Viewer::CreateEntityModel(std::string                    modelFilep
             elev = 0;
         }
 
-        float dx = modelBB._max.x() - modelBB._min.x();
-        float dy = modelBB._max.y() - modelBB._min.y();
-        float xc = (modelBB._max.x() + modelBB._min.x()) / 2.0f;
-        float yc = (modelBB._max.y() + modelBB._min.y()) / 2.0f;
+        float  dx     = modelBB._max.x() - modelBB._min.x();
+        float  dy     = modelBB._max.y() - modelBB._min.y();
+        float  xc     = (modelBB._max.x() + modelBB._min.x()) / 2.0f;
+        float  yc     = (modelBB._max.y() + modelBB._min.y()) / 2.0f;
+        double bbMinZ = bbCenter.z() - bbDimensions.z() / 2.0;
 
         osg::ref_ptr<osg::PositionAttitudeTransform> shadow_tx = new osg::PositionAttitudeTransform;
         shadow_tx->setName("shadow_tx");
@@ -2641,9 +2648,17 @@ EntityModel* Viewer::CreateEntityModel(std::string                    modelFilep
         shadow_tx->getOrCreateStateSet()->setMode(GL_NORMALIZE, osg::StateAttribute::ON);
         shadow_tx->setScale(osg::Vec3d(SHADOW_SCALE * (dx / 2.0f), SHADOW_SCALE * (dy / 2.0f), 1.0f));
         shadow_tx->addChild(shadow_node_);
-
-        shadow_tx->setNodeMask(NodeMask::NODE_MASK_ENTITY_MODEL | NodeMask::NODE_MASK_ENTITY_BB_FILLED);
+        shadow_tx->setNodeMask(NodeMask::NODE_MASK_ENTITY_MODEL);
         modeltx->addChild(shadow_tx);
+
+        osg::ref_ptr<osg::PositionAttitudeTransform> shadow_tx2 =
+            static_cast<osg::PositionAttitudeTransform*>(shadow_tx->clone(osg::CopyOp::DEEP_COPY_ALL));
+
+        shadow_tx2->setName("shadow_tx_filled_bb");
+        shadow_tx2->setPosition(osg::Vec3d(bbCenter.x(), bbCenter.y(), 0.05f * elev + bbMinZ));
+        shadow_tx2->setScale(osg::Vec3d(SHADOW_SCALE * (bbDimensions.x() / 2.0), SHADOW_SCALE * (bbDimensions.y() / 2.0), 1.0f));
+        shadow_tx2->setNodeMask(NodeMask::NODE_MASK_ENTITY_BB_FILLED);
+        group->addChild(shadow_tx2);
     }
 
     // Draw only wireframe
