@@ -971,12 +971,12 @@ TEST(GetOSIRoadLaneTest, lane_no_obj)
 
     SE_FlushOSIFile();
     ASSERT_EQ(stat("gt.osi", &fileStatus), 0);
-    EXPECT_EQ(fileStatus.st_size, 86259);  // initial OSI size, including static content
+    EXPECT_EQ(fileStatus.st_size, 86281);  // initial OSI size, including static content
 
     SE_StepDT(0.001);
     SE_FlushOSIFile();
     ASSERT_EQ(stat("gt.osi", &fileStatus), 0);
-    EXPECT_EQ(fileStatus.st_size, 87434);  // slight growth due to only dynamic updates
+    EXPECT_EQ(fileStatus.st_size, 87478);  // slight growth due to only dynamic updates
 
     int road_lane_size;
 
@@ -988,12 +988,12 @@ TEST(GetOSIRoadLaneTest, lane_no_obj)
     SE_StepDT(0.001);  // Step for write another frame to osi file
     SE_FlushOSIFile();
     ASSERT_EQ(stat("gt.osi", &fileStatus), 0);
-    EXPECT_EQ(fileStatus.st_size, 88772);  // slight growth due to only dynamic updates
+    EXPECT_EQ(fileStatus.st_size, 88838);  // slight growth due to only dynamic updates
 
     SE_StepDT(0.001);  // Step for write another frame to osi file
     SE_FlushOSIFile();
     ASSERT_EQ(stat("gt.osi", &fileStatus), 0);
-    EXPECT_EQ(fileStatus.st_size, 90111);  // slight growth due to only dynamic updates
+    EXPECT_EQ(fileStatus.st_size, 90199);  // slight growth due to only dynamic updates
 
     SE_DisableOSIFile();
     SE_Close();
@@ -1532,6 +1532,13 @@ TEST(GroundTruthTests, check_GroundTruth_including_init_state)
     EXPECT_EQ(osi_gt_ptr->moving_object(1).source_reference(0).identifier(3), "model_year:2019");
     EXPECT_EQ(osi_gt_ptr->moving_object(1).source_reference(0).identifier(4), "make:esmini_car");
 
+    // verify color populated from the color property
+    ASSERT_EQ(osi_gt_ptr->moving_object(1).has_color_description(), true);
+    ASSERT_EQ(osi_gt_ptr->moving_object(1).color_description().has_rgb(), true);
+    EXPECT_NEAR(osi_gt_ptr->moving_object(1).color_description().rgb().red(), 0.0, 1E-5);
+    EXPECT_NEAR(osi_gt_ptr->moving_object(1).color_description().rgb().green(), 0.498, 1E-4);
+    EXPECT_NEAR(osi_gt_ptr->moving_object(1).color_description().rgb().blue(), 1.0, 1E-5);
+
     for (int i = 0; i < 3; i++)
     {
         EXPECT_EQ(osi_gt_ptr->moving_object().size(), 2);
@@ -1555,7 +1562,7 @@ TEST(GroundTruthTests, check_GroundTruth_including_init_state)
     SE_DisableOSIFile();
 
     ASSERT_EQ(stat("gt.osi", &fileStatus), 0);
-    EXPECT_EQ(fileStatus.st_size, 9890);
+    EXPECT_EQ(fileStatus.st_size, 9956);
 
     // Read OSI file
     FILE* file = FileOpen("gt.osi", "rb");
@@ -1633,7 +1640,7 @@ TEST(GroundTruthTests, check_frequency_implicit)
     SE_Close();
 
     ASSERT_EQ(stat("gt_implicit.osi", &fileStatus), 0);
-    EXPECT_EQ(fileStatus.st_size, 9881);
+    EXPECT_EQ(fileStatus.st_size, 9947);
 
     // Read OSI file
     FILE* file = FileOpen("gt_implicit.osi", "rb");
@@ -1703,7 +1710,7 @@ TEST(GroundTruthTests, check_frequency_explicit)
     SE_Close();
 
     ASSERT_EQ(stat("gt_explicit.osi", &fileStatus), 0);
-    EXPECT_EQ(fileStatus.st_size, 9881);
+    EXPECT_EQ(fileStatus.st_size, 9947);
 
     // Read OSI file
     FILE* file = FileOpen("gt_explicit.osi", "rb");
@@ -1843,7 +1850,7 @@ TEST(GroundTruthTests, check_update_osi_ground_truth_api)
 
     SE_Close();
     ASSERT_EQ(stat("gt_static_dynamic.osi", &fileStatus), 0);
-    EXPECT_EQ(fileStatus.st_size, 11029);
+    EXPECT_EQ(fileStatus.st_size, 11117);
 }
 
 TEST(GroundTruthTests, check_update_osi_ground_truth_api_and_log)
@@ -1878,7 +1885,7 @@ TEST(GroundTruthTests, check_update_osi_ground_truth_api_and_log)
 
     SE_Close();
     ASSERT_EQ(stat("gt_static_dynamic.osi", &fileStatus), 0);
-    EXPECT_EQ(fileStatus.st_size, 17570);
+    EXPECT_EQ(fileStatus.st_size, 17658);
 }
 
 TEST(GroundTruthTests, check_update_gt_twice_same_frame)
@@ -1896,7 +1903,7 @@ TEST(GroundTruthTests, check_update_gt_twice_same_frame)
 
     SE_Close();
     ASSERT_EQ(stat("gt_static_dynamic.osi", &fileStatus), 0);
-    EXPECT_EQ(fileStatus.st_size, 7603);
+    EXPECT_EQ(fileStatus.st_size, 7625);
 }
 
 TEST(GroundTruthTests, check_update_osi_ground_truth_no_osi_file)

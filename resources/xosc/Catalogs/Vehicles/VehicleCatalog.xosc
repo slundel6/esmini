@@ -142,6 +142,7 @@
                 <Property name="source_reference" value="make:esmini_car"/>
                 <Property name="refpoint_x_offset" value="$RefPointXOffset"/>
                 <Property name="outline" value="$Outline"/>
+                <Property name="color" value="#007FFF"/>
             </Properties>
         </Vehicle>
 
