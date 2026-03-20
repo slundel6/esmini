@@ -636,7 +636,9 @@ int main(int argc, char** argv)
     opt.AddOption("version", "Show version and quit");
 #ifdef _USE_OSG
     opt.AddOption("view_ghost_restart", "Ghost restarts will be shown with separate ghosts");
-    opt.AddOption("view_mode", "Entity visualization: \"model\"(default)/\"boundingbox\"/\"both\" toggle key ','", "view_mode");
+    opt.AddOption("view_mode",
+                  "Entity visualization: \"model\"(default)/\"boundingbox\"/\"both\"/\"filled_boundingbox\" toggle key ','",
+                  "view_mode");
     opt.AddOption("wireframe", "Global wireframe mode, toggle key 'w'");
 #endif  // _USEOSG
 

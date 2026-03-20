@@ -1534,7 +1534,9 @@ int ScenarioPlayer::Init()
     opt.AddOption("use_signs_in_external_model", "When external scenegraph 3D model is loaded, skip creating signs from OpenDRIVE");
     opt.AddOption("vehicle_dynamics", "Visualize simple vehicle dynamics", "<pitch,roll,tension>[,damping]", "2,5,25", false, false);
     opt.AddOption("version", "Show version and quit");
-    opt.AddOption("view_mode", "Entity visualization: \"model\"(default)/\"boundingbox\"/\"both\" toggle key ','", "view_mode");
+    opt.AddOption("view_mode",
+                  "Entity visualization: \"model\"(default)/\"boundingbox\"/\"both\"/\"filled_boundingbox\" toggle key ','",
+                  "view_mode");
     opt.AddOption("wireframe", "Global wireframe mode, toggle key 'w'");
 
     if (int ret = OnRequestShowHelpOrVersion(argc_, argv_, opt); ret > 0)
