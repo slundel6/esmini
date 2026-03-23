@@ -734,6 +734,8 @@ namespace viewer
         void   CreateFog(const double range, const double sunIntensityFactor, const double cloudinessFactor);
         void   SetSkyColor(const double sunIntensityFactor, const double fogVisualRangeFactor, const double cloudinessFactor);
 
+        double ComputeShadowScaleFactor(double modelSize, double shadowModelSize);
+
     private:
         int        CreateTunnels(roadmanager::OpenDrive* od);
         int        InitTraits(osg::ref_ptr<osg::GraphicsContext::Traits> traits,

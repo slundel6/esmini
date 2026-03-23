@@ -1092,6 +1092,19 @@ MiscObject *ScenarioReader::parseOSCMiscObject(pugi::xml_node miscObjectNode)
         miscObject->SetSourceReference(source_references);
     }
 
+    std::string color = miscObject->properties_.GetValueStr("color");
+    if (!color.empty())
+    {
+        if (color[0] != '#' || color.size() != 7)
+        {
+            LOG_ERROR("Property: color format invalid, shall be #RRGGBB, skipping");
+        }
+        else
+        {
+            miscObject->SetColor(color.substr(1));
+        }
+    }
+
     parameters.RestoreParameterDeclarations();
 
     return miscObject;
