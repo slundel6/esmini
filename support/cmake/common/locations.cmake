@@ -89,6 +89,8 @@ macro(set_project_os_specific_paths)
             ${EXTERNALS_OSG_PATH}/mac)
         set(EXTERNALS_OSI_OS_SPECIFIC_PATH
             ${EXTERNALS_OSI_PATH}/mac)
+        set(EXTERNALS_OSI_VCPKG_OS
+            universal-osx)
         set(EXTERNALS_SUMO_OS_SPECIFIC_PATH
             ${EXTERNALS_SUMO_PATH}/mac)
         set(EXTERNALS_GOOGLETEST_OS_SPECIFIC_PATH
@@ -102,6 +104,8 @@ macro(set_project_os_specific_paths)
             ${EXTERNALS_OSG_PATH}/linux)
         set(EXTERNALS_OSI_OS_SPECIFIC_PATH
             ${EXTERNALS_OSI_PATH}/linux)
+        set(EXTERNALS_OSI_VCPKG_OS
+            x64-linux)
         set(EXTERNALS_SUMO_OS_SPECIFIC_PATH
             ${EXTERNALS_SUMO_PATH}/linux)
         set(EXTERNALS_GOOGLETEST_OS_SPECIFIC_PATH
@@ -125,6 +129,8 @@ macro(set_project_os_specific_paths)
                 ${EXTERNALS_OSG_PATH}/v10)
             set(EXTERNALS_OSI_OS_SPECIFIC_PATH
                 ${EXTERNALS_OSI_PATH}/v10)
+            set(EXTERNALS_OSI_VCPKG_OS
+                x64-windows-static-md)
             set(EXTERNALS_SUMO_OS_SPECIFIC_PATH
                 ${EXTERNALS_SUMO_PATH}/v10)
             set(EXTERNALS_GOOGLETEST_OS_SPECIFIC_PATH
@@ -155,36 +161,13 @@ macro(set_project_includes)
     set(EXTERNALS_OSG_INCLUDES
         ${EXTERNALS_OSG_OS_SPECIFIC_PATH}/build/include
         ${EXTERNALS_OSG_OS_SPECIFIC_PATH}/include)
+
+    # Split CI output layout for OSI 3.8 artifacts.
     set(EXTERNALS_OSI_INCLUDES
-        ${EXTERNALS_OSI_OS_SPECIFIC_PATH}/include)
-    if(EXISTS
-       ${EXTERNALS_OSI_OS_SPECIFIC_PATH}/include/osi3)
-        set(EXTERNALS_OSI_INCLUDES
-            ${EXTERNALS_OSI_INCLUDES}
-            ${EXTERNALS_OSI_OS_SPECIFIC_PATH}/include/osi3)
-    endif()
-    if(LINUX
-       AND EXISTS
-           ${EXTERNALS_OSI_OS_SPECIFIC_PATH}/osi-deps/include)
-        # Split CI output layout for OSI 3.8 artifacts.
-        set(EXTERNALS_OSI_INCLUDES
-            ${EXTERNALS_OSI_INCLUDES}
-            ${EXTERNALS_OSI_OS_SPECIFIC_PATH}/osi-deps/include)
-        if(EXISTS
-           ${EXTERNALS_OSI_OS_SPECIFIC_PATH}/osi-deps/include/osi3)
-            set(EXTERNALS_OSI_INCLUDES
-                ${EXTERNALS_OSI_INCLUDES}
-                ${EXTERNALS_OSI_OS_SPECIFIC_PATH}/osi-deps/include/osi3)
-        endif()
-    endif()
-    if(LINUX
-       AND EXISTS
-           ${EXTERNALS_OSI_OS_SPECIFIC_PATH}/build-osi-deps/vcpkg_installed/x64-linux/include)
-        # Add protobuf/abseil include roots from vcpkg output.
-        set(EXTERNALS_OSI_INCLUDES
-            ${EXTERNALS_OSI_INCLUDES}
-            ${EXTERNALS_OSI_OS_SPECIFIC_PATH}/build-osi-deps/vcpkg_installed/x64-linux/include)
-    endif()
+        ${EXTERNALS_OSI_OS_SPECIFIC_PATH}/osi-deps/include # needed?
+        ${EXTERNALS_OSI_OS_SPECIFIC_PATH}/osi-deps/include/osi3
+        ${EXTERNALS_OSI_OS_SPECIFIC_PATH}/build-osi-deps/vcpkg_installed/${EXTERNALS_OSI_VCPKG_OS}/include)
+
     set(EXTERNALS_SUMO_INCLUDES
         ${EXTERNALS_SUMO_OS_SPECIFIC_PATH}/include)
     set(EXTERNALS_GOOGLETEST_INCLUDES
@@ -212,7 +195,7 @@ macro(set_project_library_paths)
     set(EXTERNALS_OSG_PLUGINS_LIBRARY_PATH
         ${EXTERNALS_OSG_LIBRARY_PATH}/osgPlugins-3.6.5)
 
-    if(DYN_PROTOBUF)
+    if(DYN_PROTOBUF) # TODO
         set(EXTERNALS_OSI_LIBRARY_PATH
             ${EXTERNALS_OSI_OS_SPECIFIC_PATH}/lib-dyn)
     else()
