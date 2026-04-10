@@ -180,6 +180,7 @@ if(DOWNLOAD_EXTERNALS)
         "*"
         "${OSG_PACKAGE_URL}")
 
+    # TODO: Get from github instead
     download(
         osi
         ${EXTERNALS_OSI_PATH}

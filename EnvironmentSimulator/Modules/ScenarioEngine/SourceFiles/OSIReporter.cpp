@@ -1073,8 +1073,9 @@ int OSIReporter::UpdateOSIStationaryObject(Object &obj)
     // SOURCE REFERENCE
     auto source_reference = obj_osi_internal.sobj->add_source_reference();
     source_reference->set_type(SOURCE_REF_TYPE_OSC);
-    source_reference->add_identifier(fmt::format("object_type:MiscObject"));
-    source_reference->add_identifier(fmt::format("object_name:{}", obj.name_));
+    source_reference->add_identifier("object_type:MiscObject");
+    std::string obj_name = fmt::format("object_name:{}", obj.name_);
+    source_reference->add_identifier(obj_name);
 
     // Add source reference if available in scenario
     if (!obj.GetSourceReference().empty())
@@ -1422,9 +1423,12 @@ int OSIReporter::UpdateOSIMovingObject(const Object &obj)
     auto source_reference = obj_osi_internal.mobj->add_source_reference();
     source_reference->set_type(SOURCE_REF_TYPE_OSC);
 
-    source_reference->add_identifier(fmt::format("entity_id:{}", obj.GetId()));
-    source_reference->add_identifier(fmt::format("entity_type:{}", entity_type));
-    source_reference->add_identifier(fmt::format("entity_name:{}", obj.GetName()));
+    std::string ent_id   = fmt::format("entity_id:{}", obj.GetId());
+    std::string ent_type = fmt::format("entity_type:{}", entity_type);
+    std::string ent_name = fmt::format("entity_name:{}", obj.GetName());
+    source_reference->add_identifier(ent_id);
+    source_reference->add_identifier(ent_type);
+    source_reference->add_identifier(ent_name);
 
     // Color
     if (!obj.GetColorStr().empty())
@@ -3179,7 +3183,8 @@ int OSIReporter::UpdateStaticTrafficSignals()
                     // SOURCE REFERENCE
                     auto source_reference = trafficSign->add_source_reference();
                     source_reference->set_type(SOURCE_REF_TYPE_ODR);
-                    source_reference->add_identifier(fmt::format("traffic_sign_id:{}", signal->GetId()));
+                    std::string sig_id = fmt::format("traffic_sign_id:{}", signal->GetId());
+                    source_reference->add_identifier(sig_id);
 
                     if (!signal->GetModel3DFullPath().empty())
                     {
@@ -3256,7 +3261,8 @@ void OSIReporter::AddTrafficLightToGt(osi3::GroundTruth *gt, roadmanager::Signal
         // SOURCE REFERENCE
         auto source_reference = trafficLight->add_source_reference();
         source_reference->set_type(SOURCE_REF_TYPE_ODR);
-        source_reference->add_identifier(fmt::format("traffic_light_id:{}", signal->GetId()));
+        std::string tl_id = fmt::format("traffic_light_id:{}", signal->GetId());
+        source_reference->add_identifier(tl_id);
 
         if (!signal->GetModel3DFullPath().empty())
         {
