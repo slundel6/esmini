@@ -157,6 +157,34 @@ macro(set_project_includes)
         ${EXTERNALS_OSG_OS_SPECIFIC_PATH}/include)
     set(EXTERNALS_OSI_INCLUDES
         ${EXTERNALS_OSI_OS_SPECIFIC_PATH}/include)
+    if(EXISTS
+       ${EXTERNALS_OSI_OS_SPECIFIC_PATH}/include/osi3)
+        set(EXTERNALS_OSI_INCLUDES
+            ${EXTERNALS_OSI_INCLUDES}
+            ${EXTERNALS_OSI_OS_SPECIFIC_PATH}/include/osi3)
+    endif()
+    if(LINUX
+       AND EXISTS
+           ${EXTERNALS_OSI_OS_SPECIFIC_PATH}/osi-deps/include)
+        # Split CI output layout for OSI 3.8 artifacts.
+        set(EXTERNALS_OSI_INCLUDES
+            ${EXTERNALS_OSI_INCLUDES}
+            ${EXTERNALS_OSI_OS_SPECIFIC_PATH}/osi-deps/include)
+        if(EXISTS
+           ${EXTERNALS_OSI_OS_SPECIFIC_PATH}/osi-deps/include/osi3)
+            set(EXTERNALS_OSI_INCLUDES
+                ${EXTERNALS_OSI_INCLUDES}
+                ${EXTERNALS_OSI_OS_SPECIFIC_PATH}/osi-deps/include/osi3)
+        endif()
+    endif()
+    if(LINUX
+       AND EXISTS
+           ${EXTERNALS_OSI_OS_SPECIFIC_PATH}/build-osi-deps/vcpkg_installed/x64-linux/include)
+        # Add protobuf/abseil include roots from vcpkg output.
+        set(EXTERNALS_OSI_INCLUDES
+            ${EXTERNALS_OSI_INCLUDES}
+            ${EXTERNALS_OSI_OS_SPECIFIC_PATH}/build-osi-deps/vcpkg_installed/x64-linux/include)
+    endif()
     set(EXTERNALS_SUMO_INCLUDES
         ${EXTERNALS_SUMO_OS_SPECIFIC_PATH}/include)
     set(EXTERNALS_GOOGLETEST_INCLUDES
