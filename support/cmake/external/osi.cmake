@@ -27,33 +27,25 @@ macro(set_osi_libs)
             if(CMAKE_BUILD_TYPE STREQUAL "Debug")
                 set(OSI_LIBRARIES
                     ${EXTERNALS_OSI_LIBRARY_PATH}/debug/libopen_simulation_interface.dylib
-                    -Wl,--start-group
                     ${EXTERNALS_OSI_LIBRARY_PATH}/debug/libprotobufd.dylib
-                    ${OSI_DEBUG_TRANSITIVE_LIBS}
-                    -Wl,--end-group)
+                    ${OSI_DEBUG_TRANSITIVE_LIBS})
             else()
                 set(OSI_LIBRARIES
                     ${EXTERNALS_OSI_LIBRARY_PATH}/release/libopen_simulation_interface.dylib
-                    -Wl,--start-group
                     ${EXTERNALS_OSI_LIBRARY_PATH}/release/libprotobuf.dylib
-                    ${OSI_RELEASE_TRANSITIVE_LIBS}
-                    -Wl,--end-group)
+                    ${OSI_RELEASE_TRANSITIVE_LIBS})
             endif()
         else()
             if(CMAKE_BUILD_TYPE STREQUAL "Debug")
                 set(OSI_LIBRARIES
                     ${EXTERNALS_OSI_LIBRARY_PATH}/debug/libopen_simulation_interface_pic.a
-                    -Wl,--start-group
                     ${EXTERNALS_OSI_LIBRARY_PATH}/debug/libprotobufd.a
-                    ${OSI_DEBUG_TRANSITIVE_LIBS}
-                    -Wl,--end-group)
+                    ${OSI_DEBUG_TRANSITIVE_LIBS})
             else()
                 set(OSI_LIBRARIES
                     ${EXTERNALS_OSI_LIBRARY_PATH}/release/libopen_simulation_interface_pic.a
-                    -Wl,--start-group
                     ${EXTERNALS_OSI_LIBRARY_PATH}/release/libprotobuf.a
-                    ${OSI_RELEASE_TRANSITIVE_LIBS}
-                    -Wl,--end-group)
+                    ${OSI_RELEASE_TRANSITIVE_LIBS})
             endif()
         endif()
 
