@@ -115,16 +115,6 @@ macro(set_osi_libs)
         file(GLOB OSI_RELEASE_TRANSITIVE_LIBS ${FULL_RELEASE_PATTERNS})
         file(GLOB OSI_DEBUG_TRANSITIVE_LIBS ${FULL_DEBUG_PATTERNS})
 
-        # Explicitly suppress these warnings for OSI
-            # Create suppressions if they don't exist
-        if(NOT TARGET osi_suppressions)
-            add_library(osi_suppressions INTERFACE)
-            target_compile_options(osi_suppressions INTERFACE
-                /wd4141 /wd4267 /wd4244 /wd4189 /wd4296 /wd4459)
-        endif()
-
-        target_link_libraries(osi_headers INTERFACE osi_suppressions)
-
         set(OSI_LIBRARIES
             debug     ${EXTERNALS_OSI_LIBRARY_PATH}/debug/open_simulation_interface_pic.lib
             debug     ${EXTERNALS_OSI_LIBRARY_PATH}/debug/libprotobufd.lib
@@ -133,9 +123,21 @@ macro(set_osi_libs)
             optimized ${EXTERNALS_OSI_LIBRARY_PATH}/release/libprotobuf.lib
             optimized ${OSI_RELEASE_TRANSITIVE_LIBS})
 
+        add_library(osi_suppressions INTERFACE)
+        target_compile_options(osi_suppressions INTERFACE
+            /wd4141 # 'inline' used more than once
+            /wd4267 # size_t to int conversion
+            /wd4244 # narrowing conversion
+            /wd4189 # local variable initialized but not referenced
+            /wd4296 # expression is always true/false
+            /wd4459) # declaration hides global
+
+        target_link_libraries(osi_headers INTERFACE osi_suppressions)
         list(APPEND OSI_LIBRARIES osi_suppressions)
+
     endif()
 
-    set(OSI_LIBRARIES osi_headers ${OSI_LIBRARIES})
+    set(EXTERNALS_OSI_INCLUDES osi_headers)
+    list(APPEND OSI_LIBRARIES osi_headers)
 
 endmacro()
