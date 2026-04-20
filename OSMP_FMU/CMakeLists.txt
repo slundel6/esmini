@@ -15,11 +15,19 @@ message("Version: " ${VERSION})
 string(SUBSTRING "${VERSION}" 1 -1 VERSION )
 string(STRIP "${VERSION}" VERSION)
 
+<<<<<<< HEAD
 set(OSMP_VERSION "1.4.0")
 
 include(${CMAKE_CURRENT_SOURCE_DIR}/../support/cmake/common/version_mapping.cmake)
 set_default_dependency_libs_versions()
 set_tags_from_version()
+=======
+set(OSI_VERSION "3.8.0")
+set(OSMP_VERSION "1.4.0")
+
+include(${CMAKE_CURRENT_SOURCE_DIR}/../support/cmake/common/osi_version_mapping.cmake)
+set_osi_release_tag_from_version()
+>>>>>>> c3d0f8fa (Bump OSMP to c++17)
 
 set(STATIC_LINKING TRUE)
 
@@ -104,8 +112,12 @@ configure_file(modelDescription.in.xml modelDescription.xml @ONLY)
 
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}
                     ${CMAKE_CURRENT_SOURCE_DIR}/../EnvironmentSimulator/Libraries/esminiLib
+<<<<<<< HEAD
                     ${CMAKE_CURRENT_SOURCE_DIR}/../externals/implot/${IMPLOT_RELEASE_TAG}/${EXT_INCL_DIR}/include
                     ${CMAKE_CURRENT_SOURCE_DIR}/../externals/osi/${OSI_RELEASE_TAG}/${EXT_INCL_DIR}/include)
+=======
+                    ${CMAKE_CURRENT_SOURCE_DIR}/../externals/implot/${EXT_INCL_DIR}/include)
+>>>>>>> c3d0f8fa (Bump OSMP to c++17)
 
 link_directories(
     ${CMAKE_CURRENT_SOURCE_DIR}
@@ -135,6 +147,10 @@ if(STATIC_LINKING)
     set(EXTERNALS_SUMO_LIBRARY_PATH ${CMAKE_CURRENT_SOURCE_DIR}/../externals/sumo/${EXT_INCL_DIR}/lib)
     set(EXTERNALS_IMPLOT_LIBRARY_PATH ${CMAKE_CURRENT_SOURCE_DIR}/../externals/implot/${IMPLOT_RELEASE_TAG}/${EXT_INCL_DIR}/lib)
     set(EXTERNALS_OSI_LIBRARY_PATH ${CMAKE_CURRENT_SOURCE_DIR}/../externals/osi/${OSI_RELEASE_TAG}/${EXT_INCL_DIR}/lib)
+
+    set(EXTERNALS_OSI_INCLUDES ${CMAKE_CURRENT_SOURCE_DIR}/../externals/osi/${OSI_RELEASE_TAG}/${EXT_INCL_DIR}/include)
+    set(EXTERNALS_OSI_LIBRARY_PATH ${CMAKE_CURRENT_SOURCE_DIR}/../externals/osi/${OSI_RELEASE_TAG}/${EXT_INCL_DIR}/lib)
+    set(EXTERNALS_OSI_DEPS ${CMAKE_CURRENT_SOURCE_DIR}/../externals/osi/${OSI_RELEASE_TAG}/${EXT_INCL_DIR}/deps)
 
     include(${CMAKE_CURRENT_SOURCE_DIR}/../support/cmake/external/osi.cmake)
     set_osi_libs()
