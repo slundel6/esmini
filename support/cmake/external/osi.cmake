@@ -7,9 +7,6 @@ macro(set_osi_libs)
     set(FULL_RELEASE_PATTERNS "")
     set(FULL_DEBUG_PATTERNS "")
 
-    add_library(osi_headers INTERFACE)
-    target_include_directories(osi_headers SYSTEM INTERFACE "${EXTERNALS_OSI_INCLUDES}")
-
     # Search for the dependency libs in static lib folder always
     if(APPLE)
         if(DYN_PROTOBUF)
@@ -135,7 +132,12 @@ macro(set_osi_libs)
 
     endif()
 
-    set(EXTERNALS_OSI_INCLUDES osi_headers)
-    list(APPEND OSI_LIBRARIES osi_headers)
+    if(NOT TARGET osi_headers)
+        add_library(osi_headers INTERFACE)
+    endif()
+
+    target_include_directories(osi_headers SYSTEM INTERFACE "${EXTERNALS_OSI_INCLUDES}")
+
+    set(OSI_LIBRARIES osi_headers ${OSI_LIBRARIES})
 
 endmacro()
