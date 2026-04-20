@@ -66,8 +66,10 @@ function(set_tags_from_version)
         "${OSI_VERSION}"
         OSI_RELEASE_TAG
         OSI_TAG_URL
+        "3.8.0"
+        "v3.8.0_6"
         "3.5.0"
-        "v3.5.0_2")
+        "v3.5.0_6")
 
     _map_version_to_release_tag(
         "implot"
@@ -75,7 +77,7 @@ function(set_tags_from_version)
         IMPLOT_RELEASE_TAG
         IMPLOT_TAG_URL
         "0.16"
-        "v0.16_1")
+        "v0.16_3")
 
     set(OSI_RELEASE_TAG
         "${OSI_RELEASE_TAG}"
