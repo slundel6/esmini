@@ -89,8 +89,6 @@ macro(set_project_os_specific_paths)
             ${EXTERNALS_OSG_PATH}/mac)
         set(EXTERNALS_OSI_OS_SPECIFIC_PATH
             ${EXTERNALS_OSI_PATH}/mac)
-        set(EXTERNALS_OSI_OS_SPECIFIC_VCPKG_PATH
-            ${EXTERNALS_OSI_OS_SPECIFIC_PATH}/build-osi-deps/vcpkg_installed/universal-osx)
         set(EXTERNALS_SUMO_OS_SPECIFIC_PATH
             ${EXTERNALS_SUMO_PATH}/mac)
         set(EXTERNALS_GOOGLETEST_OS_SPECIFIC_PATH
@@ -104,8 +102,6 @@ macro(set_project_os_specific_paths)
             ${EXTERNALS_OSG_PATH}/linux)
         set(EXTERNALS_OSI_OS_SPECIFIC_PATH
             ${EXTERNALS_OSI_PATH}/linux)
-        set(EXTERNALS_OSI_OS_SPECIFIC_VCPKG_PATH
-            ${EXTERNALS_OSI_OS_SPECIFIC_PATH}/build-osi-deps/vcpkg_installed/x64-linux)
         set(EXTERNALS_SUMO_OS_SPECIFIC_PATH
             ${EXTERNALS_SUMO_PATH}/linux)
         set(EXTERNALS_GOOGLETEST_OS_SPECIFIC_PATH
@@ -129,8 +125,6 @@ macro(set_project_os_specific_paths)
                 ${EXTERNALS_OSG_PATH}/v10)
             set(EXTERNALS_OSI_OS_SPECIFIC_PATH
                 ${EXTERNALS_OSI_PATH}/v10)
-            set(EXTERNALS_OSI_OS_SPECIFIC_VCPKG_PATH
-                ${EXTERNALS_OSI_OS_SPECIFIC_PATH}/build-osi-deps/vcpkg_installed/x64-windows-static-md)
             set(EXTERNALS_SUMO_OS_SPECIFIC_PATH
                 ${EXTERNALS_SUMO_PATH}/v10)
             set(EXTERNALS_GOOGLETEST_OS_SPECIFIC_PATH
@@ -164,9 +158,9 @@ macro(set_project_includes)
 
     # Split CI output layout for OSI 3.8 artifacts.
     set(EXTERNALS_OSI_INCLUDES
-        ${EXTERNALS_OSI_OS_SPECIFIC_PATH}/osi-deps/include # needed?
-        ${EXTERNALS_OSI_OS_SPECIFIC_PATH}/osi-deps/include/osi3
-        ${EXTERNALS_OSI_OS_SPECIFIC_VCPKG_PATH}/include)
+        ${EXTERNALS_OSI_OS_SPECIFIC_PATH}/include)
+    set(EXTERNALS_OSI_DEPS
+        ${EXTERNALS_OSI_OS_SPECIFIC_PATH}/deps)
 
     set(EXTERNALS_SUMO_INCLUDES
         ${EXTERNALS_SUMO_OS_SPECIFIC_PATH}/include)
