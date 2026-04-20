@@ -7,6 +7,9 @@ macro(set_osi_libs)
     set(FULL_RELEASE_PATTERNS "")
     set(FULL_DEBUG_PATTERNS "")
 
+    add_library(osi_headers INTERFACE)
+    target_include_directories(osi_headers SYSTEM INTERFACE "${EXTERNALS_OSI_INCLUDES}")
+
     # Search for the dependency libs in static lib folder always
     if(APPLE)
         if(DYN_PROTOBUF)
@@ -127,12 +130,12 @@ macro(set_osi_libs)
         /wd4296 # expression is always true/false
         /wd4459) # declaration hides global
 
-        add_library(osi_headers INTERFACE)
-        target_include_directories(osi_headers SYSTEM INTERFACE "${EXTERNALS_OSI_INCLUDES}")
         target_link_libraries(osi_headers INTERFACE osi_suppressions)
-        set(EXTERNALS_OSI_INCLUDES osi_headers)
         list(APPEND OSI_LIBRARIES osi_suppressions)
 
     endif()
+
+    set(EXTERNALS_OSI_INCLUDES osi_headers)
+    list(APPEND OSI_LIBRARIES osi_headers)
 
 endmacro()
