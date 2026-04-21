@@ -63,15 +63,15 @@ target_include_directories(
            ${EXTERNALS_YAML_INCLUDES}
            ${EXTERNALS_FMT_INCLUDES})
 
-if(USE_OSI)
-    target_link_libraries(
-        ${TARGET}
-        PRIVATE ${OSI_LIBRARIES})
-endif()
-
 target_link_libraries(
     ${TARGET}
     PRIVATE project_options)
+
+if(USE_OSI)
+    target_link_libraries(
+        ${TARGET}
+        PUBLIC ${OSI_LIBRARIES})
+endif()
 
 target_link_libraries(${TARGET})
 
