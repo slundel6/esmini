@@ -136,11 +136,9 @@ macro(set_osi_libs)
         endif()
 
         target_link_libraries(osi_headers INTERFACE osi_suppressions)
-        list(APPEND OSI_LIBRARIES osi_suppressions)
 
     endif()
 
-    set(EXTERNALS_OSI_INCLUDES osi_headers)
-    list(APPEND OSI_LIBRARIES osi_headers)
+    set(OSI_LIBRARIES osi_headers ${OSI_LIBRARIES})
 
 endmacro()
