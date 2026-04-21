@@ -64,7 +64,7 @@ target_link_libraries(
 if(USE_OSI)
     target_link_libraries(
         ${TARGET}
-        PRIVATE ${OSI_LIBRARIES})
+        PUBLIC ${OSI_LIBRARIES})
 endif()
 
 target_include_directories(
