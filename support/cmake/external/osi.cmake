@@ -12,7 +12,6 @@ macro(set_osi_libs)
     endif()
 
     target_include_directories(osi_headers SYSTEM INTERFACE "${EXTERNALS_OSI_INCLUDES}")
-    target_compile_features(osi_headers INTERFACE cxx_std_17)
 
     # Search for the dependency libs in static lib folder always
     if(APPLE)
@@ -146,6 +145,6 @@ macro(set_osi_libs)
 
     endif()
 
-    set(OSI_LIBRARIES osi_headers ${OSI_LIBRARIES})
+    set(OSI_LIBRARIES osi_headers ${OSI_LIBRARIES} CACHE INTERNAL "OSI Libs" FORCE)
 
 endmacro()

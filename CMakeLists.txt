@@ -14,13 +14,6 @@ project(
     DESCRIPTION "esmini"
     LANGUAGES C
               CXX)
-if(MSVC)
-    # This ignores the unreachable code warning for EVERY file in esmini
-    add_compile_options(
-        /wd4702
-        /external:templates-
-        /external:W0)
-endif()
 
 set(ENABLE_COLORED_DIAGNOSTICS
     OFF
