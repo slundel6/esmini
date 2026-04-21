@@ -127,13 +127,19 @@ macro(set_osi_libs)
         if(NOT TARGET osi_suppressions)
             add_library(osi_suppressions INTERFACE)
             target_compile_options(osi_suppressions INTERFACE
+                /external:W0
+                /external:templates-
                 /wd4141 # 'inline' used more than once
                 /wd4267 # size_t to int conversion
                 /wd4244 # narrowing conversion
                 /wd4189 # local variable initialized but not referenced
                 /wd4296 # expression is always true/false
                 /wd4459
-                /wd4702) # declaration hides global
+                /wd4702
+                /wd4706 # Assignment within conditional
+                /wd4388 # Signed/unsigned mismatch
+                /wd4389 # Signed/unsigned mismatch
+                /wd4061) # Enumerator in switch not explicitly handled
         endif()
 
         target_link_libraries(osi_headers INTERFACE osi_suppressions)
