@@ -70,7 +70,6 @@ function(
         /w14906 # string literal cast to 'LPWSTR'
         /w14928 # illegal copy-initialization; more than one user-defined conversion has been implicitly applied
         /wd4996 # accept getenv()
-        /wd4296 # suppress known false positives from Abseil/Protobuf template instantiations
         /permissive- # standards conformance mode for MSVC compiler.
     )
 

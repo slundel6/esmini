@@ -105,7 +105,7 @@ macro(set_osi_libs)
         endif()
 
     elseif(MSVC)
-        set(LIB_SEARCH_PATTERNS "absl_*.lib" "utf8*.lib" "lz4*.lib" "zstd*.lib")
+        set(LIB_SEARCH_PATTERNS "abs*.lib" "utf8*.lib" "lz4*.lib" "zstd*.lib")
 
         foreach(PATTERN ${LIB_SEARCH_PATTERNS})
             list(APPEND FULL_RELEASE_PATTERNS "${EXTERNALS_OSI_DEPS}/release/${PATTERN}")
@@ -126,19 +126,11 @@ macro(set_osi_libs)
         if(NOT TARGET osi_suppressions)
             add_library(osi_suppressions INTERFACE)
             target_compile_options(osi_suppressions INTERFACE
-                /external:W0
-                /external:templates-
                 /wd4141 # 'inline' used more than once
                 /wd4267 # size_t to int conversion
                 /wd4244 # narrowing conversion
                 /wd4189 # local variable initialized but not referenced
-                /wd4296 # expression is always true/false
-                /wd4459
-                /wd4702
-                /wd4706 # Assignment within conditional
-                /wd4388 # Signed/unsigned mismatch
-                /wd4389 # Signed/unsigned mismatch
-                /wd4061) # Enumerator in switch not explicitly handled
+                /wd4296) # expression is always true/false
         endif()
 
         target_link_libraries(osi_headers INTERFACE osi_suppressions)
