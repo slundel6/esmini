@@ -115,13 +115,25 @@ macro(set_osi_libs)
         file(GLOB OSI_RELEASE_TRANSITIVE_LIBS ${FULL_RELEASE_PATTERNS})
         file(GLOB OSI_DEBUG_TRANSITIVE_LIBS ${FULL_DEBUG_PATTERNS})
 
+        # The 'debug'/'optimized' keywords apply to a single following item only.
+        # Tag each transitive lib explicitly to avoid mixing Debug/Release runtimes.
+        set(OSI_DEBUG_LINK_ITEMS "")
+        foreach(_lib ${OSI_DEBUG_TRANSITIVE_LIBS})
+            list(APPEND OSI_DEBUG_LINK_ITEMS debug ${_lib})
+        endforeach()
+
+        set(OSI_RELEASE_LINK_ITEMS "")
+        foreach(_lib ${OSI_RELEASE_TRANSITIVE_LIBS})
+            list(APPEND OSI_RELEASE_LINK_ITEMS optimized ${_lib})
+        endforeach()
+
         set(OSI_LIBRARIES
             debug     ${EXTERNALS_OSI_LIBRARY_PATH}/debug/open_simulation_interface_pic.lib
             debug     ${EXTERNALS_OSI_LIBRARY_PATH}/debug/libprotobufd.lib
-            debug     ${OSI_DEBUG_TRANSITIVE_LIBS}
+            ${OSI_DEBUG_LINK_ITEMS}
             optimized ${EXTERNALS_OSI_LIBRARY_PATH}/release/open_simulation_interface_pic.lib
             optimized ${EXTERNALS_OSI_LIBRARY_PATH}/release/libprotobuf.lib
-            optimized ${OSI_RELEASE_TRANSITIVE_LIBS})
+            ${OSI_RELEASE_LINK_ITEMS})
 
         if(NOT TARGET osi_suppressions)
             add_library(osi_suppressions INTERFACE)
