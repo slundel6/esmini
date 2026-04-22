@@ -105,7 +105,7 @@ macro(set_osi_libs)
         endif()
 
     elseif(MSVC)
-        set(LIB_SEARCH_PATTERNS "abs*.lib" "utf8*.lib" "lz4*.lib" "zstd*.lib")
+        set(LIB_SEARCH_PATTERNS "absl_*.lib" "utf8*.lib" "lz4*.lib" "zstd*.lib")
 
         foreach(PATTERN ${LIB_SEARCH_PATTERNS})
             list(APPEND FULL_RELEASE_PATTERNS "${EXTERNALS_OSI_DEPS}/release/${PATTERN}")
