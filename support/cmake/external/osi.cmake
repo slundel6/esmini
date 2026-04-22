@@ -13,6 +13,17 @@ macro(set_osi_libs)
 
     target_include_directories(osi_headers SYSTEM INTERFACE "${EXTERNALS_OSI_INCLUDES}")
 
+    # Some OSI package layouts keep transitive dependency headers under deps include folders.
+    # Add them when present so include-only targets can still compile on MSVC.
+    foreach(_osi_dep_inc
+            "${EXTERNALS_OSI_DEPS}/include"
+            "${EXTERNALS_OSI_DEPS}/release/include"
+            "${EXTERNALS_OSI_DEPS}/debug/include")
+        if(EXISTS "${_osi_dep_inc}")
+            target_include_directories(osi_headers SYSTEM INTERFACE "${_osi_dep_inc}")
+        endif()
+    endforeach()
+
     # Search for the dependency libs in static lib folder always
     if(APPLE)
         if(DYN_PROTOBUF)
@@ -145,6 +156,13 @@ macro(set_osi_libs)
 
     endif()
 
-    set(OSI_LIBRARIES osi_headers ${OSI_LIBRARIES} CACHE INTERNAL "OSI Libs" FORCE)
+    # Wrap resolved OSI libraries so consumers get one stable target and MSVC suppressions propagate.
+    if(NOT TARGET osi_with_warnings)
+        add_library(osi_with_warnings INTERFACE)
+    endif()
+
+    target_link_libraries(osi_with_warnings INTERFACE osi_headers ${OSI_LIBRARIES})
+
+    set(OSI_LIBRARIES osi_with_warnings CACHE INTERNAL "OSI Libs" FORCE)
 
 endmacro()
