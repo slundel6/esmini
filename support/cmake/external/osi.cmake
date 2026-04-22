@@ -145,6 +145,12 @@ macro(set_osi_libs)
 
     endif()
 
+    if(NOT TARGET osi_with_warnings)
+        add_library(osi_with_warnings INTERFACE)
+    endif()
+
+    target_link_libraries(osi_with_warnings INTERFACE osi_headers ${OSI_LIBRARIES})
+
     set(OSI_LIBRARIES osi_with_warnings CACHE INTERNAL "OSI Libs" FORCE)
 
 endmacro()
