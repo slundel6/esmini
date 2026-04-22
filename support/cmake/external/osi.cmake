@@ -130,7 +130,8 @@ macro(set_osi_libs)
                 /wd4267 # size_t to int conversion
                 /wd4244 # narrowing conversion
                 /wd4189 # local variable initialized but not referenced
-                /wd4296) # expression is always true/false
+                /wd4296 # expression is always true/false
+                /wd4459) # declaration hides global declaration
         endif()
 
         target_link_libraries(osi_headers INTERFACE osi_suppressions)
