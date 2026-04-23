@@ -49,12 +49,12 @@ macro(set_osi_libs)
         else()
             if(CMAKE_BUILD_TYPE STREQUAL "Debug")
                 set(OSI_LIBRARIES
-                    ${EXTERNALS_OSI_LIBRARY_PATH}/debug/libopen_simulation_interface.a
+                    ${EXTERNALS_OSI_LIBRARY_PATH}/debug/libopen_simulation_interface_pic.a
                     ${EXTERNALS_OSI_LIBRARY_PATH}/debug/libprotobufd.a
                     ${OSI_DEBUG_TRANSITIVE_LIBS})
             else()
                 set(OSI_LIBRARIES
-                    ${EXTERNALS_OSI_LIBRARY_PATH}/release/libopen_simulation_interface.a
+                    ${EXTERNALS_OSI_LIBRARY_PATH}/release/libopen_simulation_interface_pic.a
                     ${EXTERNALS_OSI_LIBRARY_PATH}/release/libprotobuf.a
                     ${OSI_RELEASE_TRANSITIVE_LIBS})
             endif()
@@ -127,9 +127,9 @@ macro(set_osi_libs)
 
         # 1. Add core OSI and Protobuf with explicit config mapping
         list(APPEND OSI_LIBRARIES
-            $<$<CONFIG:Debug>:${EXTERNALS_OSI_LIBRARY_PATH}/debug/open_simulation_interface_pic.lib>
+            $<$<CONFIG:Debug>:${EXTERNALS_OSI_LIBRARY_PATH}/debug/open_simulation_interface.lib>
             $<$<CONFIG:Debug>:${EXTERNALS_OSI_LIBRARY_PATH}/debug/libprotobufd.lib>
-            $<$<CONFIG:Release,RelWithDebInfo,MinSizeRel>:${EXTERNALS_OSI_LIBRARY_PATH}/release/open_simulation_interface_pic.lib>
+            $<$<CONFIG:Release,RelWithDebInfo,MinSizeRel>:${EXTERNALS_OSI_LIBRARY_PATH}/release/open_simulation_interface.lib>
             $<$<CONFIG:Release,RelWithDebInfo,MinSizeRel>:${EXTERNALS_OSI_LIBRARY_PATH}/release/libprotobuf.lib>
         )
 
