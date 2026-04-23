@@ -107,6 +107,9 @@ macro(set_osi_libs)
     elseif(MSVC)
         set(LIB_SEARCH_PATTERNS "absl_*.lib" "utf8*.lib" "lz4*.lib" "zstd*.lib")
 
+        set(FULL_RELEASE_PATTERNS "")
+        set(FULL_DEBUG_PATTERNS "")
+
         foreach(PATTERN ${LIB_SEARCH_PATTERNS})
             list(APPEND FULL_RELEASE_PATTERNS "${EXTERNALS_OSI_DEPS}/release/${PATTERN}")
             list(APPEND FULL_DEBUG_PATTERNS "${EXTERNALS_OSI_DEPS}/debug/${PATTERN}")
@@ -115,25 +118,24 @@ macro(set_osi_libs)
         file(GLOB OSI_RELEASE_TRANSITIVE_LIBS ${FULL_RELEASE_PATTERNS})
         file(GLOB OSI_DEBUG_TRANSITIVE_LIBS ${FULL_DEBUG_PATTERNS})
 
-        # The 'debug'/'optimized' keywords apply to a single following item only.
-        # Tag each transitive lib explicitly to avoid mixing Debug/Release runtimes.
-        set(OSI_DEBUG_LINK_ITEMS "")
-        foreach(_lib ${OSI_DEBUG_TRANSITIVE_LIBS})
-            list(APPEND OSI_DEBUG_LINK_ITEMS debug ${_lib})
-        endforeach()
-
-        set(OSI_RELEASE_LINK_ITEMS "")
-        foreach(_lib ${OSI_RELEASE_TRANSITIVE_LIBS})
-            list(APPEND OSI_RELEASE_LINK_ITEMS optimized ${_lib})
-        endforeach()
-
         set(OSI_LIBRARIES
             debug     ${EXTERNALS_OSI_LIBRARY_PATH}/debug/open_simulation_interface_pic.lib
             debug     ${EXTERNALS_OSI_LIBRARY_PATH}/debug/libprotobufd.lib
-            ${OSI_DEBUG_LINK_ITEMS}
             optimized ${EXTERNALS_OSI_LIBRARY_PATH}/release/open_simulation_interface_pic.lib
-            optimized ${EXTERNALS_OSI_LIBRARY_PATH}/release/libprotobuf.lib
-            ${OSI_RELEASE_LINK_ITEMS})
+            optimized ${EXTERNALS_OSI_LIBRARY_PATH}/release/libprotobuf.lib)
+
+        # The 'debug'/'optimized' keywords apply to a single following item only.
+        # Tag each transitive lib explicitly to avoid mixing Debug/Release runtimes.
+        foreach(_lib ${OSI_DEBUG_TRANSITIVE_LIBS})
+            list(APPEND OSI_LIBRARIES debug ${_lib})
+        endforeach()
+
+        foreach(_lib ${OSI_RELEASE_TRANSITIVE_LIBS})
+            list(APPEND OSI_LIBRARIES optimized ${_lib})
+        endforeach()
+
+        # Diagnostics
+        message(STATUS "OSI DEBUG LIBS: ${OSI_DEBUG_TRANSITIVE_LIBS}")
 
         if(NOT TARGET osi_suppressions)
             add_library(osi_suppressions INTERFACE)
@@ -142,8 +144,7 @@ macro(set_osi_libs)
                 /wd4267 # size_t to int conversion
                 /wd4244 # narrowing conversion
                 /wd4189 # local variable initialized but not referenced
-                /wd4296 # expression is always true/false
-                /wd4459) # declaration hides global declaration
+                /wd4296) # expression is always true/false
         endif()
 
         target_link_libraries(osi_headers INTERFACE osi_suppressions)
