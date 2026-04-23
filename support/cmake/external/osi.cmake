@@ -38,23 +38,23 @@ macro(set_osi_libs)
             if(CMAKE_BUILD_TYPE STREQUAL "Debug")
                 set(OSI_LIBRARIES
                     ${EXTERNALS_OSI_LIBRARY_PATH}/debug/libopen_simulation_interface.dylib
-                    ${EXTERNALS_OSI_LIBRARY_PATH}/debug/libprotobufd.dylib
+                    ${EXTERNALS_OSI_LIBRARY_PATH}/debug/libprotobufd.a
                     ${OSI_DEBUG_TRANSITIVE_LIBS})
             else()
                 set(OSI_LIBRARIES
                     ${EXTERNALS_OSI_LIBRARY_PATH}/release/libopen_simulation_interface.dylib
-                    ${EXTERNALS_OSI_LIBRARY_PATH}/release/libprotobuf.dylib
+                    ${EXTERNALS_OSI_LIBRARY_PATH}/release/libprotobuf.a
                     ${OSI_RELEASE_TRANSITIVE_LIBS})
             endif()
         else()
             if(CMAKE_BUILD_TYPE STREQUAL "Debug")
                 set(OSI_LIBRARIES
-                    ${EXTERNALS_OSI_LIBRARY_PATH}/debug/libopen_simulation_interface_pic.a
+                    ${EXTERNALS_OSI_LIBRARY_PATH}/debug/libopen_simulation_interface.a
                     ${EXTERNALS_OSI_LIBRARY_PATH}/debug/libprotobufd.a
                     ${OSI_DEBUG_TRANSITIVE_LIBS})
             else()
                 set(OSI_LIBRARIES
-                    ${EXTERNALS_OSI_LIBRARY_PATH}/release/libopen_simulation_interface_pic.a
+                    ${EXTERNALS_OSI_LIBRARY_PATH}/release/libopen_simulation_interface.a
                     ${EXTERNALS_OSI_LIBRARY_PATH}/release/libprotobuf.a
                     ${OSI_RELEASE_TRANSITIVE_LIBS})
             endif()
@@ -80,14 +80,14 @@ macro(set_osi_libs)
                 set(OSI_LIBRARIES
                     ${EXTERNALS_OSI_LIBRARY_PATH}/debug/libopen_simulation_interface.so
                     -Wl,--start-group
-                    ${EXTERNALS_OSI_LIBRARY_PATH}/debug/libprotobufd.so
+                    ${EXTERNALS_OSI_LIBRARY_PATH}/debug/libprotobufd.a
                     ${OSI_DEBUG_TRANSITIVE_LIBS}
                     -Wl,--end-group)
             else()
                 set(OSI_LIBRARIES
                     ${EXTERNALS_OSI_LIBRARY_PATH}/release/libopen_simulation_interface.so
                     -Wl,--start-group
-                    ${EXTERNALS_OSI_LIBRARY_PATH}/release/libprotobuf.so
+                    ${EXTERNALS_OSI_LIBRARY_PATH}/release/libprotobuf.a
                     ${OSI_RELEASE_TRANSITIVE_LIBS}
                     -Wl,--end-group)
             endif()
