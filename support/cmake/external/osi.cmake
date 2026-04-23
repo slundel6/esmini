@@ -118,20 +118,24 @@ macro(set_osi_libs)
         file(GLOB OSI_RELEASE_TRANSITIVE_LIBS ${FULL_RELEASE_PATTERNS})
         file(GLOB OSI_DEBUG_TRANSITIVE_LIBS ${FULL_DEBUG_PATTERNS})
 
-        set(OSI_LIBRARIES
-            debug     ${EXTERNALS_OSI_LIBRARY_PATH}/debug/open_simulation_interface_pic.lib
-            debug     ${EXTERNALS_OSI_LIBRARY_PATH}/debug/libprotobufd.lib
-            optimized ${EXTERNALS_OSI_LIBRARY_PATH}/release/open_simulation_interface_pic.lib
-            optimized ${EXTERNALS_OSI_LIBRARY_PATH}/release/libprotobuf.lib)
+        set(OSI_LIBRARIES "")
 
-        # The 'debug'/'optimized' keywords apply to a single following item only.
-        # Tag each transitive lib explicitly to avoid mixing Debug/Release runtimes.
+        # 1. Add core OSI and Protobuf with explicit config mapping
+        list(APPEND OSI_LIBRARIES
+            $<$<CONFIG:Debug>:${EXTERNALS_OSI_LIBRARY_PATH}/debug/open_simulation_interface_pic.lib>
+            $<$<CONFIG:Debug>:${EXTERNALS_OSI_LIBRARY_PATH}/debug/libprotobufd.lib>
+            $<$<CONFIG:Release,RelWithDebInfo,MinSizeRel>:${EXTERNALS_OSI_LIBRARY_PATH}/release/open_simulation_interface_pic.lib>
+            $<$<CONFIG:Release,RelWithDebInfo,MinSizeRel>:${EXTERNALS_OSI_LIBRARY_PATH}/release/libprotobuf.lib>
+        )
+
+        # 2. Add all transitive libs for Debug
         foreach(_lib ${OSI_DEBUG_TRANSITIVE_LIBS})
-            list(APPEND OSI_LIBRARIES debug ${_lib})
+            list(APPEND OSI_LIBRARIES $<$<CONFIG:Debug>:${_lib}>)
         endforeach()
 
+        # 3. Add all transitive libs for Release
         foreach(_lib ${OSI_RELEASE_TRANSITIVE_LIBS})
-            list(APPEND OSI_LIBRARIES optimized ${_lib})
+            list(APPEND OSI_LIBRARIES $<$<CONFIG:Release,RelWithDebInfo,MinSizeRel>:${_lib}>)
         endforeach()
 
         # Diagnostics
