@@ -127,10 +127,6 @@ jobs:
         shell: pwsh
         run: cmake . -DESMINI_BUILD_VERSION=${{ env.BUILD_NUMBER }} -B build ${{ env.ESMINI_CHECKS }} -DCMAKE_BUILD_TYPE:STRING=${{ matrix.configuration }} -G "Visual Studio 17 2022" -T v142 -A x64
 
-      # - name: Debugging with tmate
-      #   if: runner.os == 'Windows'
-      #   uses: mxschmitt/action-tmate@v3
-
       - name: CMake Configure - Linux
         if: runner.os == 'Linux'
         shell: pwsh
