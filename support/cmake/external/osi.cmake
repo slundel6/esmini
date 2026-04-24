@@ -13,11 +13,6 @@ macro(set_osi_libs)
 
     target_include_directories(osi_headers SYSTEM INTERFACE "${EXTERNALS_OSI_INCLUDES}")
 
-    # if(MSVC)
-    # # This tells the OSI headers to expect a DLL rather than a static library
-    #     target_compile_definitions(osi_headers INTERFACE OSI_DLL)
-    # endif()
-
     # Search for the dependency libs in static lib folder always
     if(APPLE)
         if(DYN_PROTOBUF)
@@ -125,26 +120,22 @@ macro(set_osi_libs)
 
         set(OSI_LIBRARIES "")
 
-        # 1. Add core OSI and Protobuf with explicit config mapping
         list(APPEND OSI_LIBRARIES
-            $<$<CONFIG:Debug>:${EXTERNALS_OSI_LIBRARY_PATH}/debug/open_simulation_interface_static.lib>
-            $<$<CONFIG:Debug>:${EXTERNALS_OSI_LIBRARY_PATH}/debug/libprotobufd.lib>
-            $<$<CONFIG:Release,RelWithDebInfo,MinSizeRel>:${EXTERNALS_OSI_LIBRARY_PATH}/release/open_simulation_interface_static.lib>
-            $<$<CONFIG:Release,RelWithDebInfo,MinSizeRel>:${EXTERNALS_OSI_LIBRARY_PATH}/release/libprotobuf.lib>
+            debug ${EXTERNALS_OSI_LIBRARY_PATH}/debug/open_simulation_interface_static.lib
+            debug ${EXTERNALS_OSI_LIBRARY_PATH}/debug/libprotobufd.lib
+            optimized ${EXTERNALS_OSI_LIBRARY_PATH}/release/open_simulation_interface_static.lib
+            optimized ${EXTERNALS_OSI_LIBRARY_PATH}/release/libprotobuf.lib
         )
 
         # 2. Add all transitive libs for Debug
         foreach(_lib ${OSI_DEBUG_TRANSITIVE_LIBS})
-            list(APPEND OSI_LIBRARIES $<$<CONFIG:Debug>:${_lib}>)
+            list(APPEND OSI_LIBRARIES debug ${_lib})
         endforeach()
 
         # 3. Add all transitive libs for Release
         foreach(_lib ${OSI_RELEASE_TRANSITIVE_LIBS})
-            list(APPEND OSI_LIBRARIES $<$<CONFIG:Release,RelWithDebInfo,MinSizeRel>:${_lib}>)
+            list(APPEND OSI_LIBRARIES optimized ${_lib})
         endforeach()
-
-        # Diagnostics
-        message(STATUS "OSI DEBUG LIBS: ${OSI_DEBUG_TRANSITIVE_LIBS}")
 
         if(NOT TARGET osi_suppressions)
             add_library(osi_suppressions INTERFACE)
@@ -165,8 +156,10 @@ macro(set_osi_libs)
         add_library(osi_with_warnings INTERFACE)
     endif()
 
+    # Make sure osi_headers is before osi_libraries
     target_link_libraries(osi_with_warnings INTERFACE osi_headers ${OSI_LIBRARIES})
 
+    # set osi_libraries with our secured order of links
     set(OSI_LIBRARIES osi_with_warnings CACHE INTERNAL "OSI Libs" FORCE)
 
 endmacro()
