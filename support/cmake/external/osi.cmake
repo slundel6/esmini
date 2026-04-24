@@ -13,10 +13,10 @@ macro(set_osi_libs)
 
     target_include_directories(osi_headers SYSTEM INTERFACE "${EXTERNALS_OSI_INCLUDES}")
 
-    if(MSVC)
-    # This tells the OSI headers to expect a DLL rather than a static library
-        target_compile_definitions(osi_headers INTERFACE OSI_DLL)
-    endif()
+    # if(MSVC)
+    # # This tells the OSI headers to expect a DLL rather than a static library
+    #     target_compile_definitions(osi_headers INTERFACE OSI_DLL)
+    # endif()
 
     # Search for the dependency libs in static lib folder always
     if(APPLE)
@@ -127,9 +127,9 @@ macro(set_osi_libs)
 
         # 1. Add core OSI and Protobuf with explicit config mapping
         list(APPEND OSI_LIBRARIES
-            $<$<CONFIG:Debug>:${EXTERNALS_OSI_LIBRARY_PATH}/debug/open_simulation_interface.lib>
+            $<$<CONFIG:Debug>:${EXTERNALS_OSI_LIBRARY_PATH}/debug/open_simulation_interface_static.lib>
             $<$<CONFIG:Debug>:${EXTERNALS_OSI_LIBRARY_PATH}/debug/libprotobufd.lib>
-            $<$<CONFIG:Release,RelWithDebInfo,MinSizeRel>:${EXTERNALS_OSI_LIBRARY_PATH}/release/open_simulation_interface.lib>
+            $<$<CONFIG:Release,RelWithDebInfo,MinSizeRel>:${EXTERNALS_OSI_LIBRARY_PATH}/release/open_simulation_interface_static.lib>
             $<$<CONFIG:Release,RelWithDebInfo,MinSizeRel>:${EXTERNALS_OSI_LIBRARY_PATH}/release/libprotobuf.lib>
         )
 
