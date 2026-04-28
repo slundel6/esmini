@@ -201,9 +201,6 @@ jobs:
       - uses: ./.github/actions/upload_esmini_artifacts
         if: matrix.configuration == 'Release'
 
-      - name: Debugging with tmate
-        uses: mxschmitt/action-tmate@v3
-
   test-no-external-modules:
     needs: [lint]
 

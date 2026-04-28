@@ -15,11 +15,7 @@ macro(set_osi_libs)
 
     # Search for the dependency libs in static lib folder always
     if(APPLE)
-        if(DYN_PROTOBUF)
-            set(LIB_SEARCH_PATTERNS "libabsl_*.a" "libutf8*.dylib" "liblz4*.dylib" "libzstd*.dylib")
-        else()
-            set(LIB_SEARCH_PATTERNS "libabsl_*.a" "libutf8*.a" "liblz4*.a" "libzstd*.a")
-        endif()
+        set(LIB_SEARCH_PATTERNS "libabsl_*.a" "libutf8*.a" "liblz4*.a" "libzstd*.a")
 
         foreach(PATTERN ${LIB_SEARCH_PATTERNS})
             list(APPEND FULL_RELEASE_PATTERNS "${EXTERNALS_OSI_DEPS}/release/${PATTERN}")
@@ -33,12 +29,12 @@ macro(set_osi_libs)
             if(CMAKE_BUILD_TYPE STREQUAL "Debug")
                 set(OSI_LIBRARIES
                     ${EXTERNALS_OSI_LIBRARY_PATH}/debug/libopen_simulation_interface.dylib
-                    ${EXTERNALS_OSI_LIBRARY_PATH}/debug/libprotobufd.a
+                    ${EXTERNALS_OSI_LIBRARY_PATH}/debug/libprotobufd.dylib
                     ${OSI_DEBUG_TRANSITIVE_LIBS})
             else()
                 set(OSI_LIBRARIES
                     ${EXTERNALS_OSI_LIBRARY_PATH}/release/libopen_simulation_interface.dylib
-                    ${EXTERNALS_OSI_LIBRARY_PATH}/release/libprotobuf.a
+                    ${EXTERNALS_OSI_LIBRARY_PATH}/release/libprotobuf.dylib
                     ${OSI_RELEASE_TRANSITIVE_LIBS})
             endif()
         else()
@@ -56,11 +52,7 @@ macro(set_osi_libs)
         endif()
 
     elseif(LINUX)
-        if(DYN_PROTOBUF)
-            set(LIB_SEARCH_PATTERNS "libabsl_*.a" "libutf8*.so" "liblz4*.so" "libzstd*.so")
-        else()
-            set(LIB_SEARCH_PATTERNS "libabsl_*.a" "libutf8*.a" "liblz4*.a" "libzstd*.a")
-        endif()
+        set(LIB_SEARCH_PATTERNS "libabsl_*.a" "libutf8*.a" "liblz4*.a" "libzstd*.a")
 
         foreach(PATTERN ${LIB_SEARCH_PATTERNS})
             list(APPEND FULL_RELEASE_PATTERNS "${EXTERNALS_OSI_DEPS}/release/${PATTERN}")
@@ -75,14 +67,14 @@ macro(set_osi_libs)
                 set(OSI_LIBRARIES
                     ${EXTERNALS_OSI_LIBRARY_PATH}/debug/libopen_simulation_interface.so
                     -Wl,--start-group
-                    ${EXTERNALS_OSI_LIBRARY_PATH}/debug/libprotobufd.a
+                    ${EXTERNALS_OSI_LIBRARY_PATH}/debug/libprotobufd.so
                     ${OSI_DEBUG_TRANSITIVE_LIBS}
                     -Wl,--end-group)
             else()
                 set(OSI_LIBRARIES
                     ${EXTERNALS_OSI_LIBRARY_PATH}/release/libopen_simulation_interface.so
                     -Wl,--start-group
-                    ${EXTERNALS_OSI_LIBRARY_PATH}/release/libprotobuf.a
+                    ${EXTERNALS_OSI_LIBRARY_PATH}/release/libprotobuf.so
                     ${OSI_RELEASE_TRANSITIVE_LIBS}
                     -Wl,--end-group)
             endif()
@@ -121,9 +113,9 @@ macro(set_osi_libs)
         set(OSI_LIBRARIES "")
 
         list(APPEND OSI_LIBRARIES
-            debug ${EXTERNALS_OSI_LIBRARY_PATH}/debug/open_simulation_interface_static.lib
+            debug ${EXTERNALS_OSI_LIBRARY_PATH}/debug/open_simulation_interface_pic.lib
             debug ${EXTERNALS_OSI_LIBRARY_PATH}/debug/libprotobufd.lib
-            optimized ${EXTERNALS_OSI_LIBRARY_PATH}/release/open_simulation_interface_static.lib
+            optimized ${EXTERNALS_OSI_LIBRARY_PATH}/release/open_simulation_interface_pic.lib
             optimized ${EXTERNALS_OSI_LIBRARY_PATH}/release/libprotobuf.lib
         )
 
