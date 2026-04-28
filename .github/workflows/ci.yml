@@ -192,7 +192,6 @@ jobs:
           configuration: ${{ matrix.configuration }}
 
       - name: Debugging with tmate
-        if: ${{ failure() && env.USE_TMATE == 'true' }}
         uses: mxschmitt/action-tmate@v3
 
       - name: Run Tests - Windows
