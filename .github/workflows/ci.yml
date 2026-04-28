@@ -22,7 +22,7 @@ on:
 env:
   ESMINI_SLIM_TEST: -D USE_OSG=OFF -D USE_SUMO=OFF -D USE_OSI=OFF -D USE_GTEST=ON -D USE_IMPLOT=OFF
   ESMINI_CHECKS: -D ENABLE_WARNINGS_AS_ERRORS=ON -D ENABLE_INCLUDE_WHAT_YOU_USE=ON
-  USE_TMATE: false
+  USE_TMATE: true
 
 jobs:
   lint:
@@ -91,9 +91,10 @@ jobs:
 
     strategy:
       matrix:
-        # os: [ubuntu-22.04, macos-14]
-        os: [ubuntu-22.04, macos-14, windows-2022]
-        configuration: [Debug, Release]
+        os: [windows-2022]
+        # os: [ubuntu-22.04, macos-14, windows-2022]
+        configuration: [Debug]
+        # configuration: [Debug, Release]
 
     runs-on: ${{ matrix.os }}
 
@@ -190,6 +191,10 @@ jobs:
         with:
           configuration: ${{ matrix.configuration }}
 
+      - name: Debugging with tmate
+        if: ${{ failure() && env.USE_TMATE == 'true' }}
+        uses: mxschmitt/action-tmate@v3
+
       - name: Run Tests - Windows
         if: runner.os == 'Windows'
         env:
@@ -284,9 +289,9 @@ jobs:
         shell: bash
         run: ./scripts/run_tests.sh -b ${{ matrix.configuration }} -p -w
 
-      - name: Debugging with tmate
-        if: ${{ failure() && env.USE_TMATE == 'true' }}
-        uses: mxschmitt/action-tmate@v3
+      # - name: Debugging with tmate
+      #   if: ${{ failure() && env.USE_TMATE == 'true' }}
+      #   uses: mxschmitt/action-tmate@v3
 
   release:
     needs: [test, test-no-external-modules]
