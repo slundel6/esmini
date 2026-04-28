@@ -249,7 +249,7 @@ jobs:
       - name: CMake Configure - Windows
         if: runner.os == 'Windows'
         shell: pwsh
-        run: cmake . -DESMINI_BUILD_VERSION=${{ env.BUILD_NUMBER }} -B build -DCMAKE_BUILD_TYPE:STRING=${{ matrix.configuration }} -G "Visual Studio 17 2022" -T v142 -A x64 ${{ env.ESMINI_SLIM_TEST }}
+        run: cmake . -DESMINI_BUILD_VERSION=${{ env.BUILD_NUMBER }} -B build -DCMAKE_BUILD_TYPE:STRING=${{ matrix.configuration }} -DDYN_PROTOBUF=ON -G "Visual Studio 17 2022" -T v142 -A x64 ${{ env.ESMINI_SLIM_TEST }}
 
       - name: CMake Configure - Linux
         if: runner.os == 'Linux'
