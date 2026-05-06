@@ -121,7 +121,7 @@ if [[ "$OSTYPE" =~ ^(msys|cygwin|linux-gnu) ]]; then
     fi
 fi
 
-if [[ "$OSTYPE" == "msys" ]] && [[ "$add_wrapper_test" == true ]]; then
+if [[ ("$OSTYPE" == "msys" || "$OSTYPE" == "cygwin") && "$add_wrapper_test" == true ]]; then
     echo $'\n'Run C# esminiLib wrapper test:
     cd ${workingDir}/bin
     if ! ${ESMINI_CS_WRAPPER_FOLDER}/${ESMINI_CS_WRAPPER_BINARY}; then
