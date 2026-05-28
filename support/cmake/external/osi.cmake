@@ -97,7 +97,11 @@ macro(set_osi_libs)
         endif()
 
     elseif(MSVC)
-        set(LIB_SEARCH_PATTERNS "absl_*.lib" "utf8*.lib" "lz4*.lib" "zstd*.lib")
+        if(DYN_PROTOBUF)
+            set(LIB_SEARCH_PATTERNS "utf8*.lib" "lz4*.lib" "zstd*.lib")
+        else()
+            set(LIB_SEARCH_PATTERNS "absl_*.lib" "utf8*.lib" "lz4*.lib" "zstd*.lib")
+        endif()
 
         set(FULL_RELEASE_PATTERNS "")
         set(FULL_DEBUG_PATTERNS "")
@@ -118,6 +122,14 @@ macro(set_osi_libs)
             optimized ${EXTERNALS_OSI_LIBRARY_PATH}/release/open_simulation_interface_pic.lib
             optimized ${EXTERNALS_OSI_LIBRARY_PATH}/release/libprotobuf.lib
         )
+
+        # Explicitly link to abseil as well, as protobuf links to abseil dynamically by default
+        if(DYN_PROTOBUF)
+            list(APPEND OSI_LIBRARIES
+                debug ${EXTERNALS_OSI_LIBRARY_PATH}/debug/abseil_dll.lib
+                optimized ${EXTERNALS_OSI_LIBRARY_PATH}/release/abseil_dll.lib
+            )
+        endif()
 
         # 2. Add all transitive libs for Debug
         foreach(_lib ${OSI_DEBUG_TRANSITIVE_LIBS})
