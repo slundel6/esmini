@@ -109,6 +109,23 @@ set(FMT_INSTALL
     CACHE BOOL
           "If FMT should be installed")
 
+if(${USE_OSI})
+    set(OSI_VERSION
+        "3.8.0"
+        CACHE STRING
+              "osi version")
+
+    set(SUPPORTED_OSI_VERSIONS
+        "3.5.0"
+        "3.8.0")
+    if(NOT
+       OSI_VERSION
+       IN_LIST
+       SUPPORTED_OSI_VERSIONS)
+        message(FATAL_ERROR "Invalid OSI version '${OSI_VERSION}', 3.5.0 and 3.8.0 supported")
+    endif()
+endif()
+
 # ############################### Setting project rules ############################################################
 
 set_property(
