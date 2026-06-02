@@ -67,16 +67,6 @@ macro(set_osi_libs)
             endif()
         endif()
 
-        if(NOT TARGET osi_with_warnings)
-            add_library(osi_with_warnings INTERFACE)
-        endif()
-
-        # Make sure osi_headers is before osi_libraries
-        target_link_libraries(osi_with_warnings INTERFACE osi_headers ${OSI_LIBRARIES})
-
-        # set osi_libraries with our secured order of links
-        set(OSI_LIBRARIES osi_with_warnings CACHE INTERNAL "OSI Libs" FORCE)
-
     elseif(${OSI_VERSION} STREQUAL "3.8.0")
         set(FULL_RELEASE_PATTERNS "")
         set(FULL_DEBUG_PATTERNS "")
@@ -231,15 +221,17 @@ macro(set_osi_libs)
 
         endif()
 
-        if(NOT TARGET osi_with_warnings)
-            add_library(osi_with_warnings INTERFACE)
-        endif()
-
-        # Make sure osi_headers is before osi_libraries
-        target_link_libraries(osi_with_warnings INTERFACE osi_headers ${OSI_LIBRARIES})
-
-        # set osi_libraries with our secured order of links
-        set(OSI_LIBRARIES osi_with_warnings CACHE INTERNAL "OSI Libs" FORCE)
     endif()
+
+    if(NOT TARGET osi_with_warnings)
+        add_library(osi_with_warnings INTERFACE)
+    endif()
+
+    # Make sure osi_headers is before osi_libraries
+    target_link_libraries(osi_with_warnings INTERFACE osi_headers ${OSI_LIBRARIES})
+
+    # set osi_libraries with our secured order of links
+    set(OSI_LIBRARIES osi_with_warnings CACHE INTERNAL "OSI Libs" FORCE)
+
 
 endmacro()
