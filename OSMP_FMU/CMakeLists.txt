@@ -15,8 +15,8 @@ message("Version: " ${VERSION})
 string(SUBSTRING "${VERSION}" 1 -1 VERSION )
 string(STRIP "${VERSION}" VERSION)
 
-set(OSIVERSION "3.5.0")
-set(OSMPVERSION "1.4.0")
+set(OSI_VERSION "3.8.0")
+set(OSMP_VERSION "1.4.0")
 
 set(STATIC_LINKING TRUE)
 
@@ -131,9 +131,9 @@ if(STATIC_LINKING)
     set(EXTERNALS_SUMO_LIBRARY_PATH ${CMAKE_CURRENT_SOURCE_DIR}/../externals/sumo/${EXT_INCL_DIR}/lib)
     set(EXTERNALS_IMPLOT_LIBRARY_PATH ${CMAKE_CURRENT_SOURCE_DIR}/../externals/implot/${EXT_INCL_DIR}/lib)
 
-    set(EXTERNALS_OSI_INCLUDES ${CMAKE_CURRENT_SOURCE_DIR}/../externals/osi/${EXT_INCL_DIR}/include)
-    set(EXTERNALS_OSI_LIBRARY_PATH ${CMAKE_CURRENT_SOURCE_DIR}/../externals/osi/${EXT_INCL_DIR}/lib)
-    set(EXTERNALS_OSI_DEPS ${CMAKE_CURRENT_SOURCE_DIR}/../externals/osi/${EXT_INCL_DIR}/deps)
+    set(EXTERNALS_OSI_INCLUDES ${CMAKE_CURRENT_SOURCE_DIR}/../externals/osi/${OSI_VERSION}/${EXT_INCL_DIR}/include)
+    set(EXTERNALS_OSI_LIBRARY_PATH ${CMAKE_CURRENT_SOURCE_DIR}/../externals/osi/${OSI_VERSION}/${EXT_INCL_DIR}/lib)
+    set(EXTERNALS_OSI_DEPS ${CMAKE_CURRENT_SOURCE_DIR}/../externals/osi/${OSI_VERSION}/${EXT_INCL_DIR}/deps)
 
     include(${CMAKE_CURRENT_SOURCE_DIR}/../support/cmake/external/osi.cmake)
     set_osi_libs()
