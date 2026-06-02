@@ -13,14 +13,14 @@ macro(set_cloud_links)
             https://esmini.asuscomm.com/AICLOUD972108097/libs/osg_mac_macos_13_png.7z;
             https://www.dropbox.com/scl/fi/pp8ml2pdhi26eyrzy91ki/osg_mac_macos_13_png.7z?rlkey=ejzcxlbrvl8gnqwih4ywsgfdo&st=i7799iip&dl=1)
         if(DEFINED OSI_VERSION)
-            if(${OSI_VERSION} STREQUAL "3.5.0")
+            if(OSI_VERSION STREQUAL "3.5.0")
                 set(OSI_PACKAGE_URL
                     https://drive.usercontent.google.com/download?id=1iyOT2Y-bqWzxbE5Aeov0WAx2-ic8uFd3&export=download&authuser=0&confirm=t;
                     https://esmini.asuscomm.com/AICLOUD972108097/libs/osi_3_5_0_mac_clang_1500_v2.7z;
                     https://www.dropbox.com/scl/fi/5eu2fs2sqosfy3x528x5v/osi_3_5_0_mac_clang_1500_v2.7z?dl=1)
-            elseif(${OSI_VERSION} STREQUAL "3.8.0")
+            elseif(NOT OSI_RELEASE_TAG STREQUAL "")
                 set(OSI_PACKAGE_URL
-                    https://github.com/slundel6/esmini-sandbox/releases/download/osi-3.8.0-15/osi-3.8.0-macos-15.tar.xz)
+                    https://github.com/slundel6/esmini-sandbox/releases/download/${OSI_RELEASE_TAG}/osi-macos.tar.xz)
             endif()
         endif()
         set(SUMO_PACKAGE_URL
@@ -37,14 +37,14 @@ macro(set_cloud_links)
             https://esmini.asuscomm.com/AICLOUD972108097/libs/osg_linux_glibc_2_31_gcc_7_5_0_png.7z;
             https://www.dropbox.com/scl/fi/0rq5uefqmvfva0idsgsjn/osg_linux_glibc_2_31_gcc_7_5_0_png.7z?rlkey=x549jvuwljvgvivhbi0ysj5xj&st=qz6fll2i&dl=1)
         if(DEFINED OSI_VERSION)
-            if(${OSI_VERSION} STREQUAL "3.5.0")
+            if(OSI_VERSION STREQUAL "3.5.0")
                 set(OSI_PACKAGE_URL
                     https://drive.usercontent.google.com/download?id=1TFCwpS6oxqeUx2DSTvMv6f9Ra6CDtYn0&export=download&authuser=0&confirm=t;
                     https://esmini.asuscomm.com/AICLOUD972108097/libs/osi_3_5_0_linux_glibc_2_31_gcc_7_5_0_v2.7z;
                     https://www.dropbox.com/scl/fi/h7luumzqokzp7g0ynqmsm/osi_3_5_0_linux_glibc_2_31_gcc_7_5_0_v2.7z?dl=1)
-            elseif(${OSI_VERSION} STREQUAL "3.8.0")
+            elseif(NOT OSI_RELEASE_TAG STREQUAL "")
                 set(OSI_PACKAGE_URL
-                    https://github.com/slundel6/esmini-sandbox/releases/download/osi-3.8.0-15/osi-3.8.0-linux-15.tar.xz)
+                    https://github.com/slundel6/esmini-sandbox/releases/download/${OSI_RELEASE_TAG}/osi-linux.tar.xz)
             endif()
         endif()
         set(SUMO_PACKAGE_URL
@@ -65,14 +65,14 @@ macro(set_cloud_links)
             https://esmini.asuscomm.com/AICLOUD972108097/libs/osg_win_vs17_v142_png.7z;
             https://www.dropbox.com/scl/fi/074keimjeec2e6jul3rn0/osg_win_vs17_v142_png.7z?rlkey=1631xcd9muiaayasf5p8jh597&st=ufyogs3h&dl=1)
         if(DEFINED OSI_VERSION)
-            if(${OSI_VERSION} STREQUAL "3.5.0")
+            if(OSI_VERSION STREQUAL "3.5.0")
                 set(OSI_PACKAGE_URL
                     https://drive.usercontent.google.com/download?id=1F0kxK7feXVfZihesDYU0UjaxoHMQ4BI5&export=download&authuser=0&confirm=t;
                     https://esmini.asuscomm.com/AICLOUD972108097/libs/osi_3_5_0_win_vs_sdk_142_v2.7z;
                     https://www.dropbox.com/scl/fi/vcvz85nwqbta8zimkfku2/osi_3_5_0_win_vs_sdk_142_v2.7z?dl=1)
-            elseif(${OSI_VERSION} STREQUAL "3.8.0")
+            elseif(NOT OSI_RELEASE_TAG STREQUAL "")
                 set(OSI_PACKAGE_URL
-                    https://github.com/slundel6/esmini-sandbox/releases/download/osi-3.8.0-15/osi-3.8.0-windows-15.tar.xz)
+                    https://github.com/slundel6/esmini-sandbox/releases/download/${OSI_RELEASE_TAG}/osi-windows.tar.xz)
             endif()
         endif()
         set(SUMO_PACKAGE_URL

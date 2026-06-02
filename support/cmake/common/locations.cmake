@@ -64,7 +64,7 @@ macro(set_project_external_paths)
     set(EXTERNALS_OSG_PATH
         ${EXTERNALS_PATH}/osg)
     set(EXTERNALS_OSI_PATH
-        ${EXTERNALS_PATH}/osi/${OSI_VERSION})
+        ${EXTERNALS_PATH}/osi/${OSI_RELEASE_TAG})
     set(EXTERNALS_PUGIXML_PATH
         ${EXTERNALS_PATH}/pugixml)
     set(EXTERNALS_SUMO_PATH
@@ -159,7 +159,8 @@ macro(set_project_includes)
     set(EXTERNALS_OSI_INCLUDES
         ${EXTERNALS_OSI_OS_SPECIFIC_PATH}/include)
 
-    if(NOT ${OSI_VERSION} STREQUAL "3.5.0")
+    if(DEFINED OSI_VERSION
+       AND NOT OSI_VERSION STREQUAL "3.5.0")
         set(EXTERNALS_OSI_DEPS
             ${EXTERNALS_OSI_OS_SPECIFIC_PATH}/deps)
     endif()
