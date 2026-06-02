@@ -20,7 +20,7 @@ macro(set_cloud_links)
                     https://www.dropbox.com/scl/fi/5eu2fs2sqosfy3x528x5v/osi_3_5_0_mac_clang_1500_v2.7z?dl=1)
             elseif(${OSI_VERSION} STREQUAL "3.8.0")
                 set(OSI_PACKAGE_URL
-                    https://github.com/slundel6/esmini-sandbox/releases/download/osi-3.8.0-14/osi-3.8.0-macos-14.tar.xz)
+                    https://github.com/slundel6/esmini-sandbox/releases/download/osi-3.8.0-15/osi-3.8.0-macos-15.tar.xz)
             endif()
         endif()
         set(SUMO_PACKAGE_URL
@@ -44,7 +44,7 @@ macro(set_cloud_links)
                     https://www.dropbox.com/scl/fi/h7luumzqokzp7g0ynqmsm/osi_3_5_0_linux_glibc_2_31_gcc_7_5_0_v2.7z?dl=1)
             elseif(${OSI_VERSION} STREQUAL "3.8.0")
                 set(OSI_PACKAGE_URL
-                    https://github.com/slundel6/esmini-sandbox/releases/download/osi-3.8.0-14/osi-3.8.0-linux-14.tar.xz)
+                    https://github.com/slundel6/esmini-sandbox/releases/download/osi-3.8.0-15/osi-3.8.0-linux-15.tar.xz)
             endif()
         endif()
         set(SUMO_PACKAGE_URL
@@ -72,7 +72,7 @@ macro(set_cloud_links)
                     https://www.dropbox.com/scl/fi/vcvz85nwqbta8zimkfku2/osi_3_5_0_win_vs_sdk_142_v2.7z?dl=1)
             elseif(${OSI_VERSION} STREQUAL "3.8.0")
                 set(OSI_PACKAGE_URL
-                    https://github.com/slundel6/esmini-sandbox/releases/download/osi-3.8.0-14/osi-3.8.0-windows-14.tar.xz)
+                    https://github.com/slundel6/esmini-sandbox/releases/download/osi-3.8.0-15/osi-3.8.0-windows-15.tar.xz)
             endif()
         endif()
         set(SUMO_PACKAGE_URL
