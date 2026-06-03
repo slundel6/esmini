@@ -124,6 +124,22 @@ if(${USE_OSI})
        SUPPORTED_OSI_VERSIONS)
         message(FATAL_ERROR "Invalid OSI version '${OSI_VERSION}', 3.5.0 and 3.8.0 supported")
     endif()
+
+    set(OSI_RELEASE_TAG
+        "")
+    if("${OSI_VERSION}"
+       STREQUAL
+       "3.5.0")
+        set(OSI_RELEASE_TAG
+            "v3.5.0_1")
+    elseif(
+        "${OSI_VERSION}"
+        STREQUAL
+        "3.8.0")
+        set(OSI_RELEASE_TAG
+            "v3.8.0_1")
+    endif()
+
 endif()
 
 # ############################### Setting project rules ############################################################
@@ -156,12 +172,10 @@ endif()
 # ############################### Loading common packages ############################################################
 
 include(${CMAKE_CURRENT_SOURCE_DIR}/support/cmake/common/color.cmake)
-include(${CMAKE_CURRENT_SOURCE_DIR}/support/cmake/common/release_tags.cmake)
 include(${CMAKE_CURRENT_SOURCE_DIR}/support/cmake/common/locations.cmake)
 include(${CMAKE_CURRENT_SOURCE_DIR}/support/cmake/common/definitions.cmake)
 include(${CMAKE_CURRENT_SOURCE_DIR}/support/cmake/common/flags.cmake)
 
-resolve_external_release_tags()
 set_project_internal_paths()
 set_project_external_paths()
 set_project_os_specific_paths()
