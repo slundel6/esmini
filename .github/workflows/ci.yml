@@ -183,11 +183,8 @@ jobs:
       - name: Validate Python OSI
         shell: bash
         run: |
-          python3 -m venv .osi_venv
-          source .osi_venv/bin/activate
-          pip3 install -r support/python/requirements.txt
           cd test
-          python3 osi_tests.py
+          python osi_tests.py
 
       - name: Run Tests - Linux
         if: runner.os == 'Linux'
