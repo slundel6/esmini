@@ -118,6 +118,7 @@ if(${USE_OSI})
     set(SUPPORTED_OSI_VERSIONS
         "3.5.0"
         "3.8.0")
+
     if(NOT
        OSI_VERSION
        IN_LIST
