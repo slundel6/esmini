@@ -180,12 +180,6 @@ jobs:
           pip3 install fmpy
           fmpy simulate esmini.fmu --start-values xosc_path ../../resources/xosc/cut-in.xosc
 
-      - name: Validate Python OSI
-        shell: bash
-        run: |
-          cd test
-          python osi_tests.py
-
       - name: Run Tests - Linux
         if: runner.os == 'Linux'
         run: ${{ matrix.os == 'ubuntu-22.04' && 'xvfb-run' || '' }} ./scripts/run_tests.sh -b ${{ matrix.configuration }} -p
