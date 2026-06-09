@@ -75,7 +75,7 @@ macro(set_osi_libs)
         target_link_libraries(osi_with_warnings INTERFACE osi_headers ${OSI_LIBRARIES})
 
         # set osi_libraries with our secured order of links
-        set(OSI_LIBRARIES osi_with_warnings CACHE INTERNAL "OSI Libs" FORCE)
+        set(OSI_LIBRARIES osi_with_warnings)
 
     elseif(${OSI_VERSION} STREQUAL "3.8.0")
         set(FULL_RELEASE_PATTERNS "")
@@ -239,7 +239,7 @@ macro(set_osi_libs)
         target_link_libraries(osi_with_warnings INTERFACE osi_headers ${OSI_LIBRARIES})
 
         # set osi_libraries with our secured order of links
-        set(OSI_LIBRARIES osi_with_warnings CACHE INTERNAL "OSI Libs" FORCE)
+        set(OSI_LIBRARIES osi_with_warnings)
 
     endif()
 

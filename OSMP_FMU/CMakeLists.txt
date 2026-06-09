@@ -16,8 +16,10 @@ string(SUBSTRING "${VERSION}" 1 -1 VERSION )
 string(STRIP "${VERSION}" VERSION)
 
 set(OSI_VERSION "3.8.0")
-set(OSI_RELEASE_TAG "v3.8.0_1")
 set(OSMP_VERSION "1.4.0")
+
+include(${CMAKE_CURRENT_SOURCE_DIR}/../support/cmake/common/osi_version_mapping.cmake)
+set_osi_release_tag_from_version()
 
 set(STATIC_LINKING TRUE)
 
