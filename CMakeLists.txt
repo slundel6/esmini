@@ -123,7 +123,12 @@ if(${USE_OSI})
        OSI_VERSION
        IN_LIST
        SUPPORTED_OSI_VERSIONS)
-        message(FATAL_ERROR "Invalid OSI version '${OSI_VERSION}', 3.5.0 and 3.8.0 supported")
+        string(
+            JOIN
+            ", "
+            VERSIONS_PRINT_STR
+            ${SUPPORTED_OSI_VERSIONS})
+        message(FATAL_ERROR "Invalid OSI version '${OSI_VERSION}', Supported versions: ${VERSIONS_PRINT_STR}")
     endif()
 
     set(OSI_RELEASE_TAG
@@ -132,13 +137,13 @@ if(${USE_OSI})
        STREQUAL
        "3.5.0")
         set(OSI_RELEASE_TAG
-            "v3.5.0_1")
+            "v3.5.0_2")
     elseif(
         "${OSI_VERSION}"
         STREQUAL
         "3.8.0")
         set(OSI_RELEASE_TAG
-            "v3.8.0_1")
+            "v3.8.0_3")
     endif()
 
 endif()
