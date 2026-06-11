@@ -115,6 +115,11 @@ set(FMT_INSTALL
 include(${CMAKE_CURRENT_SOURCE_DIR}/support/cmake/common/version_mapping.cmake)
 set_default_dependency_libs_versions()
 
+set(IMPLOT_VERSION
+    "0.16"
+    CACHE STRING
+          "implot version")
+
 # ############################### Setting project rules ############################################################
 
 set_property(
