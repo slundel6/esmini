@@ -19,9 +19,7 @@ macro(set_cloud_links)
             https://esmini.asuscomm.com/AICLOUD972108097/libs/sumo_mac.7z;
             https://www.dropbox.com/s/0x8kwztk7nmacs1/sumo_mac.7z?dl=1)
         set(IMPLOT_PACKAGE_URL
-            https://drive.usercontent.google.com/download?id=12RycamdsewKIhwg63-AKr33Xr00xSyZ8&export=download&authuser=0&confirm=t;
-            https://esmini.asuscomm.com/AICLOUD972108097/libs/implot_mac_14.7z;
-            https://www.dropbox.com/scl/fi/s1c4ytqqaxk77l5wf3h3l/implot_mac_macos_14.7z?rlkey=xligo4mju7a8f0dtm4mjeliuw&st=ca2lm7jz&dl=1)
+            https://github.com/slundel6/esmini-sandbox/releases/download/${IMPLOT_TAG_URL}/implot-macos.tar.xz)
     elseif(LINUX)
         set(OSG_PACKAGE_URL
             https://drive.usercontent.google.com/download?id=1NQlZBTFBWHpu-ImEjJN6CIxvwuinelzL&export=download&authuser=0&confirm=t;
@@ -38,9 +36,7 @@ macro(set_cloud_links)
             https://esmini.asuscomm.com/AICLOUD972108097/libs/googletest_linux.7z;
             https://dl.dropboxusercontent.com/s/si7jsjjsy5bpoym/googletest_linux.7z?dl=1)
         set(IMPLOT_PACKAGE_URL
-            https://drive.usercontent.google.com/download?id=1MC6xvGbEG-GiEsNpwuj6hK_NDx-FPcp8&export=download&authuser=0&confirm=t;
-            https://esmini.asuscomm.com/AICLOUD972108097/libs/implot_linux_glibc_2_31_gcc_9_4_0.7z;
-            https://www.dropbox.com/scl/fi/s4lu9y6z8krlymuq4nxwe/implot_linux_glibc_2_31_gcc_9_4_0.7z?rlkey=1ui1h0azyuiap5ehogumcjrk1&st=82yzvb4f&dl=1)
+            https://github.com/slundel6/esmini-sandbox/releases/download/${IMPLOT_TAG_URL}/implot-linux.tar.xz)
     elseif(MSVC)
         set(OSG_PACKAGE_URL
             https://drive.usercontent.google.com/download?id=11QIsQkYbY0I8_YsivPH9r7_qqWBqbsfH&export=download&authuser=0&confirm=t;
@@ -57,9 +53,7 @@ macro(set_cloud_links)
             https://esmini.asuscomm.com/AICLOUD972108097/libs/googletest_v10.7z;
             https://dl.dropboxusercontent.com/s/aaiehwzc6woqbc6/googletest_v10.7z?dl=1)
         set(IMPLOT_PACKAGE_URL
-            https://drive.usercontent.google.com/download?id=1zIw35UCHhyRAEVbbUmOuUgqMOfWdj7zO&export=download&authuser=0&confirm=t;
-            https://esmini.asuscomm.com/AICLOUD972108097/libs/implot_vs17_v142.7z;
-            https://www.dropbox.com/scl/fi/cgf93rq4gwtbsv635f90y/implot_vs17_v142.7z?rlkey=0pwhdlyty69qrdcx7agzjdg9x&st=7omkcafx&dl=1)
+            https://github.com/slundel6/esmini-sandbox/releases/download/${IMPLOT_TAG_URL}/implot-windows.tar.xz)
     elseif(MINGW)
         message("MinGW, enforcing slimmed esmini")
     else()
