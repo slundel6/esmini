@@ -26,6 +26,8 @@
 #include "osi_version.pb.h"
 #include "google/protobuf/io/gzip_stream.h"
 #include "google/protobuf/io/zero_copy_stream_impl.h"
+#include "osi-utilities/tracefile/writer/MCAPTraceFileWriter.h"
+#include "osi-utilities/tracefile/TraceFileConfig.h"
 #include <iostream>
 #include <fstream>
 #include <string>
@@ -65,7 +67,14 @@ public:
     /**
     Closes any open osi file
     */
+    bool OpenMCAPFile(const char* filename);
+
+    void CloseMCAPFile();
+
     void CloseOSIFile();
+
+    bool WriteMCAPFile();
+
     /**
     Writes GroundTruth in the OSI file
     */
@@ -228,6 +237,10 @@ public:
     {
         return osi_file.is_open();
     }
+    bool IsMCAPFileOpen() const
+    {
+        return mcap_file_open_;
+    }
     void ReportSensors(std::vector<ObjectSensor*> sensor);
 
     void SetUpdated(bool value)
@@ -305,4 +318,9 @@ private:
         std::unique_ptr<google::protobuf::io::OstreamOutputStream> raw_output;
         std::unique_ptr<google::protobuf::io::GzipOutputStream>    gzip_output;
     } gzip_write_stream_;
+
+    // MCAP
+    osi3::MCAPTraceFileWriter mcap_writer = {};
+    mcap::McapWriterOptions   mcap_options{"osi"};
+    bool                      mcap_file_open_ = false;
 };

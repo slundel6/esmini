@@ -143,16 +143,19 @@ void ScenarioPlayer::SetOSIFileStatus(bool is_on, const char* filename)
             filename                = strFileName.c_str();
             if (OSCParameterDistribution::Inst().GetNumPermutations() > 0)
             {
-                osiReporter->OpenOSIFile(OSCParameterDistribution::Inst().AddInfoToFilepath(filename).c_str());
+                // osiReporter->OpenOSIFile(OSCParameterDistribution::Inst().AddInfoToFilepath(filename).c_str());
+                osiReporter->OpenMCAPFile(OSCParameterDistribution::Inst().AddInfoToFilepath(filename).c_str());
             }
             else
             {
-                osiReporter->OpenOSIFile(filename);
+                // osiReporter->OpenOSIFile(filename);
+                osiReporter->OpenMCAPFile(filename);
             }
         }
         else
         {
-            osiReporter->CloseOSIFile();
+            // osiReporter->CloseOSIFile();
+            osiReporter->CloseMCAPFile();
         }
     }
 #endif  // _USE_OSI

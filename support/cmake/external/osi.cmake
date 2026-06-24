@@ -107,7 +107,7 @@ macro(set_osi_libs)
 
         # Search for the dependency libs in static lib folder always
         if(APPLE)
-            set(LIB_SEARCH_PATTERNS "libabsl_*.a" "libutf8*.a" "libz.a")
+            set(LIB_SEARCH_PATTERNS "libabsl_*.a" "libutf8*.a" "liblz4*.a" "libzstd*.a" "libz.a")
 
             foreach(PATTERN ${LIB_SEARCH_PATTERNS})
                 list(APPEND FULL_RELEASE_PATTERNS "${EXTERNALS_OSI_DEPS}/release/${PATTERN}")
@@ -144,7 +144,7 @@ macro(set_osi_libs)
             endif()
 
         elseif(LINUX)
-            set(LIB_SEARCH_PATTERNS "libabsl_*.a" "libutf8*.a" "libz.a")
+            set(LIB_SEARCH_PATTERNS "libabsl_*.a" "libutf8*.a" "liblz4*.a" "libzstd*.a" "libz.a" "libOSIUtilities.a")
 
             foreach(PATTERN ${LIB_SEARCH_PATTERNS})
                 list(APPEND FULL_RELEASE_PATTERNS "${EXTERNALS_OSI_DEPS}/release/${PATTERN}")
@@ -190,9 +190,9 @@ macro(set_osi_libs)
 
         elseif(MSVC)
             if(DYN_PROTOBUF)
-                set(LIB_SEARCH_PATTERNS "utf8*.lib" "lz4*.lib")
+                set(LIB_SEARCH_PATTERNS "utf8*.lib" "lz4*.lib" "zstd*.lib")
             else()
-                set(LIB_SEARCH_PATTERNS "absl_*.lib" "utf8*.lib" "zlib*.lib")
+                set(LIB_SEARCH_PATTERNS "absl_*.lib" "utf8*.lib" "lz4*.lib" "zstd*.lib" "zlib*.lib")
             endif()
 
             set(FULL_RELEASE_PATTERNS "")

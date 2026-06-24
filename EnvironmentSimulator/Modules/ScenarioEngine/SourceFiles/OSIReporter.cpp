@@ -179,7 +179,8 @@ OSIReporter::~OSIReporter()
 
     delete udp_client_;
 
-    CloseOSIFile();
+    CloseMCAPFile();
+    // CloseOSIFile();
 
     SE_Env::Inst().ResetOSITimeStamp();
 }
@@ -234,6 +235,39 @@ void OSIReporter::ReportSensors(std::vector<ObjectSensor *> sensor)
     }
 }
 
+bool OSIReporter::OpenMCAPFile(const char *filename)
+{
+    CloseMCAPFile();
+
+    mcap_options.chunkSize   = osi3::tracefile::config::kDefaultChunkSize;
+    mcap_options.compression = mcap::Compression::Zstd;
+    if (!mcap_writer.Open(filename, mcap_options))
+    {
+        LOG_ERROR("Failed to open MCAP file {}", filename);
+        return false;
+    }
+
+    // Use helper to add OSI-spec required metadata
+    auto net_asam_osi_trace_metadata                      = osi3::MCAPTraceFileWriter::PrepareRequiredFileMetadata();
+    net_asam_osi_trace_metadata.metadata["description"]   = "MCAP logfile created by esmini";
+    net_asam_osi_trace_metadata.metadata["creation_time"] = osi3::MCAPTraceFileWriter::GetCurrentTimeAsString();
+    net_asam_osi_trace_metadata.metadata["source_tool"]   = "esmini";
+    net_asam_osi_trace_metadata.metadata["authors"]       = "esmini";
+
+    if (!mcap_writer.AddFileMetadata(net_asam_osi_trace_metadata))
+    {
+        LOG_ERROR("Failed to add required metadata to MCAP file {}", filename);
+        return false;
+    }
+
+    const std::string                            topic            = "groundtruth";
+    std::unordered_map<std::string, std::string> channel_metadata = {
+        {"net.asam.osi.trace.channel.description", "This channel contains groundtruth data"}};
+    mcap_writer.AddChannel(topic, osi3::GroundTruth::descriptor(), channel_metadata);
+    mcap_file_open_ = true;
+    return true;
+}
+
 bool OSIReporter::OpenOSIFile(const char *filename)
 {
     // Ensure any previous stream chain is torn down in a safe order before re-opening.
@@ -263,6 +297,12 @@ bool OSIReporter::OpenOSIFile(const char *filename)
     return true;
 }
 
+void OSIReporter::CloseMCAPFile()
+{
+    mcap_writer.Close();
+    mcap_file_open_ = false;
+}
+
 void OSIReporter::CloseOSIFile()
 {
     if (gzip_write_stream_.gzip_output)
@@ -275,6 +315,17 @@ void OSIReporter::CloseOSIFile()
     {
         osi_file.close();
     }
+}
+
+bool OSIReporter::WriteMCAPFile()
+{
+    if (!mcap_writer.WriteMessage(*obj_osi_external.gt, "groundtruth"))
+    {
+        LOG_WARN("Failed to write message to MCAP file");
+        return false;
+    }
+
+    return true;
 }
 
 bool OSIReporter::WriteOSIFile()
@@ -345,7 +396,7 @@ int OSIReporter::UpdateOSIGroundTruth(const std::vector<scenarioengine::Object *
             obj_osi_internal.static_gt->mutable_host_vehicle_id()->set_value(objects.front()->g_id_);
         }
 
-        if (IsFileOpen() || GetUDPClientStatus() == 0)
+        if (IsMCAPFileOpen() || GetUDPClientStatus() == 0)
         {
             SerializeDynamicAndStaticData();
         }
@@ -367,7 +418,7 @@ int OSIReporter::UpdateOSIGroundTruth(const std::vector<scenarioengine::Object *
         switch (static_update_mode_)
         {
             case OSIStaticReportMode::DEFAULT:  // Only log and transmit dynamic ground truth
-                if (IsFileOpen() || GetUDPClientStatus() == 0)
+                if (IsMCAPFileOpen() || GetUDPClientStatus() == 0)
                 {
                     SerializeDynamicData();
                 }
@@ -378,7 +429,7 @@ int OSIReporter::UpdateOSIGroundTruth(const std::vector<scenarioengine::Object *
                 }
                 break;
             case OSIStaticReportMode::API:  // Log dynamic ground truth, serialize and transmit combined ground truth
-                if (IsFileOpen() || GetUDPClientStatus() == 0)
+                if (IsMCAPFileOpen() || GetUDPClientStatus() == 0)
                 {
                     SerializeDynamicData();
                 }
@@ -386,7 +437,7 @@ int OSIReporter::UpdateOSIGroundTruth(const std::vector<scenarioengine::Object *
                 obj_osi_external.gt->MergeFrom(*obj_osi_internal.static_gt);  // Merge for API
                 break;
             case OSIStaticReportMode::API_AND_LOG:  // Log combined ground truth, serialze and transmit combined ground truth
-                if (IsFileOpen() || GetUDPClientStatus() == 0)
+                if (IsMCAPFileOpen() || GetUDPClientStatus() == 0)
                 {
                     SerializeDynamicAndStaticData();
                 }
@@ -396,9 +447,10 @@ int OSIReporter::UpdateOSIGroundTruth(const std::vector<scenarioengine::Object *
         }
     }
 
-    if (IsFileOpen())
+    if (IsMCAPFileOpen())
     {
-        WriteOSIFile();
+        WriteMCAPFile();
+        // WriteOSIFile();
     }
 
     if (GetUDPClientStatus() == 0)
