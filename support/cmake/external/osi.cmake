@@ -4,6 +4,12 @@ include_guard()
 
 macro(set_osi_libs)
     if(${OSI_VERSION} STREQUAL "3.5.0")
+        if(NOT TARGET osi_headers)
+            add_library(osi_headers INTERFACE)
+        endif()
+
+        target_include_directories(osi_headers SYSTEM INTERFACE "${EXTERNALS_OSI_INCLUDES}")
+
         if(APPLE)
             if(DYN_PROTOBUF)
                 set(OSI_LIBRARIES
@@ -16,6 +22,7 @@ macro(set_osi_libs)
                     ${EXTERNALS_OSI_LIBRARY_PATH}/release/libprotobuf.a
                     ${EXTERNALS_OSI_LIBRARY_PATH}/release/libz.a)
             endif()
+
         elseif(LINUX)
             if(DYN_PROTOBUF)
                 set(OSI_LIBRARIES
@@ -67,92 +74,14 @@ macro(set_osi_libs)
                     ${EXTERNALS_OSI_LIBRARY_PATH}/release/open_simulation_interface_pic.lib
                     optimized
                     ${EXTERNALS_OSI_LIBRARY_PATH}/release/libprotobuf.lib
+                    optimized
+                    ${EXTERNALS_OSI_LIBRARY_PATH}/release/zlibstatic.lib
                     debug
                     ${EXTERNALS_OSI_LIBRARY_PATH}/debug/open_simulation_interface_pic.lib
                     debug
                     ${EXTERNALS_OSI_LIBRARY_PATH}/debug/libprotobufd.lib
                     debug
                     ${EXTERNALS_OSI_LIBRARY_PATH}/debug/zlibstaticd.lib)
-            endif()
-        endif()
-    else()
-        message(FATAL_ERROR "Unsupported OSI version ${OSI_VERSION}")
-    endif()
-
-    set(FULL_RELEASE_PATTERNS "")
-    set(FULL_DEBUG_PATTERNS "")
-
-    add_library(osi_headers INTERFACE)
-    target_include_directories(osi_headers SYSTEM INTERFACE "${EXTERNALS_OSI_INCLUDES}")
-
-    # Search for the dependency libs in static lib folder always
-    if(APPLE)
-        if(DYN_PROTOBUF)
-            set(LIB_SEARCH_PATTERNS "libabsl_*.a" "libutf8*.dylib" "liblz4*.dylib" "libzstd*.dylib")
-        else()
-            set(LIB_SEARCH_PATTERNS "libabsl_*.a" "libutf8*.a" "liblz4*.a" "libzstd*.a")
-
-    if(${OSI_VERSION} STREQUAL "3.5.0")
-        if(NOT TARGET osi_headers)
-            add_library(osi_headers INTERFACE)
-        endif()
-
-        target_include_directories(osi_headers SYSTEM INTERFACE "${EXTERNALS_OSI_INCLUDES}")
-
-        if(APPLE)
-            if(DYN_PROTOBUF)
-                set(OSI_LIBRARIES
-                    ${EXTERNALS_OSI_LIBRARY_PATH}/release/libopen_simulation_interface.dylib
-                    ${EXTERNALS_OSI_LIBRARY_PATH}/release/libprotobuf.dylib)
-            else()
-                set(OSI_LIBRARIES
-                    ${EXTERNALS_OSI_LIBRARY_PATH}/release/libopen_simulation_interface_pic.a
-                    ${EXTERNALS_OSI_LIBRARY_PATH}/release/libprotobuf.a)
-            endif()
-
-        elseif(LINUX)
-            if(DYN_PROTOBUF)
-                set(OSI_LIBRARIES
-                    optimized
-                    ${EXTERNALS_OSI_LIBRARY_PATH}/release/libopen_simulation_interface.so
-                    optimized
-                    ${EXTERNALS_OSI_LIBRARY_PATH}/release/libprotobuf.so
-                    debug
-                    ${EXTERNALS_OSI_LIBRARY_PATH}/debug/libopen_simulation_interface.so
-                    debug
-                    ${EXTERNALS_OSI_LIBRARY_PATH}/debug/libprotobufd.so)
-            else()
-                set(OSI_LIBRARIES
-                    optimized
-                    ${EXTERNALS_OSI_LIBRARY_PATH}/release/libopen_simulation_interface_pic.a
-                    optimized
-                    ${EXTERNALS_OSI_LIBRARY_PATH}/release/libprotobuf.a
-                    debug
-                    ${EXTERNALS_OSI_LIBRARY_PATH}/debug/libopen_simulation_interface_pic.a
-                    debug
-                    ${EXTERNALS_OSI_LIBRARY_PATH}/debug/libprotobufd.a)
-            endif()
-        elseif(MSVC)
-            if(DYN_PROTOBUF)
-                set(OSI_LIBRARIES
-                    optimized
-                    ${EXTERNALS_OSI_LIBRARY_PATH}/release/open_simulation_interface_pic.lib
-                    optimized
-                    ${EXTERNALS_OSI_LIBRARY_PATH}/release/libprotobuf.lib
-                    debug
-                    ${EXTERNALS_OSI_LIBRARY_PATH}/debug/open_simulation_interface_pic.lib
-                    debug
-                    ${EXTERNALS_OSI_LIBRARY_PATH}/debug/libprotobufd.lib)
-            else()
-                set(OSI_LIBRARIES
-                    optimized
-                    ${EXTERNALS_OSI_LIBRARY_PATH}/release/open_simulation_interface_pic.lib
-                    optimized
-                    ${EXTERNALS_OSI_LIBRARY_PATH}/release/libprotobuf.lib
-                    debug
-                    ${EXTERNALS_OSI_LIBRARY_PATH}/debug/open_simulation_interface_pic.lib
-                    debug
-                    ${EXTERNALS_OSI_LIBRARY_PATH}/debug/libprotobufd.lib)
             endif()
         endif()
 
@@ -178,7 +107,7 @@ macro(set_osi_libs)
 
         # Search for the dependency libs in static lib folder always
         if(APPLE)
-            set(LIB_SEARCH_PATTERNS "libabsl_*.a" "libutf8*.a" "liblz4*.a" "libzstd*.a")
+            set(LIB_SEARCH_PATTERNS "libabsl_*.a" "libutf8*.a" "libz.a")
 
             foreach(PATTERN ${LIB_SEARCH_PATTERNS})
                 list(APPEND FULL_RELEASE_PATTERNS "${EXTERNALS_OSI_DEPS}/release/${PATTERN}")
@@ -215,7 +144,7 @@ macro(set_osi_libs)
             endif()
 
         elseif(LINUX)
-            set(LIB_SEARCH_PATTERNS "libabsl_*.a" "libutf8*.a" "liblz4*.a" "libzstd*.a")
+            set(LIB_SEARCH_PATTERNS "libabsl_*.a" "libutf8*.a" "libz.a")
 
             foreach(PATTERN ${LIB_SEARCH_PATTERNS})
                 list(APPEND FULL_RELEASE_PATTERNS "${EXTERNALS_OSI_DEPS}/release/${PATTERN}")
@@ -261,9 +190,9 @@ macro(set_osi_libs)
 
         elseif(MSVC)
             if(DYN_PROTOBUF)
-                set(LIB_SEARCH_PATTERNS "utf8*.lib" "lz4*.lib" "zstd*.lib")
+                set(LIB_SEARCH_PATTERNS "utf8*.lib" "lz4*.lib")
             else()
-                set(LIB_SEARCH_PATTERNS "absl_*.lib" "utf8*.lib" "lz4*.lib" "zstd*.lib")
+                set(LIB_SEARCH_PATTERNS "absl_*.lib" "utf8*.lib" "zlib*.lib")
             endif()
 
             set(FULL_RELEASE_PATTERNS "")
@@ -330,6 +259,8 @@ macro(set_osi_libs)
         # set osi_libraries with our secured order of links
         set(OSI_LIBRARIES osi_with_warnings)
 
+    else()
+        message(FATAL_ERROR "Unsupported OSI version ${OSI_VERSION}")
     endif()
 
 endmacro()
