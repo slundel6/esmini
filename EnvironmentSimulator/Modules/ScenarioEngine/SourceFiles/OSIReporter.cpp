@@ -116,6 +116,8 @@ OSIReporter::OSIReporter(ScenarioEngine *scenarioengine)
     obj_osi_internal.static_gt->mutable_version()->set_version_minor(current_osi_version.version_minor());
     obj_osi_internal.static_gt->mutable_version()->set_version_patch(current_osi_version.version_patch());
 
+    LOG_DEBUG("osi version: {}.{}.{}", current_osi_version.version_major(), current_osi_version.version_minor(), current_osi_version.version_patch());
+
     obj_osi_internal.dynamic_gt->mutable_timestamp()->set_seconds(0);
     obj_osi_internal.dynamic_gt->mutable_timestamp()->set_nanos(0);
 
