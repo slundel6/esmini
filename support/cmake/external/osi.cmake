@@ -200,7 +200,7 @@ macro(set_osi_libs)
             if(DYN_PROTOBUF)
                 set(LIB_SEARCH_PATTERNS "zibstatic*.lib")
             else()
-                set(LIB_SEARCH_PATTERNS "absl_*.lib" "utf8_validity.lib" "utf8_range.lib" "upb*.lib" "zlibstatic*.lib")
+                set(LIB_SEARCH_PATTERNS "absl_*.lib" "utf8_validity.lib" "utf8_range.lib" "libupb*.lib" "zlibstatic*.lib")
             endif()
 
             set(FULL_RELEASE_PATTERNS "")
