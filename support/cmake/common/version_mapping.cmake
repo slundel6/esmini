@@ -67,7 +67,7 @@ function(set_tags_from_version)
         OSI_RELEASE_TAG
         OSI_TAG_URL
         "3.8.0"
-        "v3.8.0_5"
+        "v3.8.0_6"
         "3.5.0"
         "v3.5.0_2")
 
