@@ -3,6 +3,16 @@ include_guard()
 # ############################### Setting osi libraries ##############################################################
 
 macro(set_osi_libs)
+    if(NOT TARGET OSI_HEADERS)
+        add_library(OSI_HEADERS INTERFACE)
+    endif()
+
+    target_include_directories(
+        OSI_HEADERS
+        SYSTEM
+        INTERFACE
+        ${EXTERNALS_OSI_INCLUDES})
+
     if(${OSI_VERSION} STREQUAL "3.5.0")
         if(APPLE)
             if(DYN_PROTOBUF)
@@ -77,8 +87,106 @@ macro(set_osi_libs)
                     ${EXTERNALS_OSI_LIBRARY_PATH}/debug/zlibstaticd.lib)
             endif()
         endif()
+    elseif(${OSI_VERSION} STREQUAL "3.8.0")
+        if(APPLE)
+            if(DYN_PROTOBUF)
+                set(OSI_LIBRARIES
+                    ${EXTERNALS_OSI_LIBRARY_PATH}/release/libopen_simulation_interface.dylib
+                    ${EXTERNALS_OSI_LIBRARY_PATH}/release/libprotobuf.dylib
+                    ${EXTERNALS_OSI_LIBRARY_PATH}/release/libz.a)
+            else()
+                set(OSI_LIBRARIES
+                    ${EXTERNALS_OSI_LIBRARY_PATH}/release/libopen_simulation_interface_pic.a
+                    ${EXTERNALS_OSI_LIBRARY_PATH}/release/libprotobuf.a
+                    ${EXTERNALS_OSI_LIBRARY_PATH}/release/libz.a)
+            endif()
+        elseif(LINUX)
+            if(DYN_PROTOBUF)
+                set(OSI_LIBRARIES
+                    optimized
+                    ${EXTERNALS_OSI_LIBRARY_PATH}/release/libopen_simulation_interface.so
+                    optimized
+                    ${EXTERNALS_OSI_LIBRARY_PATH}/release/libprotobuf.so
+                    optimized
+                    ${EXTERNALS_OSI_LIBRARY_PATH}/release/libz.a
+                    debug
+                    ${EXTERNALS_OSI_LIBRARY_PATH}/debug/libopen_simulation_interface.so
+                    debug
+                    ${EXTERNALS_OSI_LIBRARY_PATH}/debug/libprotobufd.so
+                    debug
+                    ${EXTERNALS_OSI_LIBRARY_PATH}/debug/libz.a)
+            else()
+                set(OSI_LIBRARIES
+                    optimized
+                    ${EXTERNALS_OSI_LIBRARY_PATH}/release/libopen_simulation_interface_pic.a
+                    optimized
+                    ${EXTERNALS_OSI_LIBRARY_PATH}/release/libprotobuf.a
+                    optimized
+                    ${EXTERNALS_OSI_DEPS}/release/libz.a
+                    optimized
+                    ${EXTERNALS_OSI_DEPS}/release/libabsl_ar.a
+                    optimized
+                    ${EXTERNALS_OSI_DEPS}/release/libutf8_range.a
+                    optimized
+                    ${EXTERNALS_OSI_DEPS}/release/libutf8_validity.a
+                    optimized
+                    ${EXTERNALS_OSI_DEPS}/release/libupb.a
+                    debug
+                    ${EXTERNALS_OSI_LIBRARY_PATH}/debug/libopen_simulation_interface_pic.a
+                    debug
+                    ${EXTERNALS_OSI_LIBRARY_PATH}/debug/libprotobufd.a
+                    debug
+                    ${EXTERNALS_OSI_DEPS}/debug/libz.a
+                    debug
+                    ${EXTERNALS_OSI_DEPS}/debug/libabsl_ar.a
+                    debug
+                    ${EXTERNALS_OSI_DEPS}/debug/libutf8_range.a
+                    debug
+                    ${EXTERNALS_OSI_DEPS}/debug/libutf8_validity.a
+                    debug
+                    ${EXTERNALS_OSI_DEPS}/debug/libupbd.a)
+            endif()
+        elseif(MSVC)
+            if(DYN_PROTOBUF)
+                set(OSI_LIBRARIES
+                    optimized
+                    ${EXTERNALS_OSI_LIBRARY_PATH}/release/open_simulation_interface_pic.lib
+                    optimized
+                    ${EXTERNALS_OSI_LIBRARY_PATH}/release/libprotobuf.lib
+                    optimized
+                    ${EXTERNALS_OSI_LIBRARY_PATH}/release/zlibstatic.lib
+                    debug
+                    ${EXTERNALS_OSI_LIBRARY_PATH}/debug/open_simulation_interface_pic.lib
+                    debug
+                    ${EXTERNALS_OSI_LIBRARY_PATH}/debug/libprotobufd.lib
+                    debug
+                    ${EXTERNALS_OSI_LIBRARY_PATH}/debug/zlibstaticd.lib)
+            else()
+                set(OSI_LIBRARIES
+                    optimized
+                    ${EXTERNALS_OSI_LIBRARY_PATH}/release/open_simulation_interface_pic.lib
+                    optimized
+                    ${EXTERNALS_OSI_LIBRARY_PATH}/release/libprotobuf.lib
+                    optimized
+                    ${EXTERNALS_OSI_LIBRARY_PATH}/release/zlibstatic.lib
+                    debug
+                    ${EXTERNALS_OSI_LIBRARY_PATH}/debug/open_simulation_interface_pic.lib
+                    debug
+                    ${EXTERNALS_OSI_LIBRARY_PATH}/debug/libprotobufd.lib
+                    debug
+                    ${EXTERNALS_OSI_LIBRARY_PATH}/debug/zlibstaticd.lib)
+            endif()
+
+            target_compile_options(OSI_HEADERS INTERFACE
+                    /wd4141 # 'inline' used more than once
+                    /wd4267 # size_t to int conversion
+                    /wd4244 # narrowing conversion
+                    /wd4189 # local variable initialized but not referenced
+                    /wd4296 # expression is always true/false
+                    /wd4459 # declaration hides global declaration (triggered by abseil headers
+                    /wd4251)
+        endif()
     else()
         message(FATAL_ERROR "Unsupported OSI version ${OSI_VERSION}")
     endif()
-
 endmacro()

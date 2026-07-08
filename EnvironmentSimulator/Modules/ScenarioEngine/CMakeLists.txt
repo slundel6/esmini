@@ -73,7 +73,6 @@ target_include_directories(
     ${TARGET}
     SYSTEM
     PUBLIC ${ROAD_MANAGER_PATH}
-           ${EXTERNALS_OSI_INCLUDES}
            ${EXTERNALS_SUMO_INCLUDES}
            ${EXTERNALS_PUGIXML_PATH}
            ${EXTERNALS_EXPR_PATH}
@@ -81,7 +80,8 @@ target_include_directories(
 
 target_link_libraries(
     ${TARGET}
-    PRIVATE CommonMini)
+    PRIVATE CommonMini
+    PUBLIC OSI_HEADERS)
 
 disable_iwyu(${TARGET})
 enable_fpic(${TARGET})
