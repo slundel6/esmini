@@ -2,10 +2,10 @@
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
 #ifdef _USE_OSI
-#include "osi_common.pb.h"
-#include "osi_object.pb.h"
-#include "osi_sensorview.pb.h"
-#include "osi_version.pb.h"
+#include <osi_common.pb.h>
+#include <osi_object.pb.h>
+#include <osi_sensorview.pb.h>
+#include <osi_version.pb.h>
 #endif  // _USE_OSI
 #include "Replay.hpp"
 #include "CommonMini.hpp"
