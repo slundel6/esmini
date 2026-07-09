@@ -1,6 +1,6 @@
 macro(set_default_dependency_libs_versions)
     set(OSI_VERSION
-        "3.5.0"
+        "3.8.0"
         CACHE STRING
             "osi version")
 
