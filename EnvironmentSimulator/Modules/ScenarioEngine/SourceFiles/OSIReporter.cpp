@@ -3120,8 +3120,18 @@ int OSIReporter::UpdateStaticTrafficSignals()
                     trafficSign->mutable_id()->set_value(signal->GetGlobalId());
                     trafficSign->mutable_main_sign()->mutable_classification()->mutable_value()->set_value(signal->GetValue());
                     trafficSign->mutable_main_sign()->mutable_classification()->mutable_value()->set_text(signal->GetText());
-                    trafficSign->mutable_main_sign()->mutable_classification()->set_type(
-                        static_cast<osi3::TrafficSign_MainSign_Classification_Type>(signal->GetOSIType()));
+                    const int  signal_osi_type   = signal->GetOSIType();
+                    const auto traffic_sign_type = static_cast<osi3::TrafficSign_MainSign_Classification_Type>(signal_osi_type);
+                    if (osi3::TrafficSign_MainSign_Classification_Type_IsValid(signal_osi_type))
+                    {
+                        trafficSign->mutable_main_sign()->mutable_classification()->set_type(traffic_sign_type);
+                    }
+                    else
+                    {
+                        LOG_WARN("Signal id {} has invalid OSI type {}. Falling back to TYPE_UNKNOWN.", signal->GetGlobalId(), signal_osi_type);
+                        trafficSign->mutable_main_sign()->mutable_classification()->set_type(
+                            osi3::TrafficSign_MainSign_Classification_Type::TrafficSign_MainSign_Classification_Type_TYPE_UNKNOWN);
+                    }
                     trafficSign->mutable_main_sign()->mutable_classification()->set_country(signal->GetCountry());
 
                     // Set Unit

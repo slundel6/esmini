@@ -4827,7 +4827,7 @@ bool OpenDrive::ParseOpenDriveXML(const pugi::xml_document& doc)
                     type         = signal.attribute("type").value();
                     subtype      = signal.attribute("subtype").value();
                     value        = signal.attribute("value").value();
-                    int osi_type = static_cast<int>(Signal::OSIType::TrafficSign_MainSign_Classification_Type_INT_MAX_SENTINEL_DO_NOT_USE_);
+                    int osi_type = static_cast<int>(Signal::OSIType::TYPE_UNKNOWN);
 
                     if (!type.empty() && type != "-1" && type != "none")
                     {
@@ -4852,6 +4852,7 @@ bool OpenDrive::ParseOpenDriveXML(const pugi::xml_document& doc)
                                 LOG_INFO("Signal Type {} doesn't exists for country {}", type_to_find, country);
                             }
                         }
+
                         if (osi_type == static_cast<int>(Signal::OSIType::TYPE_UNKNOWN))
                         {
                             LOG_INFO("Signal Type {} exists for country {} - but no OSI type defined", type_to_find, country);
@@ -4859,7 +4860,7 @@ bool OpenDrive::ParseOpenDriveXML(const pugi::xml_document& doc)
                     }
                     else
                     {
-                        osi_type = static_cast<int>(Signal::OSIType::TYPE_UNKNOWN);
+                        LOG_INFO("No signal type defined in signal with id {} - setting OSI type TYPE_UNKNOWN", ids);
                     }
 
                     std::string unit     = signal.attribute("unit").value();
