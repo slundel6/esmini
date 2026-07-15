@@ -159,12 +159,6 @@ macro(set_project_includes)
     set(EXTERNALS_OSI_INCLUDES
         ${EXTERNALS_OSI_OS_SPECIFIC_PATH}/include)
 
-    if(DEFINED OSI_VERSION
-       AND NOT OSI_VERSION STREQUAL "3.5.0")
-        set(EXTERNALS_OSI_DEPS
-            ${EXTERNALS_OSI_OS_SPECIFIC_PATH}/deps)
-    endif()
-
     set(EXTERNALS_SUMO_INCLUDES
         ${EXTERNALS_SUMO_OS_SPECIFIC_PATH}/include)
     set(EXTERNALS_GOOGLETEST_INCLUDES
