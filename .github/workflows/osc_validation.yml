@@ -37,7 +37,7 @@ jobs:
         run: |
           COUNT=$(git rev-list --count --since="24 hours ago" origin/dev)
           echo "$COUNT commits over the last 24 hours found on dev"
-          echo "commit_count=$COUNT" >> $GITHUB_OUTPUT
+          echo "commit_count=1" >> $GITHUB_OUTPUT
 
       - name: Skip job
         if: steps.changes.outputs.commit_count == '0'
