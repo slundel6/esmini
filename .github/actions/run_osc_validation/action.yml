@@ -65,7 +65,7 @@ runs:
             /^\[\[xfail\]\]/ {
               if (test != "") {
                 printf "- %s\n", test
-                printf "  reason: %s\n\n", reason
+                printf "  %s\n\n", reason
               }
               test = ""
               reason = ""
@@ -86,7 +86,7 @@ runs:
             END {
               if (test != "") {
                 printf "- %s\n", test
-                printf "  reason: %s\n", reason
+                printf "  %s\n", reason
               }
             }
           ' "$profile"
