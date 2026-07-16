@@ -52,6 +52,46 @@ runs:
         name: osc-validation
         path: osc-validation/osc_validation_results
 
+    - name: Print xfail profile
+      if: always()
+      shell: bash
+      run: |
+        profile="$GITHUB_ACTION_PATH/test_profile.toml"
+
+        {
+          echo "### osc-validation expected failures"
+          echo
+          awk '
+            /^\[\[xfail\]\]/ {
+              if (test != "") {
+                printf "- %s\n", test
+                printf "  reason: %s\n\n", reason
+              }
+              test = ""
+              reason = ""
+              next
+            }
+            /^test[[:space:]]*=/ {
+              sub(/^[^=]*=[[:space:]]*"/, "")
+              sub(/"[[:space:]]*$/, "")
+              test = $0
+              next
+            }
+            /^reason[[:space:]]*=/ {
+              sub(/^[^=]*=[[:space:]]*"/, "")
+              sub(/"[[:space:]]*$/, "")
+              reason = $0
+              next
+            }
+            END {
+              if (test != "") {
+                printf "- %s\n", test
+                printf "  reason: %s\n", reason
+              }
+            }
+          ' "$profile"
+        } | tee -a "$GITHUB_STEP_SUMMARY"
+
     - name: Fail if tests failed
       if: always()
       shell: bash
