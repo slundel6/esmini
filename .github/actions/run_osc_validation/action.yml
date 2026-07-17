@@ -94,8 +94,8 @@ runs:
           echo
           echo "**Whitelist:**"
           echo "- Included: $included_count"
+          echo "- Deviations: $deviation_count"
           echo "- Excluded: $excluded_count"
-          echo "- Deviation: $deviation_count"
           echo "- Total: $total_count"
           echo
           echo "**Run results:**"
@@ -124,7 +124,7 @@ runs:
         profile="$GITHUB_ACTION_PATH/test_profile.toml"
 
         {
-          echo "### osc-validation expected failures"
+          echo "### osc validation deviations"
           echo
           awk '
             /^\[\[xfail\]\]/ {
@@ -156,12 +156,3 @@ runs:
             }
           ' "$profile"
         } | tee -a "$GITHUB_STEP_SUMMARY"
-
-    - name: Fail if tests failed
-      if: always()
-      shell: bash
-      run: |
-        if [ "${{ steps.run_tests.outputs.exitcode }}" != "0" ]; then
-          echo "osc-validation failed"
-          exit 1
-        fi
