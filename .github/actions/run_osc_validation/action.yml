@@ -21,8 +21,7 @@ runs:
         pip install -e . "numpy<2.0"
         popd
 
-    - name: Run osc-validation
-      id: run_tests
+    - name: Run explicit permutations
       shell: bash
       run: |
         pushd osc-validation
@@ -31,19 +30,85 @@ runs:
         SIM_BIN="$(pwd)/../bin/esmini"
         echo "Using esmini binary: $SIM_BIN"
 
-        mkdir -p osc_validation_results
+        # Unroll the whitelist into an array of tests to run, honoring
+        # INCLUDE/EXCLUDE/DEVIATION keywords (blank lines and '#' comments are
+        # ignored). DEVIATION tests run alongside INCLUDE tests, but are
+        # expected to fail as documented via test_profile.toml's [[xfail]].
+        tests=()
+        included_count=0
+        excluded_count=0
+        deviation_count=0
+        while read -r keyword test; do
+          [ -z "$keyword" ] && continue
+          case "$keyword" in
+            \#*) continue ;;
+            INCLUDE) tests+=("$test"); included_count=$((included_count + 1)) ;;
+            DEVIATION) tests+=("$test"); deviation_count=$((deviation_count + 1)) ;;
+            EXCLUDE) echo "Excluding: $test"; excluded_count=$((excluded_count + 1)) ;;
+            *) echo "Unknown keyword '$keyword' in whitelist.txt" >&2; exit 1 ;;
+          esac
+        done < "$GITHUB_ACTION_PATH/whitelist.txt"
+        total_count=$((included_count + excluded_count + deviation_count))
+
+        echo "Included tests:  $included_count"
+        echo "Excluded tests:  $excluded_count"
+        echo "Deviation tests: $deviation_count"
+        echo "Total tests:     $total_count"
+
+        if [ "${#tests[@]}" -eq 0 ]; then
+          echo "No INCLUDE/DEVIATION tests found in whitelist.txt"
+          exit 1
+        fi
+
+        echo "Running tests:"
+        printf '  %s\n' "${tests[@]}"
 
         set +e
-        osc-validate \
-          --tool ESMini \
+        pytest \
+          "${tests[@]}" \
           --toolpath "$SIM_BIN" \
+          --tool ESMini \
           --test-profile "$GITHUB_ACTION_PATH/test_profile.toml" \
-          --html osc_validation_results/report.html
-        code=$?
-        echo "exitcode=$code" >> $GITHUB_OUTPUT
-        echo "osc-validation finished with exit code $code"
+          2>&1 | tee /tmp/osc_validation_explicit_permutations.log
+        exitcode=${PIPESTATUS[0]}
+        set -e
+
+        # pytest's final summary line looks like:
+        #   "1 failed, 2 passed, 1 xfailed in 3.50s"
+        # Extract the count for each outcome category it reports.
+        get_count() {
+          grep -oE "[0-9]+ $1" /tmp/osc_validation_explicit_permutations.log | tail -n1 | grep -oE '^[0-9]+' || echo 0
+        }
+        passed_count="$(get_count passed)"
+        failed_count="$(get_count failed)"
+        deviated_count="$(get_count xfailed)"
+        unexpectedly_passed_count="$(get_count xpassed)"
+
+        echo "Passed:              $passed_count"
+        echo "Failed:              $failed_count"
+        echo "Deviated (xfailed):  $deviated_count"
+        echo "Unexpectedly passed: $unexpectedly_passed_count"
+
+        {
+          echo "### osc-validation explicit permutations"
+          echo
+          echo "**Whitelist:**"
+          echo "- Included: $included_count"
+          echo "- Excluded: $excluded_count"
+          echo "- Deviation: $deviation_count"
+          echo "- Total: $total_count"
+          echo
+          echo "**Run results:**"
+          echo "- Passed: $passed_count"
+          echo "- Failed: $failed_count"
+          echo "- Deviated: $deviated_count"
+          if [ "$unexpectedly_passed_count" != "0" ]; then
+            echo "- Unexpectedly passed (no longer deviates): $unexpectedly_passed_count"
+          fi
+        } | tee -a "$GITHUB_STEP_SUMMARY"
 
         popd
+        exit "$exitcode"
 
     - name: Upload osc-validation artifacts
       if: always()
