@@ -9,7 +9,7 @@ runs:
       run: |
         # Single source of truth for the pinned osc-validation tag/ref.
         # Update this value alone to bump the version used by the steps below.
-        echo "OSC_VALIDATION_REF=v0.2.0" >> "$GITHUB_ENV"
+        echo "OSC_VALIDATION_REF=v0.1.0" >> "$GITHUB_ENV"
 
     - name: Check for new osc-validation tags
       shell: bash
@@ -31,7 +31,7 @@ runs:
         fi
 
     - name: Checkout osc-validation
-      uses: actions/checkout@v4
+      uses: actions/checkout@v6
       with:
         repository: PMSFIT/osc-validation
         ref: ${{ env.OSC_VALIDATION_REF }}
@@ -63,7 +63,7 @@ runs:
 
     - name: Upload osc-validation artifacts
       if: always()
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@v7
       with:
         name: osc-validation
         path: osc-validation/osc_validation_results

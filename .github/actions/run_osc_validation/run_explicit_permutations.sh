@@ -31,6 +31,7 @@ WHITELIST="${1:-${WHITELIST:-}}"
 SIM_BIN="${2:-${SIM_BIN:-}}"
 GENERATED_PROFILE="${3:-${GENERATED_PROFILE:-}}"
 
+# Check for zero length
 if [ -z "$WHITELIST" ]; then
   echo "Usage: $0 <whitelist_file> [sim_binary] [generated_profile_file]" >&2
   exit 1
@@ -44,6 +45,7 @@ if [ -z "$SIM_BIN" ]; then
   SIM_BIN="$(pwd)/../bin/esmini"
 fi
 
+# If we generate a temporary profile, clean it up in the end
 owns_generated_profile=false
 if [ -z "$GENERATED_PROFILE" ]; then
   GENERATED_PROFILE="$(mktemp)"
