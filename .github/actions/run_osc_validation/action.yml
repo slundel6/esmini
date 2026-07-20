@@ -25,9 +25,12 @@ runs:
         echo "Latest osc-validation tag:  $LATEST_TAG"
 
         if [ -n "$LATEST_TAG" ] && [ "$LATEST_TAG" != "$PINNED_TAG" ]; then
-          echo "::notice::A newer osc-validation tag is available: $LATEST_TAG (currently pinned to $PINNED_TAG). Consider updating OSC_VALIDATION_REF in .github/actions/run_osc_validation/action.yml & generating an updated whitelist.txt using scripts/sync_osc_validation_whitelist.py"
+          VERSION_TEXT="A newer osc-validation tag is available: $LATEST_TAG (currently pinned to $PINNED_TAG)"
+          echo "::notice::${VERSION_TEXT}."
+
+          echo "VERSION_NOTICE=${VERSION_TEXT}. Consider updating OSC_VALIDATION_REF in .github/actions/run_osc_validation/action.yml & generating an updated whitelist.txt using scripts/sync_osc_validation_whitelist.py" >> "$GITHUB_ENV"
         else
-          echo "osc-validation is up to date ($PINNED_TAG)."
+           echo "VERSION_NOTICE=osc-validation is up to date ($PINNED_TAG)." >> "$GITHUB_ENV"
         fi
 
     - name: Checkout osc-validation

@@ -161,7 +161,16 @@ echo "Failed:              $failed_count"
 echo "Deviated (xfailed):  $deviated_count"
 echo "Unexpectedly passed: $unexpectedly_passed_count"
 
-SUMMARY="$(cat <<EOF
+SUMMARY=""
+if [ -n "${VERSION_NOTICE:-}" ]; then
+  SUMMARY="### osc-validation version check
+
+$VERSION_NOTICE
+
+"
+fi
+
+SUMMARY="${SUMMARY}$(cat <<EOF
 ### osc-validation explicit permutations
 
 **Whitelist:**
