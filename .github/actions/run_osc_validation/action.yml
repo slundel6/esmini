@@ -4,11 +4,37 @@ runs:
   using: "composite"
   steps:
 
+    - name: Set osc-validation pinned ref
+      shell: bash
+      run: |
+        # Single source of truth for the pinned osc-validation tag/ref.
+        # Update this value alone to bump the version used by the steps below.
+        echo "OSC_VALIDATION_REF=v0.2.0" >> "$GITHUB_ENV"
+
+    - name: Check for new osc-validation tags
+      shell: bash
+      run: |
+        PINNED_TAG="$OSC_VALIDATION_REF"
+
+        LATEST_TAG="$(git ls-remote --tags --refs https://github.com/PMSFIT/osc-validation.git \
+          | awk -F'refs/tags/' '{print $2}' \
+          | grep -E '^v?[0-9]+\.[0-9]+\.[0-9]+$' \
+          | sort -V | tail -n1)"
+
+        echo "Pinned osc-validation tag:  $PINNED_TAG"
+        echo "Latest osc-validation tag:  $LATEST_TAG"
+
+        if [ -n "$LATEST_TAG" ] && [ "$LATEST_TAG" != "$PINNED_TAG" ]; then
+          echo "::notice::A newer osc-validation tag is available: $LATEST_TAG (currently pinned to $PINNED_TAG). Consider updating OSC_VALIDATION_REF in .github/actions/run_osc_validation/action.yml & generating an updated whitelist.txt using scripts/sync_osc_validation_whitelist.py"
+        else
+          echo "osc-validation is up to date ($PINNED_TAG)."
+        fi
+
     - name: Checkout osc-validation
       uses: actions/checkout@v4
       with:
         repository: PMSFIT/osc-validation
-        ref: v0.2.0
+        ref: ${{ env.OSC_VALIDATION_REF }}
         fetch-depth: 1
         path: osc-validation
 
@@ -27,85 +53,10 @@ runs:
         pushd osc-validation
         source .venv/bin/activate
 
-        SIM_BIN="$(pwd)/../bin/esmini"
-        echo "Using esmini binary: $SIM_BIN"
-
-        # Unroll the whitelist into an array of tests to run, honoring
-        # INCLUDE/EXCLUDE/DEVIATION keywords (blank lines and '#' comments are
-        # ignored). DEVIATION tests run alongside INCLUDE tests, but are
-        # expected to fail as documented via test_profile.toml's [[xfail]].
-        tests=()
-        included_count=0
-        excluded_count=0
-        deviation_count=0
-        while read -r keyword test; do
-          [ -z "$keyword" ] && continue
-          case "$keyword" in
-            \#*) continue ;;
-            INCLUDE) tests+=("$test"); included_count=$((included_count + 1)) ;;
-            DEVIATION) tests+=("$test"); deviation_count=$((deviation_count + 1)) ;;
-            EXCLUDE) echo "Excluding: $test"; excluded_count=$((excluded_count + 1)) ;;
-            *) echo "Unknown keyword '$keyword' in whitelist.txt" >&2; exit 1 ;;
-          esac
-        done < "$GITHUB_ACTION_PATH/whitelist.txt"
-        total_count=$((included_count + excluded_count + deviation_count))
-
-        echo "Included tests:  $included_count"
-        echo "Excluded tests:  $excluded_count"
-        echo "Deviation tests: $deviation_count"
-        echo "Total tests:     $total_count"
-
-        if [ "${#tests[@]}" -eq 0 ]; then
-          echo "No INCLUDE/DEVIATION tests found in whitelist.txt"
-          exit 1
-        fi
-
-        echo "Running tests:"
-        printf '  %s\n' "${tests[@]}"
-
-        set +e
-        pytest \
-          "${tests[@]}" \
-          --toolpath "$SIM_BIN" \
-          --tool ESMini \
-          --test-profile "$GITHUB_ACTION_PATH/test_profile.toml" \
-          2>&1 | tee /tmp/osc_validation_explicit_permutations.log
-        exitcode=${PIPESTATUS[0]}
-        set -e
-
-        # pytest's final summary line looks like:
-        #   "1 failed, 2 passed, 1 xfailed in 3.50s"
-        # Extract the count for each outcome category it reports.
-        get_count() {
-          grep -oE "[0-9]+ $1" /tmp/osc_validation_explicit_permutations.log | tail -n1 | grep -oE '^[0-9]+' || echo 0
-        }
-        passed_count="$(get_count passed)"
-        failed_count="$(get_count failed)"
-        deviated_count="$(get_count xfailed)"
-        unexpectedly_passed_count="$(get_count xpassed)"
-
-        echo "Passed:              $passed_count"
-        echo "Failed:              $failed_count"
-        echo "Deviated (xfailed):  $deviated_count"
-        echo "Unexpectedly passed: $unexpectedly_passed_count"
-
-        {
-          echo "### osc-validation explicit permutations"
-          echo
-          echo "**Whitelist:**"
-          echo "- Included: $included_count"
-          echo "- Deviations: $deviation_count"
-          echo "- Excluded: $excluded_count"
-          echo "- Total: $total_count"
-          echo
-          echo "**Run results:**"
-          echo "- Passed: $passed_count"
-          echo "- Failed: $failed_count"
-          echo "- Deviated: $deviated_count"
-          if [ "$unexpectedly_passed_count" != "0" ]; then
-            echo "- Unexpectedly passed (no longer deviates): $unexpectedly_passed_count"
-          fi
-        } | tee -a "$GITHUB_STEP_SUMMARY"
+        "$GITHUB_ACTION_PATH/run_explicit_permutations.sh" \
+          "$GITHUB_ACTION_PATH/whitelist.txt" \
+          "$(pwd)/../bin/esmini"
+        exitcode=$?
 
         popd
         exit "$exitcode"
@@ -116,43 +67,3 @@ runs:
       with:
         name: osc-validation
         path: osc-validation/osc_validation_results
-
-    - name: Print xfail profile
-      if: always()
-      shell: bash
-      run: |
-        profile="$GITHUB_ACTION_PATH/test_profile.toml"
-
-        {
-          echo "### osc validation deviations"
-          echo
-          awk '
-            /^\[\[xfail\]\]/ {
-              if (test != "") {
-                printf "- %s\n", test
-                printf "  %s\n\n", reason
-              }
-              test = ""
-              reason = ""
-              next
-            }
-            /^test[[:space:]]*=/ {
-              sub(/^[^=]*=[[:space:]]*"/, "")
-              sub(/"[[:space:]]*$/, "")
-              test = $0
-              next
-            }
-            /^reason[[:space:]]*=/ {
-              sub(/^[^=]*=[[:space:]]*"/, "")
-              sub(/"[[:space:]]*$/, "")
-              reason = $0
-              next
-            }
-            END {
-              if (test != "") {
-                printf "- %s\n", test
-                printf "  %s\n", reason
-              }
-            }
-          ' "$profile"
-        } | tee -a "$GITHUB_STEP_SUMMARY"

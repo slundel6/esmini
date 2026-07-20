@@ -31,7 +31,7 @@ import subprocess
 import sys
 from pathlib import Path
 
-VALID_KEYWORDS = {"INCLUDE", "EXCLUDE"}
+VALID_KEYWORDS = {"INCLUDE", "EXCLUDE", "DEVIATION"}
 # Matches pytest -q collect-only summary lines, e.g. "28 tests collected in 1.76s"
 # or "no tests collected", which should not be treated as test ids.
 SUMMARY_LINE_RE = re.compile(r"^(\d+ tests? collected|no tests collected)", re.IGNORECASE)
@@ -109,15 +109,15 @@ def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument("--whitelist", required=True, type=Path, help="Path to whitelist.txt")
     parser.add_argument(
-        "--collect-root",
-        default="osc_validation/validation",
-        help="pytest collection root, relative to --cwd (default: %(default)s)",
-    )
-    parser.add_argument(
         "--cwd",
         default=Path("."),
         type=Path,
         help="Directory to run pytest from, i.e. the osc-validation checkout (default: %(default)s)",
+    )
+    parser.add_argument(
+        "--collect-root",
+        default="osc_validation/validation",
+        help="pytest collection root, relative to --cwd (default: %(default)s)",
     )
     args = parser.parse_args()
 
