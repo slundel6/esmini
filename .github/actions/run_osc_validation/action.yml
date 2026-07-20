@@ -9,7 +9,7 @@ runs:
       run: |
         # Single source of truth for the pinned osc-validation tag/ref.
         # Update this value alone to bump the version used by the steps below.
-        echo "OSC_VALIDATION_REF=v0.1.0" >> "$GITHUB_ENV"
+        echo "OSC_VALIDATION_REF=v0.2.0" >> "$GITHUB_ENV"
 
     - name: Check for new osc-validation tags
       shell: bash
