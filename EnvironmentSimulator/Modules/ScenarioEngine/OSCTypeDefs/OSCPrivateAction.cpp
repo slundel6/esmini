@@ -416,6 +416,10 @@ void FollowTrajectoryAction::Start(double simTime)
     object_->pos_.SetTrajectoryS(initialDistanceOffset_);
     time_ = traj_->GetTime();
 
+    // Save states for relative timing domain
+    traj_start_time_ = time_;
+    start_time_      = simTime;
+
     // establish speed sign / driving direction, default is driving forward
     double speedSign = 1.0;
     if (timing_domain_ == TimingDomain::NONE)
@@ -580,7 +584,8 @@ void scenarioengine::FollowTrajectoryAction::Move(double simTime, double dt)
     }
     else if (timing_domain_ == TimingDomain::TIMING_RELATIVE)
     {
-        time_ += timing_scale_ * dt;
+        // Relative timing domain: trajectory time runs relative to when THIS action started,
+        time_ = traj_start_time_ + (simTime - start_time_) * timing_scale_;
         object_->pos_.SetTrajectoryPosByTime(time_ + timing_offset_);
 
         // calculate and update actual speed only while not reached end of trajectory,
@@ -598,7 +603,8 @@ void scenarioengine::FollowTrajectoryAction::Move(double simTime, double dt)
     {
         if (object_->IsGhost() || simTime > -SMALL_NUMBER)
         {
-            time_ = (simTime + dt) * timing_scale_;
+            // simTime already represents this tick's committed simulation instant - no further dt advance needed
+            time_ = simTime * timing_scale_;
         }
 
         object_->pos_.SetTrajectoryPosByTime(time_ + timeOffset + timing_offset_);
@@ -606,8 +612,7 @@ void scenarioengine::FollowTrajectoryAction::Move(double simTime, double dt)
         if ((dt > SMALL_NUMBER) &&  // skip speed update if timestep is zero
             (time_ + timeOffset < traj_->GetStartTime() + traj_->GetDuration() + SMALL_NUMBER))
         {
-            // don't calculate and update actual speed when reached end of trajectory,
-            // since the movement is based on remaining length of trajectory, not speed
+            movingDirection_ = SIGN(object_->pos_.GetTrajectoryS() - old_s);
             object_->SetSpeed(movingDirection_ * headingDirection * fabs(object_->pos_.GetTrajectoryS() - old_s) / dt);
         }
     }
@@ -689,13 +694,6 @@ void AcquirePositionAction::Start(double simTime)
     object_->dirty_.SetBits(Object::DirtyBit::ROUTE);
 
     OSCAction::Start(simTime);
-}
-
-void AcquirePositionAction::Step(double simTime, double dt)
-{
-    (void)simTime;
-    (void)dt;
-
     OSCAction::End();
 }
 
@@ -1254,6 +1252,12 @@ void LongSpeedAction::Start(double simTime)
 
     // Set initial state
     object_->SetSpeed(transition_.Evaluate());
+
+    if (transition_.shape_ == DynamicsShape::STEP &&
+        !(target_->type_ == Target::TargetType::RELATIVE_SPEED && (static_cast<TargetRelative*>(target_.get()))->continuous_ == true))
+    {
+        OSCAction::End();
+    }
 }
 
 void LongSpeedAction::Step(double simTime, double dt)
@@ -1680,7 +1684,9 @@ void LongSpeedProfileAction::Start(double simTime)
 
 void LongSpeedProfileAction::Step(double simTime, double dt)
 {
-    double time = simTime + dt;
+    (void)dt;
+    // simTime already represents this tick's committed simulation instant - no further dt advance needed
+    double time = simTime;
 
     if (time < segment_.back().t + 10 && !(time > segment_.back().t and abs(speed_ - segment_.back().v) < SMALL_NUMBER))
     {
@@ -2435,12 +2441,6 @@ void TeleportAction::Start(double simTime)
     object_->pos_.Print();
 
     object_->dirty_.SetBits(Object::DirtyBit::LATERAL | Object::DirtyBit::LONGITUDINAL | Object::DirtyBit::SPEED | Object::DirtyBit::TELEPORT);
-}
-
-void TeleportAction::Step(double simTime, double dt)
-{
-    (void)simTime;
-    (void)dt;
 
     OSCAction::End();
 }
@@ -2484,13 +2484,6 @@ void ConnectTrailerAction::Start(double simTime)
     {
         LOG_INFO("No trailer to disconnect from {}", object_->GetName());
     }
-}
-
-void ConnectTrailerAction::Step(double simTime, double dt)
-{
-    (void)simTime;
-    (void)dt;
-
     OSCAction::End();
 }
 
@@ -2520,13 +2513,6 @@ void DisconnectTrailerAction::Start(double simTime)
     {
         LOG_WARN("DisconnectTrailerAction: No trailer connected, ignoring action");
     }
-}
-
-void DisconnectTrailerAction::Step(double simTime, double dt)
-{
-    (void)simTime;
-    (void)dt;
-
     OSCAction::End();
 }
 
@@ -3202,6 +3188,9 @@ void LightStateAction::Start(double simTime)
     }
 
     OSCAction::Start(simTime);
+
+    // All states are updated inside Step currently...
+    Step(simTime, 0.0);
 }
 
 void LightStateAction::Step(double simTime, double dt)
@@ -3210,6 +3199,11 @@ void LightStateAction::Step(double simTime, double dt)
     bool end_action = false;
 
     bool instantTransition = NEAR_NUMBERS(transitionTime_, 0.0);
+    if (!instantTransition)
+    {
+        transitionTimer_ += dt;
+    }
+
     if ((instantTransition || transitionTimer_ > transitionTime_ - SMALL_NUMBER) && !transitioned_)
     {
         if (!instantTransition)
@@ -3286,8 +3280,6 @@ void LightStateAction::Step(double simTime, double dt)
                     lightState.previousMaxRgb_[i] + (lightState.maxRgb_[i] - lightState.previousMaxRgb_[i]) * transitionFactor;
             }
         }
-
-        transitionTimer_ += dt;
     }
 
     if (actionVehicleLightStatus_.mode == Object::VehicleLightMode::FLASHING)

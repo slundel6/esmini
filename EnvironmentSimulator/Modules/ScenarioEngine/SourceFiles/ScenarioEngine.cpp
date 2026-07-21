@@ -135,6 +135,21 @@ void ScenarioEngine::UpdateGhostMode()
 
 int ScenarioEngine::step(double deltaSimTime)
 {
+    /* Flow:
+     - Update time
+     - Step actions (currently active)
+     - Step injected actions
+     - Step default controller
+     - Step controllers
+     - Evaluate triggers
+     - Start triggered actions (DONT step)
+     * */
+    if (storyBoard.GetCurrentState() == StoryBoardElement::State::COMPLETE)
+    {
+        // Scenario already finished and its final state has been recorded in a previous call - nothing more to do
+        return 1;
+    }
+
     UpdateGhostMode();
 
     if (frame_nr_ == 0)
@@ -158,24 +173,28 @@ int ScenarioEngine::step(double deltaSimTime)
         }
     }
 
-    storyBoard.Step(simulationTime_, deltaSimTime);
-
-    if (storyBoard.GetCurrentState() == StoryBoardElement::State::RUNNING)
+    if (frame_nr_ == 0 && SE_Env::Inst().GetCollisionDetection() && storyBoard.GetCurrentState() == StoryBoardElement::State::RUNNING)
     {
         // Check for collisions/overlap after first initialization
-        if (SE_Env::Inst().GetCollisionDetection() && frame_nr_ == 0)
-        {
-            DetectCollisions();
-        }
+        DetectCollisions();
     }
 
-    if (storyBoard.GetCurrentState() != StoryBoardElement::State::RUNNING)
+    simulationTime_ += deltaSimTime;
+    if (simulationTime_ < 0.0 && simulationTime_ > -SMALL_NUMBER)
     {
-        return 1;
+        // Avoid -0.000
+        simulationTime_ = 0.0;
     }
+
+    if (simulationTime_ > trueTime_)
+    {
+        trueTime_ = simulationTime_;
+    }
+
+    storyBoard.Step(simulationTime_, deltaSimTime);
 
     // Step any externally injected actions
-    if (injected_actions_ && injected_actions_->size() > 0)
+    if (injected_actions_ != nullptr && injected_actions_->size() > 0)
     {
         for (OSCAction* action : *injected_actions_)
         {
@@ -188,24 +207,6 @@ int ScenarioEngine::step(double deltaSimTime)
                 action->Step(simulationTime_, deltaSimTime);
             }
         }
-    }
-
-    // This timestep calculation is due to the Ghost vehicle
-    // If both times are equal, it is a normal scenario, or no Ghost teleportation is ongoing -> Step as usual
-    // Else if we can take a step, and still not reach the point of teleportation -> Step only simulationTime (That the Ghost runs on)
-    // Else, the only thing left is that the next step will take us above the point of teleportation -> Step to that point instead and go on from
-    // there
-
-    simulationTime_ += deltaSimTime;
-    if (simulationTime_ < 0.0 && simulationTime_ > -SMALL_NUMBER)
-    {
-        // Avoid -0.000
-        simulationTime_ = 0.0;
-    }
-
-    if (simulationTime_ > trueTime_)
-    {
-        trueTime_ = simulationTime_;
     }
 
     for (size_t i = 0; i < entities_.object_.size(); i++)
@@ -398,6 +399,11 @@ int ScenarioEngine::step(double deltaSimTime)
     }
 
     frame_nr_++;
+
+    // Check both start and stop triggers
+    storyBoard.EvalTriggers(simulationTime_);
+
+    // Dont return if stop yet, so playerbase has a chance to write logfiles etc.
 
     return 0;
 }
@@ -701,7 +707,7 @@ void ScenarioEngine::prepareGroundTruth(double dt)
                     // Update wheel rotations of internal scenario objects
                     if (!obj->dirty_.Check(Object::DirtyBit::WHEEL_ANGLE))
                     {
-                        if (fabs(obj->GetSpeed()) > SMALL_NUMBER)
+                        if (fabs(obj->GetSpeed()) > SMALL_NUMBER && !NEAR_NUMBERS(v->rear_axle_speed_, 0.0))
                         {
                             // Calculate steering angle according to simple bicycle model
                             obj->wheel_angle_ =
@@ -713,7 +719,8 @@ void ScenarioEngine::prepareGroundTruth(double dt)
                     if (!obj->dirty_.Check(Object::DirtyBit::WHEEL_ROTATION))
                     {
                         // Update wheel rotation based on sign of rear axle speed and magnitude of reference point speed
-                        obj->wheel_rot_ = fmod(obj->wheel_rot_ + SIGN(v->rear_axle_speed_) * fabs(obj->GetSpeed()) * dt / WHEEL_RADIUS, 2 * M_PI);
+                        const double rear_sign = NEAR_NUMBERS(v->rear_axle_speed_, 0.0) ? 0.0 : SIGN(v->rear_axle_speed_);
+                        obj->wheel_rot_        = fmod(obj->wheel_rot_ + rear_sign * fabs(obj->GetSpeed()) * dt / WHEEL_RADIUS, 2 * M_PI);
                         obj->dirty_.SetBits(Object::DirtyBit::WHEEL_ROTATION);
                     }
                 }
@@ -1157,7 +1164,7 @@ int ScenarioEngine::DetectCollisions()
                 if (std::find(obj0->collisions_.begin(), obj0->collisions_.end(), obj1) == obj0->collisions_.end())
                 {
                     // was not overlapping last timestep, but are now
-                    LOG_WARN("Collision between {} and {}", obj0->GetName(), obj1->GetName());
+                    LOG_INFO("Collision between {} and {}", obj0->GetName(), obj1->GetName());
                     obj0->collisions_.push_back(obj1);
                     obj1->collisions_.push_back(obj0);
                 }
@@ -1167,7 +1174,7 @@ int ScenarioEngine::DetectCollisions()
                 if (std::find(obj0->collisions_.begin(), obj0->collisions_.end(), obj1) != obj0->collisions_.end())
                 {
                     // was overlapping last frame, but not anymore
-                    LOG_WARN("Collision between {} and {} dissolved", obj0->GetName(), obj1->GetName());
+                    LOG_INFO("Collision between {} and {} dissolved", obj0->GetName(), obj1->GetName());
                     obj0->collisions_.erase(std::remove(obj0->collisions_.begin(), obj0->collisions_.end(), obj1), obj0->collisions_.end());
                     obj1->collisions_.erase(std::remove(obj1->collisions_.begin(), obj1->collisions_.end(), obj0), obj1->collisions_.end());
                 }

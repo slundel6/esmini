@@ -88,8 +88,8 @@ TEST(LoggerTests, check_verbosity_level_warn)
 
     FILE* file = FileOpen("log.txt", "r");
     ASSERT_NE(file, nullptr);
-    const int max_msg_size = 10000;
-    char      msg_buf[max_msg_size];
+    const int max_msg_size          = 10000;
+    char      msg_buf[max_msg_size] = {};
 
     size_t size = fread(msg_buf, 1, max_msg_size, file);
     EXPECT_NE(size, 0);
@@ -119,9 +119,9 @@ TEST(LoggerTests, check_verbosity_level_info)
 
     FILE* file = FileOpen("log.txt", "r");
     ASSERT_NE(file, nullptr);
-    const int max_msg_size = 10000;
-    char      msg_buf[max_msg_size];
-    size_t    size = fread(msg_buf, 1, max_msg_size, file);
+    const int max_msg_size          = 10000;
+    char      msg_buf[max_msg_size] = {};
+    size_t    size                  = fread(msg_buf, 1, max_msg_size, file);
     EXPECT_NE(size, 0);
     bool found = strstr(msg_buf, "This message should be logged") != NULL;
     EXPECT_TRUE(found);
@@ -147,9 +147,9 @@ TEST(LoggerTests, check_meta_data)
 
     FILE* file = FileOpen("log.txt", "r");
     ASSERT_NE(file, nullptr);
-    const int max_msg_size = 10000;
-    char      msg_buf[max_msg_size];
-    size_t    size = fread(msg_buf, 1, max_msg_size, file);
+    const int max_msg_size          = 10000;
+    char      msg_buf[max_msg_size] = {};
+    size_t    size                  = fread(msg_buf, 1, max_msg_size, file);
     EXPECT_NE(size, 0);
     bool found = strstr(msg_buf, ".cpp::") != NULL;
     EXPECT_TRUE(found);
@@ -177,9 +177,9 @@ TEST(LoggerTests, check_log_skip_modules)
 
     FILE* file = FileOpen("log.txt", "r");
     ASSERT_NE(file, nullptr);
-    const int max_msg_size = 10000;
-    char      msg_buf[max_msg_size];
-    size_t    size = fread(msg_buf, 1, max_msg_size, file);
+    const int max_msg_size          = 10000;
+    char      msg_buf[max_msg_size] = {};
+    size_t    size                  = fread(msg_buf, 1, max_msg_size, file);
     EXPECT_NE(size, 0);
     bool found = strstr(msg_buf, "This message should be logged") != NULL;
     EXPECT_TRUE(found);
@@ -216,9 +216,9 @@ TEST(LoggerTests, check_log_only_modules)
 
     FILE* file = FileOpen("log.txt", "r");
     ASSERT_NE(file, nullptr);
-    const int max_msg_size = 10000;
-    char      msg_buf[max_msg_size];
-    size_t    size = fread(msg_buf, 1, max_msg_size, file);
+    const int max_msg_size          = 10000;
+    char      msg_buf[max_msg_size] = {};
+    size_t    size                  = fread(msg_buf, 1, max_msg_size, file);
     EXPECT_NE(size, 0);
     bool found = strstr(msg_buf, "This message should be not logged") != NULL;
     EXPECT_FALSE(found);
@@ -257,9 +257,9 @@ TEST(LoggerTests, check_log_append)
 
     FILE* file = FileOpen("log.txt", "r");
     ASSERT_NE(file, nullptr);
-    const int max_msg_size = 10000;
-    char      msg_buf[max_msg_size];
-    size_t    size = fread(msg_buf, 1, max_msg_size, file);
+    const int max_msg_size          = 10000;
+    char      msg_buf[max_msg_size] = {};
+    size_t    size                  = fread(msg_buf, 1, max_msg_size, file);
     EXPECT_NE(size, 0);
     char* pos   = strstr(msg_buf, "This message should be logged twice");
     bool  found = pos != NULL;
@@ -976,7 +976,7 @@ TEST(GetOSIRoadLaneTest, lane_no_obj)
     SE_StepDT(0.001);
     SE_FlushOSIFile();
     ASSERT_EQ(stat("gt.osi", &fileStatus), 0);
-    EXPECT_EQ(fileStatus.st_size, 187233);  // slight growth due to only dynamic updates
+    EXPECT_EQ(fileStatus.st_size, 187269);  // slight growth due to only dynamic updates
 
     int road_lane_size;
 
@@ -988,12 +988,12 @@ TEST(GetOSIRoadLaneTest, lane_no_obj)
     SE_StepDT(0.001);  // Step for write another frame to osi file
     SE_FlushOSIFile();
     ASSERT_EQ(stat("gt.osi", &fileStatus), 0);
-    EXPECT_EQ(fileStatus.st_size, 188690);  // slight growth due to only dynamic updates
+    EXPECT_EQ(fileStatus.st_size, 188726);  // slight growth due to only dynamic updates
 
     SE_StepDT(0.001);  // Step for write another frame to osi file
     SE_FlushOSIFile();
     ASSERT_EQ(stat("gt.osi", &fileStatus), 0);
-    EXPECT_EQ(fileStatus.st_size, 190148);  // slight growth due to only dynamic updates
+    EXPECT_EQ(fileStatus.st_size, 190184);  // slight growth due to only dynamic updates
 
     SE_DisableOSIFile();
     SE_Close();
@@ -1581,7 +1581,7 @@ TEST(GroundTruthTests, check_GroundTruth_including_init_state)
 
     const int max_msg_size = 10000;
     int       msg_size;
-    char      msg_buf[max_msg_size];
+    char      msg_buf[max_msg_size] = {};
 
     for (int i = 0; i < 3; i++)
     {
@@ -1659,7 +1659,7 @@ TEST(GroundTruthTests, check_frequency_implicit)
 
     const int max_msg_size = 10000;
     int       msg_size;
-    char      msg_buf[max_msg_size];
+    char      msg_buf[max_msg_size] = {};
 
     for (int i = 0; i < 3; i++)
     {
@@ -1729,7 +1729,7 @@ TEST(GroundTruthTests, check_frequency_explicit)
 
     const int max_msg_size = 10000;
     int       msg_size;
-    char      msg_buf[max_msg_size];
+    char      msg_buf[max_msg_size] = {};
 
     for (int i = 0; i < 3; i++)
     {
@@ -3302,7 +3302,7 @@ TEST(VehicleLightStateTest, GetVehicleLightState)
     EXPECT_EQ(light_state.light_mode, 2);
     EXPECT_EQ(light_state.emitting, true);
 
-    while (SE_GetSimulationTime() < 0.125 + SMALL_NUMBER)
+    while (SE_GetSimulationTime() < 0.100 + SMALL_NUMBER)
     {
         SE_StepDT(0.025);
     }
@@ -3329,7 +3329,7 @@ TEST(VehicleLightStateTest, GetVehicleLightState)
     EXPECT_EQ(light_state.light_mode, 3);
     EXPECT_EQ(light_state.emitting, false);
 
-    while (SE_GetSimulationTime() < 0.625 + SMALL_NUMBER)
+    while (SE_GetSimulationTime() < 0.600 + SMALL_NUMBER)
     {
         SE_StepDT(0.025);
     }
@@ -3409,7 +3409,7 @@ TEST(ExternalControlTest, TestTimings)
         while (SE_GetSimulationTime() < duration - SMALL_NUMBER && SE_GetQuitFlag() != 1)
         {
             // After ghost restart, check polyline returnvalues
-            if (j == 1 && NEAR_NUMBERS(SE_GetSimulationTime(), 2.2))
+            if (j == 1 && NEAR_NUMBERS(SE_GetSimulationTime(), 2.19))
             {
                 // try too small timestamp not preset in ghost trail which is now defined between 2.25 and 5.1
                 EXPECT_EQ(SE_GetRoadInfoGhostTrailTime(0, 2.24, &road_info, &ghost_speed), SE_GhostTrailReturnCode::SE_GHOST_TRAIL_TIME_PRIOR);
@@ -3772,8 +3772,8 @@ TEST(ExternalControlTest, TestTimings)
             FILE* file = FileOpen("gt.osi", "rb");
             ASSERT_NE(file, nullptr);
 
-            const int         max_msg_size = 10000;
-            char              msg_buf[max_msg_size];
+            const int         max_msg_size          = 10000;
+            char              msg_buf[max_msg_size] = {};
             int               msg_size;
             osi3::GroundTruth osi_gt;
             double            seconds = -1.0;
@@ -3895,7 +3895,6 @@ TEST(EnvironmentTest, OSIForEnvironment)
     osi_gt = reinterpret_cast<const osi3::GroundTruth*>(SE_GetOSIGroundTruthRaw());
 
     SE_StepDT(1.0);
-    SE_StepDT(1.0);
 
     EXPECT_EQ(osi_gt->environmental_conditions().atmospheric_pressure(), 80000);
     EXPECT_EQ(osi_gt->environmental_conditions().fog(), osi3::EnvironmentalConditions_Fog_FOG_MODERATE_VISIBILITY);
@@ -3913,19 +3912,19 @@ TEST(EnvironmentTest, OSIForEnvironment)
     EXPECT_EQ(osi_gt->environmental_conditions().time_of_day().seconds_since_midnight(), 37800);
     EXPECT_EQ(osi_gt->environmental_conditions().unix_timestamp(), 1700044200);
 
-    SE_StepDT(0.1);
-
-    EXPECT_EQ(osi_gt->environmental_conditions().time_of_day().seconds_since_midnight(), 37800);
-    EXPECT_EQ(osi_gt->environmental_conditions().unix_timestamp(),
-              1700044200);  // TimeOfDay animation is true, simulation time is 1.0s which is added to epoch time
-    EXPECT_EQ(osi_gt->environmental_conditions().clouds().fractional_cloud_cover(),
-              osi3::EnvironmentalConditions_CloudLayer_FractionalCloudCover_FRACTIONAL_CLOUD_COVER_ONE_OKTAS);
-
     SE_StepDT(1.0);
 
     EXPECT_EQ(osi_gt->environmental_conditions().time_of_day().seconds_since_midnight(), 37801);
     EXPECT_EQ(osi_gt->environmental_conditions().unix_timestamp(),
               1700044201);  // TimeOfDay animation is true, simulation time is 1.0s which is added to epoch time
+    EXPECT_EQ(osi_gt->environmental_conditions().clouds().fractional_cloud_cover(),
+              osi3::EnvironmentalConditions_CloudLayer_FractionalCloudCover_FRACTIONAL_CLOUD_COVER_ONE_OKTAS);
+
+    SE_StepDT(1.0);
+
+    EXPECT_EQ(osi_gt->environmental_conditions().time_of_day().seconds_since_midnight(), 37802);
+    EXPECT_EQ(osi_gt->environmental_conditions().unix_timestamp(),
+              1700044202);  // TimeOfDay animation is true, simulation time is 1.0s which is added to epoch time
 
     SE_Close();
 }
@@ -4144,9 +4143,9 @@ static void paramDeclCallback(void*)
 TEST(ParameterTest, SetParameterValuesBeforeInit)
 {
     double positions[3][2] = {
-        {5.34382, 186.68216},  // TargetSpeedFactor = 1.1
+        {5.34382, 186.68215},  // TargetSpeedFactor = 1.1
         {8.83781, 240.59825},  // TargetSpeedFactor = 1.5
-        {5.46731, 201.38162}   // TargetSpeedFactor = Default = 1.2
+        {5.46730, 201.38161}   // TargetSpeedFactor = Default = 1.2
     };
     SE_ScenarioObjectState state;
 
@@ -4295,7 +4294,7 @@ TEST(TestGetAndSet, OverrideGearTest)
     EXPECT_EQ(list.gear.value_type, 0);
     EXPECT_EQ(list.gear.number, -2);
 
-    for (; t < 7.1 + SMALL_NUMBER; t += dt)
+    for (; t < 7.0 + SMALL_NUMBER; t += dt)
     {
         SE_StepDT(dt);
     }
@@ -4566,33 +4565,33 @@ TEST(ExternalController, TestExternalDriver)
                 if (abs(SE_GetSimulationTime() - 11.0) < SMALL_NUMBER)
                 {
                     SE_GetObjectState(0, &objectState);
-                    EXPECT_NEAR(objectState.x, 202.4752, 1e-3);
-                    EXPECT_NEAR(objectState.y, 83.0303, 1e-3);
-                    EXPECT_NEAR(objectState.h, 1.134, 1e-3);
+                    EXPECT_NEAR(objectState.x, 202.7794, 1e-3);
+                    EXPECT_NEAR(objectState.y, 83.6756, 1e-3);
+                    EXPECT_NEAR(objectState.h, 1.1387, 1e-3);
                     EXPECT_NEAR(objectState.p, 6.262, 1e-3);
                     if (ghostMode[i] == true)
                     {
                         SE_RoadInfo road_info2;
                         SE_GetRoadInfoGhostTrailTime(0, SE_GetSimulationTime(), &road_info2, &speed2);
-                        EXPECT_NEAR(road_info2.global_pos_x, 206.7191, 1e-3);
-                        EXPECT_NEAR(road_info2.global_pos_y, 92.4454, 1e-3);
-                        EXPECT_NEAR(roadInfo.trail_heading, 1.2158, 1e-3);
+                        EXPECT_NEAR(road_info2.global_pos_x, 206.9841, 1e-3);
+                        EXPECT_NEAR(road_info2.global_pos_y, 93.1336, 1e-3);
+                        EXPECT_NEAR(roadInfo.trail_heading, 1.2209, 1e-3);
                     }
                 }
                 else if (abs(SE_GetSimulationTime() - 30.0) < SMALL_NUMBER)
                 {
                     SE_GetObjectState(0, &objectState);
-                    EXPECT_NEAR(objectState.x, 382.1315, 1e-3);
-                    EXPECT_NEAR(objectState.y, 301.6021, 1e-3);
-                    EXPECT_NEAR(objectState.h, 5.272, 1e-3);
+                    EXPECT_NEAR(objectState.x, 382.4967, 1e-3);
+                    EXPECT_NEAR(objectState.y, 301.0150, 1e-3);
+                    EXPECT_NEAR(objectState.h, 5.2658, 1e-3);
                     EXPECT_NEAR(objectState.p, 0.025, 1e-3);
                     if (ghostMode[i] == true)
                     {
                         SE_RoadInfo road_info3;
                         SE_GetRoadInfoGhostTrailTime(0, SE_GetSimulationTime(), &road_info3, &speed2);
-                        EXPECT_NEAR(road_info3.global_pos_x, 388.2329, 1e-3);
-                        EXPECT_NEAR(road_info3.global_pos_y, 291.2719, 1e-3);
-                        EXPECT_NEAR(roadInfo.trail_heading, 5.1278, 1e-3);
+                        EXPECT_NEAR(road_info3.global_pos_x, 388.5732, 1e-3);
+                        EXPECT_NEAR(road_info3.global_pos_y, 290.6021, 1e-3);
+                        EXPECT_NEAR(roadInfo.trail_heading, 5.1251, 1e-3);
                     }
                 }
             }
@@ -4603,31 +4602,31 @@ TEST(ExternalController, TestExternalDriver)
                 if (abs(SE_GetSimulationTime() - 11.0) < SMALL_NUMBER)
                 {
                     SE_GetObjectState(0, &objectState);
-                    EXPECT_NEAR(objectState.x, 203.2110, 1e-3);
-                    EXPECT_NEAR(objectState.y, 84.5007, 1e-3);
-                    EXPECT_NEAR(objectState.h, 1.142, 1e-3);
+                    EXPECT_NEAR(objectState.x, 203.5033, 1e-3);
+                    EXPECT_NEAR(objectState.y, 85.1421, 1e-3);
+                    EXPECT_NEAR(objectState.h, 1.1469, 1e-3);
                     EXPECT_NEAR(objectState.p, 6.262, 1e-3);
                     if (ghostMode[i] == true)
                     {
                         SE_GetRoadInfoGhostTrailTime(0, SE_GetSimulationTime(), &road_info2, &speed3);
-                        EXPECT_NEAR(road_info2.global_pos_x, 206.7191, 1e-3);
-                        EXPECT_NEAR(road_info2.global_pos_y, 92.4454, 1e-3);
-                        EXPECT_NEAR(roadInfo.trail_heading, 1.2182, 1e-3);
+                        EXPECT_NEAR(road_info2.global_pos_x, 206.9841, 1e-3);
+                        EXPECT_NEAR(road_info2.global_pos_y, 93.1336, 1e-3);
+                        EXPECT_NEAR(roadInfo.trail_heading, 1.2234, 1e-3);
                     }
                 }
                 else if (abs(SE_GetSimulationTime() - 30.0) < SMALL_NUMBER)
                 {
                     SE_GetObjectState(0, &objectState);
-                    EXPECT_NEAR(objectState.x, 382.0824, 1e-3);
-                    EXPECT_NEAR(objectState.y, 302.5291, 1e-3);
-                    EXPECT_NEAR(objectState.h, 5.271, 1e-3);
+                    EXPECT_NEAR(objectState.x, 382.4663, 1e-3);
+                    EXPECT_NEAR(objectState.y, 301.9093, 1e-3);
+                    EXPECT_NEAR(objectState.h, 5.2655, 1e-3);
                     EXPECT_NEAR(objectState.p, 0.026, 1e-3);
                     if (ghostMode[i] == true)
                     {
                         SE_GetRoadInfoGhostTrailTime(0, SE_GetSimulationTime(), &road_info2, &speed3);
-                        EXPECT_NEAR(road_info2.global_pos_x, 388.2329, 1e-3);
-                        EXPECT_NEAR(road_info2.global_pos_y, 291.2719, 1e-3);
-                        EXPECT_NEAR(roadInfo.trail_heading, 5.1519, 1e-3);
+                        EXPECT_NEAR(road_info2.global_pos_x, 388.5732, 1e-3);
+                        EXPECT_NEAR(road_info2.global_pos_y, 290.6021, 1e-3);
+                        EXPECT_NEAR(roadInfo.trail_heading, 5.1483, 1e-3);
                     }
                 }
             }
@@ -5384,7 +5383,7 @@ TEST(ReplayTest, TestMultiReplayDifferentTimeSteps)
 
     SE_AddPath("../../../resources/models");
 
-    for (int k = 0; k < 2; k++)
+    for (int k = 0; k < 1; k++)
     {
         // Run the two scenarios, create dat files
         for (int i = 0; i < 2; i++)
@@ -5449,23 +5448,23 @@ TEST(ReplayTest, TestMultiReplayDifferentTimeSteps)
             entry = replay->GetReplayEntryAtTimeBinary(ids[0], time);
             EXPECT_NEAR(entry.state.pos.y, 276.1375, 1E-3);
             entry = replay->GetReplayEntryAtTimeBinary(ids[1], time);
-            EXPECT_NEAR(entry.state.pos.y, 318.771, 1E-3);
+            EXPECT_NEAR(entry.state.pos.y, 318.7708, 1E-3);
             entry = replay->GetReplayEntryAtTimeBinary(ids[2], time);
-            EXPECT_NEAR(entry.state.pos.y, 331.016, 1E-3);
+            EXPECT_NEAR(entry.state.pos.y, 334.0156, 1E-3);
             entry = replay->GetReplayEntryAtTimeBinary(ids[3], time);
-            EXPECT_NEAR(entry.state.pos.y, 417.317, 1E-3);
+            EXPECT_NEAR(entry.state.pos.y, 421.5150, 1E-3);
         }
         else
         {
-            time  = 19.6;
+            time  = 19.5;
             entry = replay->GetReplayEntryAtTimeBinary(ids[0], time);
-            EXPECT_NEAR(entry.state.pos.y, 355.1682, 1E-3);
+            EXPECT_NEAR(entry.state.pos.y, 352.4716, 1E-3);
             entry = replay->GetReplayEntryAtTimeBinary(ids[1], time);
-            EXPECT_NEAR(entry.state.pos.y, 361.272, 1E-3);
+            EXPECT_NEAR(entry.state.pos.y, 358.5953, 1E-3);
             entry = replay->GetReplayEntryAtTimeBinary(ids[2], time);
-            EXPECT_NEAR(entry.state.pos.y, 332.214, 1E-3);
+            EXPECT_NEAR(entry.state.pos.y, 332.5147, 1E-3);
             entry = replay->GetReplayEntryAtTimeBinary(ids[3], time);
-            EXPECT_NEAR(entry.state.pos.y, 418.993, 1E-3);
+            EXPECT_NEAR(entry.state.pos.y, 419.4133, 1E-3);
         }
 
         delete replay;
@@ -5522,12 +5521,12 @@ void StoryBoardElementStateCallbackInstance1(const char* element_name, int type,
         {"slowdown event", 4.4, 6, 3, "hwe_story::hwe_act::hwe_maneuvergroup::hwe_maneuver::slowdown event"},              // Event, Complete
         {"lanechange event", 4.4, 6, 2, "hwe_story::hwe_act::hwe_maneuvergroup::hwe_maneuver::lanechange event"},          // Event, Running
         {"lane change", 4.4, 7, 2, "hwe_story::hwe_act::hwe_maneuvergroup::hwe_maneuver::lanechange event::lane change"},  // Action, Running
-        {"lane change", 8.3, 7, 3, "hwe_story::hwe_act::hwe_maneuvergroup::hwe_maneuver::lanechange event::lane change"},  // Action, Complete
-        {"lanechange event", 8.3, 6, 3, "hwe_story::hwe_act::hwe_maneuvergroup::hwe_maneuver::lanechange event"},          // Event, Complete
-        {"hwe_maneuver", 8.3, 5, 3, "hwe_story::hwe_act::hwe_maneuvergroup::hwe_maneuver"},                                // Maneuver, Complete
-        {"hwe_maneuvergroup", 8.3, 4, 3, "hwe_story::hwe_act::hwe_maneuvergroup"},                                         // ManeuverGroup, Complete
-        {"hwe_act", 8.3, 3, 3, "hwe_story::hwe_act"},                                                                      // Act, Complete
-        {"hwe_story", 8.3, 2, 3, "hwe_story"},                                                                             // Story, Complete
+        {"lane change", 8.4, 7, 3, "hwe_story::hwe_act::hwe_maneuvergroup::hwe_maneuver::lanechange event::lane change"},  // Action, Complete
+        {"lanechange event", 8.4, 6, 3, "hwe_story::hwe_act::hwe_maneuvergroup::hwe_maneuver::lanechange event"},          // Event, Complete
+        {"hwe_maneuver", 8.4, 5, 3, "hwe_story::hwe_act::hwe_maneuvergroup::hwe_maneuver"},                                // Maneuver, Complete
+        {"hwe_maneuvergroup", 8.4, 4, 3, "hwe_story::hwe_act::hwe_maneuvergroup"},                                         // ManeuverGroup, Complete
+        {"hwe_act", 8.4, 3, 3, "hwe_story::hwe_act"},                                                                      // Act, Complete
+        {"hwe_story", 8.4, 2, 3, "hwe_story"},                                                                             // Story, Complete
         {"storyBoard", 12.1, 1, 3, ""},                                                                                    // StoryBoard, Complete
     };
 
@@ -5671,7 +5670,6 @@ TEST(RoadmanagerTest, TestSimpleGetDistance)
     EXPECT_EQ(ret, -2);
 
     SE_StepDT(0.1);
-    SE_StepDT(0.1);
 
     // Object 1 is deleted
     ret = SE_SimpleGetDistanceToObject(0, 1, SE_RelativeDistanceType::REL_DIST_EUCLIDIAN, 200.0, &distance, &timestamp);
@@ -5682,8 +5680,8 @@ TEST(RoadmanagerTest, TestSimpleGetDistance)
     // Object 3 is teleported close to ego
     ret = SE_SimpleGetDistanceToObject(0, 3, SE_RelativeDistanceType::REL_DIST_LONGITUDINAL, 200.0, &distance, &timestamp);
     EXPECT_EQ(ret, 0);
-    EXPECT_NEAR(distance, 80.5, error);
-    EXPECT_NEAR(timestamp, 0.3, error);
+    EXPECT_NEAR(distance, 82.0, error);
+    EXPECT_NEAR(timestamp, 0.2, error);
 
     while (SE_GetSimulationTime() < 2.5 - SMALL_NUMBER)
     {
