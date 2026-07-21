@@ -1000,7 +1000,6 @@ namespace scenarioengine
             return "TeleportAction";
         };
 
-        void Step(double simTime, double dt);
         void Start(double simTime);
 
         void ReplaceObjectRefs(Object* obj1, Object* obj2);
@@ -1048,7 +1047,6 @@ namespace scenarioengine
             return "ConnectTrailerAction";
         };
 
-        void Step(double simTime, double dt);
         void Start(double simTime);
 
         void ReplaceObjectRefs(Object* obj1, Object* obj2);
@@ -1085,7 +1083,6 @@ namespace scenarioengine
             return "ConnectTrailerAction";
         };
 
-        void Step(double simTime, double dt);
         void Start(double simTime);
 
         void ReplaceObjectRefs(Object* obj1, Object* obj2);
@@ -1155,6 +1152,8 @@ namespace scenarioengine
         double                     timing_scale_;
         double                     timing_offset_;
         double                     time_;
+        double                     start_time_;
+        double                     traj_start_time_;
         double                     initialDistanceOffset_;
         int                        initialHeadingSign_;
         int                        movingDirection_;
@@ -1171,6 +1170,8 @@ namespace scenarioengine
               timing_scale_(1),
               timing_offset_(0),
               time_(0),
+              start_time_(0),
+              traj_start_time_(0),
               initialDistanceOffset_(0),
               initialHeadingSign_(1),
               movingDirection_(1),
@@ -1192,6 +1193,8 @@ namespace scenarioengine
             initialDistanceOffset_     = action.timing_offset_;
             following_mode_            = action.following_mode_;
             time_                      = 0;
+            start_time_                = 0;
+            traj_start_time_           = 0;
             initialHeadingSign_        = action.initialHeadingSign_;
             movingDirection_           = action.movingDirection_;
             explicit_h_active_         = action.explicit_h_active_;
@@ -1263,7 +1266,6 @@ namespace scenarioengine
         };
 
         void Start(double simTime);
-        void Step(double simTime, double dt);
 
         void ReplaceObjectRefs(Object* obj1, Object* obj2);
     };

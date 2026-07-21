@@ -31,9 +31,9 @@ Below is a typical interaction between a custom application (e.g. vehicle simula
 |Frame|app time|app events|esmini time|esmini events
 |0 (t=0.0)|0.0|Init esmini("scenario.xosc") =>|0.0|
 ||0.0||0.0|Step(dt=0.0)
-||0.0||0.0 a|- check conditions
-||0.0||0.0 a|- update actions
+||0.0||0.0 a|- start init actions
 ||0.0||0.0 a|- step default controller (establish initial positions and speed)
+||0.0||0.0 a|- evaluate triggers & start triggered actions
 ||0.0||0.0 a|- save to dat, send OSI
 ||0.0||0.0 a|- Draw()
 ||0.0|Get Ego state (initial position, speed...) =>|0.0|
@@ -44,10 +44,10 @@ Below is a typical interaction between a custom application (e.g. vehicle simula
 ||0.1||0.0|Update state of Ego, protect it from default controller
 ||0.1|Step esmini(dt=0.1) =>|0.0|
 ||0.1||0.0|Step(dt=0.1)
-||0.1||0.0 a|- check conditions
-||0.1||0.0 a|- update actions
-||0.1||0.0 a|- step default controller (move entities, except Ego)
 ||0.1||0.1 a|- update simulation time
+||0.1||0.1 a|- update actions
+||0.1||0.1 a|- step default controller (move entities, except Ego)
+||0.1||0.1 a|- evaluate triggers & start triggered actions
 ||0.1||0.1 a|- save to dat, send OSI
 ||0.1||0.1 a|- Draw()
 |2 (t=0.1->0.2)|0.2|Update Ego(dt=0.1)|0.1|
@@ -56,10 +56,10 @@ Below is a typical interaction between a custom application (e.g. vehicle simula
 ||0.2||0.1|Update state of Ego, protect it from default controller
 ||0.2|Step esmini(dt=0.1) =>|0.1|
 ||0.2||0.1|Step(dt=0.1)
-||0.2||0.1 a|- check conditions
-||0.2||0.1 a|- update actions
-||0.2||0.1 a|- step default controller (move entities, except Ego)
 ||0.2||0.2 a|- update simulation time
+||0.2||0.2 a|- update actions
+||0.2||0.2 a|- step default controller (move entities, except Ego)
+||0.2||0.2 a|- evaluate triggers & start triggered actions
 ||0.2||0.2 a|- save to dat, send OSI
 ||0.2||0.2 a|- Draw()
 |and so on...||||

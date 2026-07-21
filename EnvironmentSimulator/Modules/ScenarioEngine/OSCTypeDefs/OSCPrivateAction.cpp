@@ -416,6 +416,10 @@ void FollowTrajectoryAction::Start(double simTime)
     object_->pos_.SetTrajectoryS(initialDistanceOffset_);
     time_ = traj_->GetTime();
 
+    // Save states for relative timing domain
+    traj_start_time_ = time_;
+    start_time_      = simTime;
+
     // establish speed sign / driving direction, default is driving forward
     double speedSign = 1.0;
     if (timing_domain_ == TimingDomain::NONE)
@@ -457,6 +461,8 @@ void FollowTrajectoryAction::Start(double simTime)
     {
         object_->SetSpeed(speedSign * traj_->GetSpeed());
     }
+
+    Step(simTime, 0.0);  // Step to move to proper position in a trajectory and set dirty bits
 }
 
 FollowTrajectoryAction::~FollowTrajectoryAction()
@@ -578,40 +584,32 @@ void scenarioengine::FollowTrajectoryAction::Move(double simTime, double dt)
         movingDirection_ = SIGN(object_->GetSpeed()) * initialHeadingSign_;
         object_->pos_.MoveTrajectoryDS(movingDirection_ * fabs(object_->speed_) * dt);
     }
-    else if (timing_domain_ == TimingDomain::TIMING_RELATIVE)
+    else
     {
-        time_ += timing_scale_ * dt;
-        object_->pos_.SetTrajectoryPosByTime(time_ + timing_offset_);
-
+        if (timing_domain_ == TimingDomain::TIMING_RELATIVE)
+        {
+            // Relative timing domain: trajectory time runs relative to when THIS action started,
+            time_ = traj_start_time_ + (simTime - start_time_) * timing_scale_;
+            object_->pos_.SetTrajectoryPosByTime(time_ + timing_offset_);
+        }
+        else if (timing_domain_ == TimingDomain::TIMING_ABSOLUTE)
+        {
+            if (object_->IsGhost() || simTime > -SMALL_NUMBER)
+            {
+                // simTime already represents this tick's committed simulation instant - no further dt advance needed
+                time_ = simTime * timing_scale_;
+            }
+            object_->pos_.SetTrajectoryPosByTime(time_ + timeOffset + timing_offset_);
+        }
         // calculate and update actual speed only while not reached end of trajectory,
         // since the movement is based on remaining length of trajectory, not speed
-        if (time_ + timing_offset_ < traj_->GetStartTime() + traj_->GetDuration() + SMALL_NUMBER)
-        {
-            if (dt > SMALL_NUMBER)  // only update speed if some time has passed
-            {
-                movingDirection_ = SIGN(object_->pos_.GetTrajectoryS() - old_s);
-                object_->SetSpeed(movingDirection_ * headingDirection * fabs(object_->pos_.GetTrajectoryS() - old_s) / dt);
-            }
-        }
-    }
-    else if (timing_domain_ == TimingDomain::TIMING_ABSOLUTE)
-    {
-        if (object_->IsGhost() || simTime > -SMALL_NUMBER)
-        {
-            time_ = (simTime + dt) * timing_scale_;
-        }
-
-        object_->pos_.SetTrajectoryPosByTime(time_ + timeOffset + timing_offset_);
-
         if ((dt > SMALL_NUMBER) &&  // skip speed update if timestep is zero
             (time_ + timeOffset < traj_->GetStartTime() + traj_->GetDuration() + SMALL_NUMBER))
         {
-            // don't calculate and update actual speed when reached end of trajectory,
-            // since the movement is based on remaining length of trajectory, not speed
+            movingDirection_ = SIGN(object_->pos_.GetTrajectoryS() - old_s);
             object_->SetSpeed(movingDirection_ * headingDirection * fabs(object_->pos_.GetTrajectoryS() - old_s) / dt);
         }
     }
-
     // Check if switching into segment with no specified heading
     if (traj_->IsHSetExplicitly())
     {
@@ -689,13 +687,6 @@ void AcquirePositionAction::Start(double simTime)
     object_->dirty_.SetBits(Object::DirtyBit::ROUTE);
 
     OSCAction::Start(simTime);
-}
-
-void AcquirePositionAction::Step(double simTime, double dt)
-{
-    (void)simTime;
-    (void)dt;
-
     OSCAction::End();
 }
 
@@ -918,6 +909,8 @@ void LatLaneChangeAction::Start(double simTime)
     // Make offsets agnostic to lane sign
     transition_.SetStartVal(SIGN(internal_pos_.GetLaneId()) * internal_pos_.GetOffset());
     transition_.SetTargetVal(SIGN(target_lane_id_) * target_lane_offset_);
+
+    Step(simTime, 0.0);  // Step to move any instantenous motions and set dirty bits properly
 }
 
 void LatLaneChangeAction::Step(double simTime, double dt)
@@ -941,6 +934,21 @@ void LatLaneChangeAction::Step(double simTime, double dt)
 
     if (abs(object_->GetSpeed()) < SMALL_NUMBER)
     {
+        return;
+    }
+
+    bool instant_transition = transition_.shape_ == DynamicsShape::STEP ||
+                              (transition_.dimension_ != DynamicsDimension::RATE && transition_.GetParamTargetVal() < SMALL_NUMBER);
+
+    if (dt == 0.0 && !instant_transition)
+    {
+        // dt == 0 should only initialize action state. Avoid lane/track/inertial round-trips for continuous transitions.
+        if (fabs(offset_agnostic - transition_.GetTargetVal()) < SMALL_NUMBER)
+        {
+            OSCAction::End();
+            object_->pos_.SetHeadingRelativeRoadDirection(0.0);
+        }
+        object_->dirty_.SetBits(Object::DirtyBit::SPEED);
         return;
     }
 
@@ -991,8 +999,7 @@ void LatLaneChangeAction::Step(double simTime, double dt)
                              internal_pos_.GetS(),
                              offset_agnostic * SIGN(internal_pos_.GetLaneId()));
 
-    if (transition_.shape_ == DynamicsShape::STEP ||
-        (transition_.dimension_ != DynamicsDimension::RATE && transition_.GetParamTargetVal() < SMALL_NUMBER))
+    if (instant_transition)
     {
         // not for step shape, since it is not a continuous function. Maintain longitudinal motion
         delta_long = step_len;
@@ -1254,6 +1261,12 @@ void LongSpeedAction::Start(double simTime)
 
     // Set initial state
     object_->SetSpeed(transition_.Evaluate());
+
+    if (transition_.shape_ == DynamicsShape::STEP &&
+        !(target_->type_ == Target::TargetType::RELATIVE_SPEED && (static_cast<TargetRelative*>(target_.get()))->continuous_ == true))
+    {
+        OSCAction::End();
+    }
 }
 
 void LongSpeedAction::Step(double simTime, double dt)
@@ -1680,19 +1693,19 @@ void LongSpeedProfileAction::Start(double simTime)
 
 void LongSpeedProfileAction::Step(double simTime, double dt)
 {
-    double time = simTime + dt;
+    (void)dt;
 
-    if (time < segment_.back().t + 10 && !(time > segment_.back().t and abs(speed_ - segment_.back().v) < SMALL_NUMBER))
+    if (simTime < segment_.back().t + 10 && !(simTime > segment_.back().t and abs(speed_ - segment_.back().v) < SMALL_NUMBER))
     {
         while (static_cast<unsigned int>(cur_index_) < segment_.size() - 1 &&
-               time > segment_[static_cast<unsigned int>(cur_index_) + 1].t - SMALL_NUMBER)
+               simTime > segment_[static_cast<unsigned int>(cur_index_) + 1].t - SMALL_NUMBER)
         {
             cur_index_++;
         }
 
         SpeedSegment* s = &segment_[static_cast<unsigned int>(cur_index_)];
 
-        speed_ = s->v + s->k * (time - s->t) + 0.5 * s->j * pow(time - s->t, 2);
+        speed_ = s->v + s->k * (simTime - s->t) + 0.5 * s->j * pow(simTime - s->t, 2);
         if (NEAR_ZERO(speed_))
         {
             // avoid random jumping between positive and negative zero
@@ -1700,7 +1713,7 @@ void LongSpeedProfileAction::Step(double simTime, double dt)
         }
     }
 
-    elapsed_ = MAX(0.0, time - segment_[0].t);
+    elapsed_ = MAX(0.0, simTime - segment_[0].t);
 
     if (static_cast<unsigned int>(cur_index_) >= entry_.size() - 1 && fabs(speed_ - segment_.back().v) < SMALL_NUMBER)
     {
@@ -2435,12 +2448,6 @@ void TeleportAction::Start(double simTime)
     object_->pos_.Print();
 
     object_->dirty_.SetBits(Object::DirtyBit::LATERAL | Object::DirtyBit::LONGITUDINAL | Object::DirtyBit::SPEED | Object::DirtyBit::TELEPORT);
-}
-
-void TeleportAction::Step(double simTime, double dt)
-{
-    (void)simTime;
-    (void)dt;
 
     OSCAction::End();
 }
@@ -2484,13 +2491,6 @@ void ConnectTrailerAction::Start(double simTime)
     {
         LOG_INFO("No trailer to disconnect from {}", object_->GetName());
     }
-}
-
-void ConnectTrailerAction::Step(double simTime, double dt)
-{
-    (void)simTime;
-    (void)dt;
-
     OSCAction::End();
 }
 
@@ -2520,13 +2520,6 @@ void DisconnectTrailerAction::Start(double simTime)
     {
         LOG_WARN("DisconnectTrailerAction: No trailer connected, ignoring action");
     }
-}
-
-void DisconnectTrailerAction::Step(double simTime, double dt)
-{
-    (void)simTime;
-    (void)dt;
-
     OSCAction::End();
 }
 
@@ -3202,6 +3195,9 @@ void LightStateAction::Start(double simTime)
     }
 
     OSCAction::Start(simTime);
+
+    // All states are updated inside Step currently...
+    Step(simTime, 0.0);
 }
 
 void LightStateAction::Step(double simTime, double dt)
@@ -3210,6 +3206,11 @@ void LightStateAction::Step(double simTime, double dt)
     bool end_action = false;
 
     bool instantTransition = NEAR_NUMBERS(transitionTime_, 0.0);
+    if (!instantTransition)
+    {
+        transitionTimer_ += dt;
+    }
+
     if ((instantTransition || transitionTimer_ > transitionTime_ - SMALL_NUMBER) && !transitioned_)
     {
         if (!instantTransition)
@@ -3286,8 +3287,6 @@ void LightStateAction::Step(double simTime, double dt)
                     lightState.previousMaxRgb_[i] + (lightState.maxRgb_[i] - lightState.previousMaxRgb_[i]) * transitionFactor;
             }
         }
-
-        transitionTimer_ += dt;
     }
 
     if (actionVehicleLightStatus_.mode == Object::VehicleLightMode::FLASHING)

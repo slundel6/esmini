@@ -36,7 +36,7 @@ if __name__ == "__main__":
     process = subprocess.Popen(esmini_args, stdout=subprocess.PIPE, text=True)
     csv_data = process.stdout.read().strip().splitlines()
 
-    data = np.genfromtxt(csv_data[1:], delimiter=',', names=True, dtype=None, encoding=None, autostrip=True)
+    data = np.genfromtxt(csv_data, delimiter=',', names=True, dtype=None, encoding=None, autostrip=True)
 
     plot.plot(
         data, get_labels_line_extended(),

@@ -603,7 +603,7 @@ TEST(LightState, TestLightStateColors)
         EXPECT_FALSE(is_uninitialized);
     }
 
-    while (se->getSimulationTime() < 0.2 + SMALL_NUMBER)
+    while (se->getSimulationTime() < 0.1 + SMALL_NUMBER)
     {
         player->Frame(dt);
     }
@@ -665,7 +665,7 @@ TEST(LightState, TestLightStateColors)
         }
     }
 
-    while (se->getSimulationTime() < 0.4 + SMALL_NUMBER)
+    while (se->getSimulationTime() < 0.3 + SMALL_NUMBER)
     {
         player->Frame(dt);
     }
@@ -1121,7 +1121,7 @@ TEST(OSI, TestTrafficLightStates)
     EXPECT_EQ(osi_gt_ptr->traffic_light(2).classification().is_out_of_service(), false);
     EXPECT_EQ(osi_gt_ptr->traffic_light(2).classification().assigned_lane_id(0).value(), 2);
 
-    for (size_t i = 0; i < 2; i++)
+    for (size_t i = 0; i < 1; i++)
     {
         player->Frame(dt);
     }

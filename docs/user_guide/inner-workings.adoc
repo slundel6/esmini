@@ -215,7 +215,6 @@ sequenceDiagram
         app->>lib: Step()
         lib->>player: Step()
         player->>se: Step()
-        se->>se: EvaluateTriggers()
         se->>se: StepActions()
         opt
            se->>app: StoryboardStateChangeCallBack()
@@ -239,6 +238,7 @@ sequenceDiagram
            player-->>lib: states
            lib-->>app: states
         end
+        se->>se: EvaluateTriggers()
         app->>app: step app
     end
 ....
