@@ -10,7 +10,7 @@
 # as in CI.
 #
 # whitelist.txt is the single source of truth: test_profile.toml (required by
-# osc-validation's pytest plugin for xfail handling) is generated on the fly
+# osc-validations pytest plugin for xfail handling) is generated on the fly
 # from the DEVIATION/reason entries in whitelist.txt, so it never needs to be
 # maintained separately.
 #
@@ -114,7 +114,7 @@ echo "Running tests:"
 printf '  %s\n' "${tests[@]}"
 
 # Generate test_profile.toml from the DEVIATION/reason pairs collected above.
-# osc-validation's test id format drops the "osc_validation/validation/"
+# osc-validations test id format drops the "osc_validation/validation/"
 # prefix used in whitelist.txt.
 generate_test_profile() {
   local out="$1"
@@ -145,7 +145,7 @@ pytest \
 exitcode=${PIPESTATUS[0]}
 set -e
 
-# pytest's final summary line looks like:
+# pytests final summary line looks like:
 #   "1 failed, 2 passed, 1 xfailed in 3.50s"
 # Extract the count for each outcome category it reports.
 get_count() {
