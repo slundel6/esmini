@@ -20,6 +20,8 @@
 #include "Entities.hpp"
 #include "OSCParameterDistribution.hpp"
 
+#include <unordered_map>
+
 #define WHEEL_RADIUS          0.35
 #define STAND_STILL_THRESHOLD 1e-3  // meter per second
 
@@ -182,6 +184,18 @@ int ScenarioEngine::step(double deltaSimTime)
         trueTime_ = simulationTime_;
     }
 
+    // Snapshot each object's speed as it stood BEFORE this tick's storyboard/action processing.
+    // Any speed change triggered during storyBoard.Step() below must take effect starting from this
+    // tick onward, not retroactively baked into the movement covering the interval that already elapsed
+    // (which otherwise makes a newly triggered action's effect appear valid one sample too early).
+    std::unordered_map<int, double> speed_before_step;
+    speed_before_step.reserve(entities_.object_.size());
+    for (size_t i = 0; i < entities_.object_.size(); i++)
+    {
+        Object* obj                  = entities_.object_[i];
+        speed_before_step[obj->GetId()] = obj->speed_;
+    }
+
     storyBoard.Step(simulationTime_, deltaSimTime);
 
     if (frame_nr_ == 0 && SE_Env::Inst().GetCollisionDetection() && storyBoard.GetCurrentState() == StoryBoardElement::State::RUNNING)
@@ -215,15 +229,21 @@ int ScenarioEngine::step(double deltaSimTime)
     {
         Object* obj = entities_.object_[i];
 
+        // Look up the speed the object had before this tick's storyboard processing. Objects added
+        // during this tick's Step() (e.g. via AddEntityAction) won't be found - fall back to their
+        // current (freshly established) speed for those, same as the Init behavior.
+        auto   it              = speed_before_step.find(obj->GetId());
+        double speed_for_motion = (it != speed_before_step.end()) ? it->second : obj->speed_;
+
         // Do not move objects when speed is zero,
         // and only ghosts allowed to execute during ghost restart
         if (!(obj->IsControllerModeOnDomains(ControlOperationMode::MODE_OVERRIDE,
                                              static_cast<unsigned int>(ControlDomainMasks::DOMAIN_MASK_LAT_AND_LONG))) &&
-            fabs(obj->speed_) > SMALL_NUMBER &&
+            fabs(speed_for_motion) > SMALL_NUMBER &&
             // Skip update for non ghost objects during ghost restart
             !(!obj->IsGhost() && SE_Env::Inst().GetGhostMode() == GhostMode::RESTARTING) && !obj->TowVehicle())  // update trailers later
         {
-            defaultController(obj, deltaSimTime);
+            defaultController(obj, deltaSimTime, speed_for_motion);
         }
 
         if (!obj->pos_.GetRoute())
@@ -601,7 +621,7 @@ int ScenarioEngine::parseScenario()
     return 0;
 }
 
-int ScenarioEngine::defaultController(Object* obj, double dt)
+int ScenarioEngine::defaultController(Object* obj, double dt, double moveSpeed)
 {
     int retval = 0;
 
@@ -612,7 +632,10 @@ int ScenarioEngine::defaultController(Object* obj, double dt)
             Vehicle* tow_vehicle = static_cast<Vehicle*>(obj->TowVehicle());
             if (tow_vehicle == nullptr)
             {
-                double steplen = obj->speed_ * dt;
+                // Use the speed as it was BEFORE this tick's storyboard/action processing, so a speed change
+                // triggered this tick takes effect starting from this tick onward, not retroactively applied
+                // to the interval that has already elapsed (which would make it appear valid one sample early).
+                double steplen = moveSpeed * dt;
                 retval         = static_cast<int>(obj->MoveAlongS(steplen, true));
                 if (retval == static_cast<int>(roadmanager::Position::ReturnCode::ERROR_GENERIC))
                 {
