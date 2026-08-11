@@ -3,8 +3,11 @@
 name: esmini profiling
 
 on:
-  push:
-    branches: ['**']
+  schedule:
+    # This will run the sanitize job Nightly at 3:37AM every day for the dev branch
+    # * is a special character in YAML so you have to quote this string
+    - cron: '37 3 * * *'
+
   workflow_dispatch:
 
 env:
@@ -36,7 +39,21 @@ jobs:
           git checkout dev
         fi
 
+    - name: Check recent commits
+      id: changes
+      run: |
+        COUNT=$(git rev-list --count --since="24 hours ago" origin/dev)
+        echo "$COUNT commits over the last 24 hours found on dev"
+        echo "commit_count=$COUNT" >> $GITHUB_OUTPUT
+
+    - name: Skip job
+      if: steps.changes.outputs.commit_count == '0'
+      run: |
+        echo "No new commits on dev. Skipping."
+        exit 0
+
     - name: Cache externals/resources
+      if: steps.changes.outputs.commit_count != '0'
       id: cache_externals
       uses: actions/cache@v4
       with:
@@ -51,17 +68,20 @@ jobs:
           ${{ runner.os }}-external-resources
 
     - name: Setup dependencies
+      if: steps.changes.outputs.commit_count != '0'
       uses: ./.github/actions/setup_tools_shared
 
     - name: CMake Configure - Ubuntu
-      if: runner.os == 'Linux'
+      if: steps.changes.outputs.commit_count != '0' && runner.os == 'Linux'
       shell: bash
       run: cmake . -B build -G Ninja -DCMAKE_BUILD_TYPE=RelWithDebInfo -DUSE_OSI=ON -DUSE_GTEST=OFF -DUSE_OSG=ON -DUSE_SUMO=OFF -DUSE_IMPLOT=OFF -DBUILD_EXAMPLES=OFF
 
     - name: CMake Build
+      if: steps.changes.outputs.commit_count != '0'
       run: cmake --build build --config ${{ matrix.configuration }} --target esmini -j 2
 
     - name: Checkout samply
+      if: steps.changes.outputs.commit_count != '0'
       uses: actions/checkout@v4
       with:
         repository: ${{ env.samply_repo }}
@@ -71,6 +91,7 @@ jobs:
         path: samply
 
     - name: Cache samply binary
+      if: steps.changes.outputs.commit_count != '0'
       id: cache_samply_bin
       uses: actions/cache@v4
       with:
@@ -78,20 +99,23 @@ jobs:
         key: ${{ runner.os }}-samply-bin-${{ env.samply_branch }}
 
     - name: Build samply
-      if: steps.cache_samply_bin.outputs.cache-hit != 'true'
+      if: steps.changes.outputs.commit_count != '0' && steps.cache_samply_bin.outputs.cache-hit != 'true'
       shell: bash
       working-directory: samply
       run: cargo build --release
 
     - name: Configure linux to allow perf event
+      if: steps.changes.outputs.commit_count != '0'
       shell: bash
       run: echo '-1' | sudo tee /proc/sys/kernel/perf_event_paranoid
 
     - name: Run scenario to prepare call stack
+      if: steps.changes.outputs.commit_count != '0'
       shell: bash
       run: ./build/EnvironmentSimulator/Applications/esmini/esmini --osc resources/xosc/cut-in.xosc --fixed_timestep 0.025 --osi_file --record sim.dat --headless
 
     - name: Run profiling
+      if: steps.changes.outputs.commit_count != '0'
       shell: bash
       working-directory: samply
       run: |
@@ -107,6 +131,7 @@ jobs:
         done
 
     - name: Upload profiling results
+      if: steps.changes.outputs.commit_count != '0'
       id: publish_profile
       shell: bash
       working-directory: samply
@@ -137,6 +162,7 @@ jobs:
         echo "failed=$failed" >> "$GITHUB_OUTPUT"
 
     - name: Upload Firefox profile artifact
+      if: steps.changes.outputs.commit_count != '0'
       id: upload_profile
       uses: actions/upload-artifact@v4
       with:
@@ -147,6 +173,7 @@ jobs:
         if-no-files-found: error
 
     - name: Publish links
+      if: steps.changes.outputs.commit_count != '0'
       shell: bash
       run: |
         cat samply/profiles/profiler-links.md >> "$GITHUB_STEP_SUMMARY"
