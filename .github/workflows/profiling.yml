@@ -29,21 +29,17 @@ jobs:
     steps:
     - uses: actions/checkout@v6
       with:
-        ref: ${{ github.event.ref }}
+        ref: ${{ github.ref == 'refs/heads/master' && env.esmini_branch || github.ref }}
         submodules: true
         fetch-depth: 1
-
-    - name: Conditional Checkout
-      run: |
-        if [ "${{ github.ref }}" == "refs/heads/master" ]; then
-          git checkout dev
-        fi
 
     - name: Check recent commits
       id: changes
       run: |
-        COUNT=$(git rev-list --count --since="24 hours ago" origin/dev)
-        echo "$COUNT commits over the last 24 hours found on dev"
+        SINCE="$(date -u -d '24 hours ago' '+%Y-%m-%dT%H:%M:%SZ')"
+        git fetch --no-tags --prune --shallow-since="$SINCE" origin "${{ env.esmini_branch }}"
+        COUNT=$(git rev-list --count --since="$SINCE" FETCH_HEAD)
+        echo "$COUNT commits over the last 24 hours found on ${{ env.esmini_branch }}"
         echo "commit_count=$COUNT" >> $GITHUB_OUTPUT
 
     - name: Skip job
