@@ -933,9 +933,9 @@ namespace scenarioengine
         std::shared_ptr<TrailerHitch>   trailer_hitch_;    // mounting point to any tow vehicle
         std::vector<WheelData>          wheel_data;
         double                          max_pitch_angle_ = 0.0;
-        SE_Vector                       rear_axle_pos_;    // rear axle position in world coordinates
-        SE_Vector                       rear_axle_vel_;    // rear axle velocity in world coordinates
-        double                          rear_axle_speed_;  // rear axle speed
+        SE_Vector                       rear_axle_pos_;          // rear axle position in world coordinates
+        SE_Vector                       rear_axle_vel_;          // rear axle velocity in world coordinates
+        double                          rear_axle_speed_ = 0.0;  // rear axle speed
     };
 
     class Pedestrian : public Object
