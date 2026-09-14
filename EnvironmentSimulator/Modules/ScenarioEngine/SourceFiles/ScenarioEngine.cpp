@@ -135,10 +135,12 @@ void ScenarioEngine::UpdateGhostMode()
 
 int ScenarioEngine::step(double deltaSimTime)
 {
-    /* Desired flow:
+    /* Flow:
      - Update time
      - Step actions (currentl active)
+     - Step injected actions
      - Step default controller
+     - Step controllers
      - Evaluate triggers
      - Start triggered actions (DONT step)
      * */
@@ -190,6 +192,22 @@ int ScenarioEngine::step(double deltaSimTime)
     }
 
     storyBoard.Step(simulationTime_, deltaSimTime);
+
+    // Step any externally injected actions
+    if (injected_actions_ != nullptr && injected_actions_->size() > 0)
+    {
+        for (OSCAction* action : *injected_actions_)
+        {
+            if (action->GetCurrentState() == StoryBoardElement::State::INIT || action->GetCurrentState() == StoryBoardElement::State::STANDBY)
+            {
+                action->Start(simulationTime_);
+            }
+            else
+            {
+                action->Step(simulationTime_, deltaSimTime);
+            }
+        }
+    }
 
     for (size_t i = 0; i < entities_.object_.size(); i++)
     {
@@ -338,33 +356,6 @@ int ScenarioEngine::step(double deltaSimTime)
                     v->rear_axle_vel_.Set(v->pos_.GetVelX(), v->pos_.GetVelY());
                     v->rear_axle_speed_ = v->GetSpeed();
                 }
-            }
-        }
-    }
-
-    // This timestep calculation is due to the Ghost vehicle
-    // If both times are equal, it is a normal scenario, or no Ghost teleportation is ongoing -> Step as usual
-    // Else if we can take a step, and still not reach the point of teleportation -> Step only simulationTime (That the Ghost runs on)
-    // Else, the only thing left is that the next step will take us above the point of teleportation -> Step to that point instead and go on from
-    // there
-
-    // Note: Do NOT bail out here even if the storyboard just transitioned out of RUNNING (e.g. stop trigger fired).
-    // This tick's simulationTime_ has already been committed above, so its state must still be finalized and
-    // reported this call - otherwise the final simulation instant would never be recorded (see step() guard above
-    // that stops any further ticks once the storyboard has reached COMPLETE).
-
-    // Step any externally injected actions
-    if (injected_actions_ != nullptr && injected_actions_->size() > 0)
-    {
-        for (OSCAction* action : *injected_actions_)
-        {
-            if (action->GetCurrentState() == StoryBoardElement::State::INIT || action->GetCurrentState() == StoryBoardElement::State::STANDBY)
-            {
-                action->Start(simulationTime_);
-            }
-            else
-            {
-                action->Step(simulationTime_, deltaSimTime);
             }
         }
     }
