@@ -6,7 +6,7 @@ on:
   schedule:
     # This will run the sanitize job Nightly at 3:37AM every day for the dev branch
     # * is a special character in YAML so you have to quote this string
-    - cron: '37 3 * * *'
+    - cron: '37 0 * * *'
 
   workflow_dispatch:
 
@@ -27,19 +27,22 @@ jobs:
     runs-on: ${{ matrix.os }}
 
     steps:
-    - uses: actions/checkout@v6
-      with:
-        ref: ${{ github.ref == 'refs/heads/master' && env.esmini_branch || github.ref }}
-        submodules: true
-        fetch-depth: 1
+    - name: Conditional Checkout
+      run: |
+        if [ "${{ github.ref }}" == "refs/heads/master" ]; then
+          git checkout dev
+        fi
 
     - name: Check recent commits
       id: changes
       run: |
-        SINCE="$(date -u -d '24 hours ago' '+%Y-%m-%dT%H:%M:%SZ')"
-        git fetch --no-tags --prune --shallow-since="$SINCE" origin "${{ env.esmini_branch }}"
-        COUNT=$(git rev-list --count --since="$SINCE" FETCH_HEAD)
-        echo "$COUNT commits over the last 24 hours found on ${{ env.esmini_branch }}"
+        if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+          COUNT=1
+          echo "Job triggered manually via workflow_dispatch"
+        else
+          COUNT=$(git rev-list --count --since="24 hours ago" origin/dev)
+          echo "$COUNT commits over the last 24 hours found on dev"
+        fi
         echo "commit_count=$COUNT" >> $GITHUB_OUTPUT
 
     - name: Skip job
