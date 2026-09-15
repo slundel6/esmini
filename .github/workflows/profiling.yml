@@ -27,6 +27,12 @@ jobs:
     runs-on: ${{ matrix.os }}
 
     steps:
+    - uses: actions/checkout@v6
+      with:
+        ref: ${{ github.event.ref }}
+        submodules: true
+        fetch-depth: 0  # Fetch all history for proper branch switching
+
     - name: Conditional Checkout
       run: |
         if [ "${{ github.ref }}" == "refs/heads/master" ]; then
