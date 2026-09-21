@@ -137,7 +137,7 @@ int ScenarioEngine::step(double deltaSimTime)
 {
     /* Flow:
      - Update time
-     - Step actions (currentl active)
+     - Step actions (currently active)
      - Step injected actions
      - Step default controller
      - Step controllers
