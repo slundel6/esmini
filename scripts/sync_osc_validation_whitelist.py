@@ -1,14 +1,14 @@
 #!/usr/bin/env python3
 """
-Sync the osc-validation whitelist.txt with the tests currently discovered by
+Sync the osc-validation whitelist.yml with the tests currently discovered by
 pytest's --collect-only.
 
 For every test currently discovered by pytest:
-  - if it already has an entry in whitelist.txt, that line and its keyword
-    (INCLUDE/EXCLUDE) are left untouched
-  - if it is new, it is appended to whitelist.txt with the EXCLUDE keyword
+  - if it already has an entry in whitelist.yml, its rule and reason are left
+    untouched
+  - if it is new, it is appended to the EXCLUDE rule
 
-Tests listed in whitelist.txt that are no longer discovered by pytest are not
+Tests listed in whitelist.yml that are no longer discovered by pytest are not
 removed automatically, they are only reported as a warning.
 
 Requirements:
@@ -20,8 +20,8 @@ Requirements:
 
 Example, run from the esmini repo root, assuming a sibling checkout of
 osc-validation with its venv already active:
-    python3 test/sync_osc_validation_whitelist.py \
-        --whitelist .github/actions/run_osc_validation/whitelist.txt \
+    python3 scripts/sync_osc_validation_whitelist.py \
+        --whitelist .github/actions/run_osc_validation/whitelist.yml \
         --collect-root osc_validation/validation \
         --cwd ../osc-validation
 """
@@ -31,7 +31,9 @@ import subprocess
 import sys
 from pathlib import Path
 
-VALID_KEYWORDS = {"INCLUDE", "EXCLUDE", "DEVIATION"}
+import yaml
+
+VALID_KEYWORDS = ("INCLUDE", "DEVIATION", "EXCLUDE")
 # Matches pytest -q collect-only summary lines, e.g. "28 tests collected in 1.76s"
 # or "no tests collected", which should not be treated as test ids.
 SUMMARY_LINE_RE = re.compile(r"^(\d+ tests? collected|no tests collected)", re.IGNORECASE)
@@ -39,7 +41,7 @@ SUMMARY_LINE_RE = re.compile(r"^(\d+ tests? collected|no tests collected)", re.I
 
 def collect_tests(cwd: Path, collect_root: str) -> list[str]:
     """Run pytest --collect-only and return the collected test ids, prefixed
-    with collect_root so they match the format used in whitelist.txt."""
+    with collect_root so they match the format used in whitelist.yml."""
     result = subprocess.run(
         ["pytest", collect_root, "--collect-only", "-q"],
         cwd=cwd,
@@ -62,40 +64,69 @@ def collect_tests(cwd: Path, collect_root: str) -> list[str]:
     return tests
 
 
-def parse_whitelist(path: Path) -> tuple[list[str], dict[str, str]]:
-    """Return the raw lines of the whitelist plus a mapping of test id -> keyword."""
-    lines = path.read_text().splitlines() if path.exists() else []
+def parse_whitelist(path: Path) -> tuple[dict, dict[str, str], str]:
+    """Return the YAML document, test id rules, and leading comments."""
+    text = path.read_text(encoding="utf-8") if path.exists() else ""
+    try:
+        document = yaml.safe_load(text) or {"rules": {}}
+    except yaml.YAMLError as error:
+        raise SystemExit(f"Unable to parse whitelist '{path}': {error}") from error
+
+    if not isinstance(document, dict) or not isinstance(document.get("rules"), dict):
+        raise SystemExit(f"Whitelist '{path}' must contain a 'rules' mapping")
+
+    rules = document["rules"]
+    unknown_rules = set(rules) - set(VALID_KEYWORDS)
+    if unknown_rules:
+        raise SystemExit(
+            f"Unknown whitelist rule(s): {', '.join(sorted(unknown_rules))}"
+        )
+
     known: dict[str, str] = {}
-    for line in lines:
-        stripped = line.strip()
-        if not stripped or stripped.startswith("#"):
-            continue
-        parts = stripped.split(maxsplit=1)
-        if len(parts) == 2 and parts[0] in VALID_KEYWORDS:
-            known[parts[1]] = parts[0]
-    return lines, known
+    for keyword in VALID_KEYWORDS:
+        entries = rules.setdefault(keyword, [])
+        if not isinstance(entries, list):
+            raise SystemExit(f"'rules.{keyword}' in '{path}' must be a list")
+        for entry in entries:
+            if not isinstance(entry, dict) or not isinstance(entry.get("id"), str):
+                raise SystemExit(
+                    f"Every 'rules.{keyword}' entry in '{path}' must contain a string 'id'"
+                )
+            known[entry["id"]] = keyword
+
+    leading_comments = []
+    for line in text.splitlines():
+        if line.startswith("#") or not line.strip():
+            leading_comments.append(line)
+        else:
+            break
+    comment_block = "\n".join(leading_comments).rstrip()
+    return document, known, comment_block
 
 
 def sync(whitelist_path: Path, collected: list[str]) -> None:
-    lines, known = parse_whitelist(whitelist_path)
+    document, known, leading_comments = parse_whitelist(whitelist_path)
 
     new_tests = [t for t in collected if t not in known]
     stale_tests = sorted(set(known) - set(collected))
 
     if new_tests:
-        if lines and lines[-1].strip() != "":
-            lines.append("")
-        lines.append("# Newly discovered tests (auto-added, review and update the keyword)")
-        for test in new_tests:
-            lines.append(f"EXCLUDE {test}")
-        whitelist_path.write_text("\n".join(lines) + "\n")
+        document["rules"]["EXCLUDE"].extend({"id": test} for test in new_tests)
+        yaml_text = yaml.safe_dump(
+            document, sort_keys=False, allow_unicode=True, width=4096
+        )
+        if leading_comments:
+            yaml_text = f"{leading_comments}\n\n{yaml_text}"
+        whitelist_path.write_text(yaml_text, encoding="utf-8")
 
     included = sum(1 for keyword in known.values() if keyword == "INCLUDE")
     excluded = sum(1 for keyword in known.values() if keyword == "EXCLUDE")
+    deviations = sum(1 for keyword in known.values() if keyword == "DEVIATION")
 
     print(f"Collected tests:     {len(collected)}")
     print(f"New tests added:     {len(new_tests)} (as EXCLUDE)")
     print(f"Existing included:   {included}")
+    print(f"Existing deviations: {deviations}")
     print(f"Existing excluded:   {excluded}")
     print(f"Existing total:      {len(known)}")
 
@@ -107,17 +138,18 @@ def sync(whitelist_path: Path, collected: list[str]) -> None:
 
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
-    parser.add_argument("--whitelist", required=True, type=Path, help="Path to whitelist.txt")
+    parser.add_argument("-wl", "--whitelist", required=True, type=Path, help="Path to whitelist.yml")
     parser.add_argument(
-        "--cwd",
+        "-cwd",
         default=Path("."),
         type=Path,
         help="Directory to run pytest from, i.e. the osc-validation checkout (default: %(default)s)",
     )
     parser.add_argument(
+        "-cr",
         "--collect-root",
         default="osc_validation/validation",
-        help="pytest collection root, relative to --cwd (default: %(default)s)",
+        help="pytest collection root, relative to -cwd (default: %(default)s)",
     )
     args = parser.parse_args()
 

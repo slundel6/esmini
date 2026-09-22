@@ -71,3 +71,6 @@ jobs:
       - name: Run osc-validation
         if: steps.changes.outputs.commit_count != '0'
         uses: ./.github/actions/run_osc_validation
+        with:
+          runner: test/osc_validation_test.py
+          whitelist: .github/actions/run_osc_validation/whitelist.yml

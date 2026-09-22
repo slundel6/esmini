@@ -1,5 +1,12 @@
 name: "Run osc-validation"
 description: "Install osc-validation, run pytest suite with HTML report, and collect artifacts"
+inputs:
+  runner:
+    description: "Python script used to run the validation suite"
+    required: true
+  whitelist:
+    description: "YAML file defining included, excluded, and deviating tests"
+    required: true
 runs:
   using: "composite"
   steps:
@@ -28,7 +35,7 @@ runs:
           VERSION_TEXT="A newer osc-validation tag is available: $LATEST_TAG (currently pinned to $PINNED_TAG)"
           echo "::notice::${VERSION_TEXT}."
 
-          echo "VERSION_NOTICE=${VERSION_TEXT}. Consider updating OSC_VALIDATION_REF in .github/actions/run_osc_validation/action.yml & generating an updated whitelist.txt using scripts/sync_osc_validation_whitelist.py" >> "$GITHUB_ENV"
+          echo "VERSION_NOTICE=${VERSION_TEXT}. Consider updating OSC_VALIDATION_REF in .github/actions/run_osc_validation/action.yml and generating an updated whitelist.yml using scripts/sync_osc_validation_whitelist.py." >> "$GITHUB_ENV"
         else
            echo "VERSION_NOTICE=osc-validation is up to date ($PINNED_TAG)." >> "$GITHUB_ENV"
         fi
@@ -47,22 +54,16 @@ runs:
         pushd osc-validation
         python3 -m venv .venv
         source .venv/bin/activate
-        pip install -e . "numpy<2.0"
+        pip install -e . "numpy<2.0" PyYAML
         popd
 
     - name: Run explicit permutations
       shell: bash
       run: |
-        pushd osc-validation
-        source .venv/bin/activate
-
-        "$GITHUB_ACTION_PATH/run_explicit_permutations.sh" \
-          "$GITHUB_ACTION_PATH/whitelist.txt" \
-          "$(pwd)/../bin/esmini"
-        exitcode=$?
-
-        popd
-        exit "$exitcode"
+        "$GITHUB_WORKSPACE/osc-validation/.venv/bin/python" \
+          "$GITHUB_WORKSPACE/${{ inputs.runner }}" \
+          --whitelist "$GITHUB_WORKSPACE/${{ inputs.whitelist }}" \
+          --validation-prefix "$GITHUB_WORKSPACE/osc-validation"
 
     - name: Upload osc-validation artifacts
       if: always()
