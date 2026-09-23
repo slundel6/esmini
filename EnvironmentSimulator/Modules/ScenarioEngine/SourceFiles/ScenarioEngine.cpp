@@ -173,12 +173,6 @@ int ScenarioEngine::step(double deltaSimTime)
         }
     }
 
-    if (frame_nr_ == 0 && SE_Env::Inst().GetCollisionDetection() && storyBoard.GetCurrentState() == StoryBoardElement::State::RUNNING)
-    {
-        // Check for collisions/overlap after first initialization
-        DetectCollisions();
-    }
-
     simulationTime_ += deltaSimTime;
     if (simulationTime_ < 0.0 && simulationTime_ > -SMALL_NUMBER)
     {
@@ -393,7 +387,7 @@ int ScenarioEngine::step(double deltaSimTime)
     }
 
     // Check for collisions
-    if (SE_Env::Inst().GetCollisionDetection() && frame_nr_ > 0)
+    if (SE_Env::Inst().GetCollisionDetection())
     {
         DetectCollisions();
     }

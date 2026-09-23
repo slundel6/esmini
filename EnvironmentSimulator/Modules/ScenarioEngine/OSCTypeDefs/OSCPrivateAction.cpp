@@ -582,33 +582,25 @@ void scenarioengine::FollowTrajectoryAction::Move(double simTime, double dt)
         movingDirection_ = SIGN(object_->GetSpeed()) * initialHeadingSign_;
         object_->pos_.MoveTrajectoryDS(movingDirection_ * fabs(object_->speed_) * dt);
     }
-    else if (timing_domain_ == TimingDomain::TIMING_RELATIVE)
+    else
     {
-        // Relative timing domain: trajectory time runs relative to when THIS action started,
-        time_ = traj_start_time_ + (simTime - start_time_) * timing_scale_;
-        object_->pos_.SetTrajectoryPosByTime(time_ + timing_offset_);
-
+        if (timing_domain_ == TimingDomain::TIMING_RELATIVE)
+        {
+            // Relative timing domain: trajectory time runs relative to when THIS action started,
+            time_ = traj_start_time_ + (simTime - start_time_) * timing_scale_;
+            object_->pos_.SetTrajectoryPosByTime(time_ + timing_offset_);
+        }
+        else if (timing_domain_ == TimingDomain::TIMING_ABSOLUTE)
+        {
+            if (object_->IsGhost() || simTime > -SMALL_NUMBER)
+            {
+                // simTime already represents this tick's committed simulation instant - no further dt advance needed
+                time_ = simTime * timing_scale_;
+            }
+            object_->pos_.SetTrajectoryPosByTime(time_ + timeOffset + timing_offset_);
+        }
         // calculate and update actual speed only while not reached end of trajectory,
         // since the movement is based on remaining length of trajectory, not speed
-        if (time_ + timing_offset_ < traj_->GetStartTime() + traj_->GetDuration() + SMALL_NUMBER)
-        {
-            if (dt > SMALL_NUMBER)  // only update speed if some time has passed
-            {
-                movingDirection_ = SIGN(object_->pos_.GetTrajectoryS() - old_s);
-                object_->SetSpeed(movingDirection_ * headingDirection * fabs(object_->pos_.GetTrajectoryS() - old_s) / dt);
-            }
-        }
-    }
-    else if (timing_domain_ == TimingDomain::TIMING_ABSOLUTE)
-    {
-        if (object_->IsGhost() || simTime > -SMALL_NUMBER)
-        {
-            // simTime already represents this tick's committed simulation instant - no further dt advance needed
-            time_ = simTime * timing_scale_;
-        }
-
-        object_->pos_.SetTrajectoryPosByTime(time_ + timeOffset + timing_offset_);
-
         if ((dt > SMALL_NUMBER) &&  // skip speed update if timestep is zero
             (time_ + timeOffset < traj_->GetStartTime() + traj_->GetDuration() + SMALL_NUMBER))
         {
@@ -616,7 +608,6 @@ void scenarioengine::FollowTrajectoryAction::Move(double simTime, double dt)
             object_->SetSpeed(movingDirection_ * headingDirection * fabs(object_->pos_.GetTrajectoryS() - old_s) / dt);
         }
     }
-
     // Check if switching into segment with no specified heading
     if (traj_->IsHSetExplicitly())
     {
@@ -1685,20 +1676,18 @@ void LongSpeedProfileAction::Start(double simTime)
 void LongSpeedProfileAction::Step(double simTime, double dt)
 {
     (void)dt;
-    // simTime already represents this tick's committed simulation instant - no further dt advance needed
-    double time = simTime;
 
-    if (time < segment_.back().t + 10 && !(time > segment_.back().t and abs(speed_ - segment_.back().v) < SMALL_NUMBER))
+    if (simTime < segment_.back().t + 10 && !(simTime > segment_.back().t and abs(speed_ - segment_.back().v) < SMALL_NUMBER))
     {
         while (static_cast<unsigned int>(cur_index_) < segment_.size() - 1 &&
-               time > segment_[static_cast<unsigned int>(cur_index_) + 1].t - SMALL_NUMBER)
+               simTime > segment_[static_cast<unsigned int>(cur_index_) + 1].t - SMALL_NUMBER)
         {
             cur_index_++;
         }
 
         SpeedSegment* s = &segment_[static_cast<unsigned int>(cur_index_)];
 
-        speed_ = s->v + s->k * (time - s->t) + 0.5 * s->j * pow(time - s->t, 2);
+        speed_ = s->v + s->k * (simTime - s->t) + 0.5 * s->j * pow(simTime - s->t, 2);
         if (NEAR_ZERO(speed_))
         {
             // avoid random jumping between positive and negative zero
@@ -1706,7 +1695,7 @@ void LongSpeedProfileAction::Step(double simTime, double dt)
         }
     }
 
-    elapsed_ = MAX(0.0, time - segment_[0].t);
+    elapsed_ = MAX(0.0, simTime - segment_[0].t);
 
     if (static_cast<unsigned int>(cur_index_) >= entry_.size() - 1 && fabs(speed_ - segment_.back().v) < SMALL_NUMBER)
     {
