@@ -276,13 +276,13 @@ class TestSuite(unittest.TestCase):
         self.assertTrue(re.search('\\n9.500, 0, Ego, 6.032, 256.098, -0.447, 1.559, 0.002, 0.000, 9.219, -0.000, 0.408', csv))
         self.assertTrue(re.search('\\n9.500, 2, Target2, 6.326, 279.121, -0.488, 1.557, 0.002, 0.000, 8.333, -0.000, 6.279', csv))
         self.assertTrue(re.search('\\n11.500, 0, Ego, 9.835, 274.183, -0.479, 1.558, 0.002, 0.000, 10.058, 0.272, 3.186', csv))
-        self.assertTrue(re.search('\\n12.500, 0, Ego, 9.995, 285.929, -0.501, 1.557, 0.002, 0.000, 12.608, -0.000, 5.335', csv))
+        self.assertTrue(re.search('\\n12.500, 0, Ego, 9.995, 285.930, -0.501, 1.557, 0.002, 0.000, 12.608, -0.000, 5.335', csv))
         self.assertTrue(re.search('\\n12.500, 4, Target4, 10.596, 324.076, -0.575, 1.553, 0.002, 0.000, 8.333, -0.000, 2.309', csv))
         self.assertTrue(re.search('\\n14.500, 0, Ego, 14.073, 310.885, -0.549, 1.555, 0.002, 0.000, 13.490, 0.156, 2.365', csv))
-        self.assertTrue(re.search('\\n22.800, 0, Ego, 16.851, 426.601, -0.763, 1.537, 0.002, 0.000, 9.547, -0.001, 0.073', csv))
+        self.assertTrue(re.search('\\n22.800, 0, Ego, 16.851, 426.603, -0.763, 1.537, 0.002, 0.000, 9.547, -0.001, 0.073', csv))
         self.assertTrue(re.search('\\n22.800, 5, Target5, 17.706, 449.796, -0.796, 1.531, 0.001, 0.000, 8.333, -0.001, 2.503', csv))
         self.assertTrue(re.search('\\n24.800, 0, Ego, 13.835, 445.486, -0.790, 1.532, 0.001, 0.000, 10.341, -0.266, 4.705', csv))
-        self.assertTrue(re.search('\\n25.800, 0, Ego, 14.311, 457.362, -0.805, 1.529, 0.001, 0.000, 12.646, -0.001, 0.965', csv))
+        self.assertTrue(re.search('\\n25.800, 0, Ego, 14.311, 457.363, -0.805, 1.529, 0.001, 0.000, 12.646, -0.001, 0.965', csv))
         self.assertTrue(re.search('\\n25.800, 6, Target6, 16.065, 494.783, -0.838, 1.518, 0.001, 0.000, 8.333, -0.001, 4.817', csv))
         self.assertTrue(re.search('\\n27.800, 0, Ego, 11.872, 482.641, -0.829, 1.522, 0.001, 0.000, 13.760, -0.148, 4.589', csv))
         self.assertTrue(re.search('\\n31.300, 0, Ego, 16.232, 554.865, -0.842, 1.499, 6.283, 0.000, 24.157, -0.001, 3.979', csv))
@@ -2356,7 +2356,7 @@ class TestSuite(unittest.TestCase):
 
         self.assertTrue(re.search('^3.050, 0, Ego, 89.338, -1.535, -2.056, 6.283, 0.038, 6.279, 15.696, 0.000, 2.735', csv, re.MULTILINE))
         self.assertTrue(re.search('^3.050, 1, Target, 105.262, 2.406, -2.665, 0.211, 0.036, 0.000, 8.333, 0.021, 3.504', csv, re.MULTILINE))
-        self.assertTrue(re.search('^3.100, 0, Ego, 90.122, -1.535, -2.086, 0.111, 0.039, 0.000, 15.680, 0.000, 4.975', csv, re.MULTILINE))
+        self.assertTrue(re.search('^3.100, 0, Ego, 90.121, -1.535, -2.086, 0.111, 0.039, 0.000, 15.680, 0.000, 4.975', csv, re.MULTILINE))
         self.assertTrue(re.search('^3.100, 1, Target, 105.669, 2.494, -2.679, 0.214, 0.036, 0.000, 8.333, 0.021, 4.694', csv, re.MULTILINE))
         self.assertTrue(re.search('^4.950, 0, Ego, 111.763, 3.835, -2.895, 0.332, 0.034, 0.003, 8.280, -0.010, 4.937', csv, re.MULTILINE))
         self.assertTrue(re.search('^4.950, 1, Target, 120.530, 6.568, -3.180, 0.321, 0.029, 0.000, 8.333, 0.021, 4.760', csv, re.MULTILINE))
@@ -2685,7 +2685,7 @@ class TestSuite(unittest.TestCase):
         self.assertTrue(re.search('^80.000, 0, Ego, 188.436, -1.875, 0.000, 0.000, 0.000, 0.000, 19.444, -0.000, 3.357', csv, re.MULTILINE))
 
     def test_osi2csv(self):
-        log, duration, cpu_time, _ = run_scenario(os.path.join(ESMINI_PATH, 'resources/cut-in.xosc'), COMMON_ESMINI_ARGS + "--fixed_timestep 0.1 --osi_file")
+        log, _, _, _ = run_scenario(os.path.join(ESMINI_PATH, 'resources/cut-in.xosc'), COMMON_ESMINI_ARGS + "--fixed_timestep 0.1 --osi_file")
 
         # Check some initialization steps
         self.assertTrue(re.search('Loading .*cut-in.xosc', log)  is not None)
@@ -2703,7 +2703,7 @@ class TestSuite(unittest.TestCase):
 
             # check values of a few random rows
             self.assertTrue(lines[132] == '0.000000, 166, misc_obj166, 2, 0, 7.887475, 516.040382, -0.571041, 0.000000, 0.000000, 0.000000, 0.000000, 0.000000, 0.000000, -1.630025, 0.000201, 0.000000, 0.000000, 0.000000, 0.000000, 0.000000, 0.000000, 0.000000, 0.000000, 0.000000, 0.000000')
-            self.assertTrue(lines[938] == '7.000000, 37, obj37, 1, MEDIUM_CAR, 6.315084, 274.827883, 0.269692, 0.761141, 35.992651, -0.065520, 2.035548, -0.031802, -0.004935, 1.552224, 0.001827, -0.000010, -0.056813, 0.000000, 0.000000, -0.543809, 0.000000, 0.000000, 36.000698, -0.004703, 0.000000')
+            self.assertTrue(lines[938] == '7.000000, 37, obj37, 1, MEDIUM_CAR, 6.315084, 274.827883, 0.269693, 0.761141, 35.992651, -0.065520, 2.035548, -0.031802, -0.005025, 1.552224, 0.001827, -0.000010, -0.056813, 0.000000, 0.000000, -0.543809, 0.000000, 0.000000, 36.000698, -0.004703, 0.000000')
 
 
 if __name__ == "__main__":

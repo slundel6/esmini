@@ -1751,11 +1751,11 @@ TEST(ControllerTest, TestFollowReferenceController)
     {
         scenario_step(se, dt);
     }
-    EXPECT_NEAR(se->entities_.object_[0]->pos_.GetX(), 119.5249, 1e-3);
-    EXPECT_NEAR(se->entities_.object_[0]->pos_.GetY(), 1.4171, 1e-3);
+    EXPECT_NEAR(se->entities_.object_[0]->pos_.GetX(), 119.5221, 1e-3);
+    EXPECT_NEAR(se->entities_.object_[0]->pos_.GetY(), 1.3554, 1e-3);
     EXPECT_NEAR(se->entities_.object_[0]->GetSpeed(), 13.8862, 1e-3);
-    EXPECT_NEAR(se->entities_.object_[1]->pos_.GetX(), 118.8205, 1e-3);
-    EXPECT_NEAR(se->entities_.object_[1]->pos_.GetY(), 1.3047, 1e-3);
+    EXPECT_NEAR(se->entities_.object_[1]->pos_.GetX(), 118.8163, 1e-3);
+    EXPECT_NEAR(se->entities_.object_[1]->pos_.GetY(), 1.2280, 1e-3);
     EXPECT_NEAR(se->entities_.object_[1]->GetSpeed(), 13.8888, 1e-3);
 
     delete se;
@@ -5097,11 +5097,11 @@ TEST(ActionTest, TestInstantLaneChange)
     ASSERT_EQ(entities->object_.size(), 1);
 
     // Check expected position and orientation at some specific time stamps
-    while (se->getSimulationTime() < 0.95 + SMALL_NUMBER)
+    while (se->getSimulationTime() < 0.90 + SMALL_NUMBER)
     {
         scenario_step(se, dt);
     }
-    EXPECT_NEAR(entities->object_[0]->pos_.GetX(), 50.0, 1E-3);
+    EXPECT_NEAR(entities->object_[0]->pos_.GetX(), 49.75, 1E-3);
     EXPECT_NEAR(entities->object_[0]->pos_.GetY(), -1.535, 1E-3);
     EXPECT_NEAR(entities->object_[0]->pos_.GetZ(), 0.0, 1E-3);
     EXPECT_NEAR(entities->object_[0]->pos_.GetH(), 0.0, 1E-3);
@@ -5109,11 +5109,18 @@ TEST(ActionTest, TestInstantLaneChange)
     EXPECT_NEAR(entities->object_[0]->pos_.GetR(), 0.0, 1E-3);
     EXPECT_NEAR(entities->object_[0]->GetSpeed(), 5.0, 1E-3);
 
-    while (se->getSimulationTime() < 1.0 + SMALL_NUMBER)
+    while (se->getSimulationTime() < 0.95 + SMALL_NUMBER)
     {
         scenario_step(se, dt);
     }
-    EXPECT_NEAR(entities->object_[0]->pos_.GetX(), 50.25, 1E-3);
+    EXPECT_NEAR(entities->object_[0]->pos_.GetX(), 50.0, 1E-3);
+    EXPECT_NEAR(entities->object_[0]->pos_.GetY(), 1.535, 1E-3);
+
+    while (se->getSimulationTime() < 1.90 + SMALL_NUMBER)
+    {
+        scenario_step(se, dt);
+    }
+    EXPECT_NEAR(entities->object_[0]->pos_.GetX(), 54.75, 1E-3);
     EXPECT_NEAR(entities->object_[0]->pos_.GetY(), 1.535, 1E-3);
 
     while (se->getSimulationTime() < 1.95 + SMALL_NUMBER)
@@ -5121,27 +5128,20 @@ TEST(ActionTest, TestInstantLaneChange)
         scenario_step(se, dt);
     }
     EXPECT_NEAR(entities->object_[0]->pos_.GetX(), 55.0, 1E-3);
-    EXPECT_NEAR(entities->object_[0]->pos_.GetY(), 1.535, 1E-3);
+    EXPECT_NEAR(entities->object_[0]->pos_.GetY(), -1.535, 1E-3);
 
-    while (se->getSimulationTime() < 2.0 + SMALL_NUMBER)
+    while (se->getSimulationTime() < 2.90 + SMALL_NUMBER)
     {
         scenario_step(se, dt);
     }
-    EXPECT_NEAR(entities->object_[0]->pos_.GetX(), 55.25, 1E-3);
+    EXPECT_NEAR(entities->object_[0]->pos_.GetX(), 59.75, 1E-3);
     EXPECT_NEAR(entities->object_[0]->pos_.GetY(), -1.535, 1E-3);
 
     while (se->getSimulationTime() < 2.95 + SMALL_NUMBER)
     {
         scenario_step(se, dt);
     }
-    EXPECT_NEAR(entities->object_[0]->pos_.GetX(), 60.00, 1E-3);
-    EXPECT_NEAR(entities->object_[0]->pos_.GetY(), -1.535, 1E-3);
-
-    while (se->getSimulationTime() < 3.0 + SMALL_NUMBER)
-    {
-        scenario_step(se, dt);
-    }
-    EXPECT_NEAR(entities->object_[0]->pos_.GetX(), 60.25, 1E-3);
+    EXPECT_NEAR(entities->object_[0]->pos_.GetX(), 60.0, 1E-3);
     EXPECT_NEAR(entities->object_[0]->pos_.GetY(), 1.535, 1E-3);
 
     delete se;

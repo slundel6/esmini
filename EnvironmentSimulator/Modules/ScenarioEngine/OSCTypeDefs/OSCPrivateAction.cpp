@@ -461,6 +461,8 @@ void FollowTrajectoryAction::Start(double simTime)
     {
         object_->SetSpeed(speedSign * traj_->GetSpeed());
     }
+
+    Step(simTime, 0.0);  // Step to move to proper position in a trajectory and set dirty bits
 }
 
 FollowTrajectoryAction::~FollowTrajectoryAction()
@@ -907,6 +909,8 @@ void LatLaneChangeAction::Start(double simTime)
     // Make offsets agnostic to lane sign
     transition_.SetStartVal(SIGN(internal_pos_.GetLaneId()) * internal_pos_.GetOffset());
     transition_.SetTargetVal(SIGN(target_lane_id_) * target_lane_offset_);
+
+    Step(simTime, 0.0);  // Step to move any instantenous motions and set dirty bits properly
 }
 
 void LatLaneChangeAction::Step(double simTime, double dt)
