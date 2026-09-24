@@ -11,7 +11,7 @@ import tempfile
 import yaml
 
 
-RULES = ("INCLUDE", "DEVIATION", "EXCLUDE")
+RULES = ("INCLUDE", "DEVIATION", "EXCLUDE", "NOT_SUPPORTED")
 VALIDATION_TEST_PREFIX = "osc_validation/validation/"
 ESMINI_EXECUTABLE = Path(__file__).resolve().parents[1] / "bin" / "esmini"
 
@@ -33,6 +33,11 @@ def parse_arguments():
         "-g",
         "--generate-profile",
         help="path for the generated test profile (default: temporary file)",
+    )
+    parser.add_argument(
+        "-esmini",
+        "--esmini-executable",
+        help="path to the esmini executable (default: ./bin/esmini)"
     )
     return parser.parse_args()
 
@@ -76,7 +81,7 @@ def load_rules(whitelist_path):
                 not isinstance(reason, str) or not reason.strip()
             ):
                 raise ValueError(
-                    f"DEVIATION test '{test_id}' is missing a non-empty 'reason'"
+                    f"DEVIATION test '{test_id}' 'reason' must not be empty"
                 )
 
             parsed_entries.append({"id": test_id, "reason": reason})
@@ -113,14 +118,14 @@ def write_test_profile(profile_path, deviations):
             )
 
 
-def run_pytest(tests, profile_path, validation_prefix):
+def run_pytest(tests, profile_path, validation_prefix, esmini_exe):
     command = [
         sys.executable,
         "-m",
         "pytest",
         *tests,
         "--toolpath",
-        str(ESMINI_EXECUTABLE),
+        str(esmini_exe),
         "--tool",
         "ESMini",
         "--test-profile",
@@ -152,7 +157,8 @@ def create_summary(rules, output):
     included_count = len(rules["INCLUDE"])
     deviation_count = len(rules["DEVIATION"])
     excluded_count = len(rules["EXCLUDE"])
-    total_count = included_count + deviation_count + excluded_count
+    not_supported_count = len(rules["NOT_SUPPORTED"])
+    total_count = included_count + deviation_count + excluded_count + not_supported_count
 
     sections = []
     version_notice = os.environ.get("VERSION_NOTICE")
@@ -164,6 +170,7 @@ def create_summary(rules, output):
 **Whitelist:**
 - Included: {included_count}
 - Deviations: {deviation_count}
+- Not supported: {not_supported_count}
 - Excluded: {excluded_count}
 - Total: {total_count}
 
@@ -171,7 +178,9 @@ def create_summary(rules, output):
 - Passed: {result_count(output, "passed")}
 - Failed: {result_count(output, "failed")}
 - Deviated: {result_count(output, "xfailed")}
-- Excluded (not run): {excluded_count}"""
+Not run:
+- Not supported: {not_supported_count}
+- Excluded: {excluded_count}"""
 
     unexpectedly_passed = result_count(output, "xpassed")
     if unexpectedly_passed:
@@ -185,6 +194,15 @@ def create_summary(rules, output):
                 f"- {profile_test_id(deviation['id'])}\n  {deviation['reason']}"
             )
         sections.append("\n\n".join(deviations))
+
+    if rules["NOT_SUPPORTED"]:
+        not_supported = ["### osc-validation not supported"]
+        for scenario in rules["NOT_SUPPORTED"]:
+            item = f"- {profile_test_id(scenario['id'])}"
+            if scenario["reason"]:
+                item += f"\n  {scenario['reason']}"
+            not_supported.append(item)
+        sections.append("\n\n".join(not_supported))
 
     if rules["EXCLUDE"]:
         exclusions = ["### osc-validation exclusions"]
@@ -244,15 +262,22 @@ def main():
     else:
         profile_path = Path(args.generate_profile).resolve()
 
+
+    esmini_exe = ESMINI_EXECUTABLE
+    if args.esmini_executable:
+        esmini_exe = Path(args.esmini_executable).resolve()
+
     try:
         write_test_profile(profile_path, rules["DEVIATION"])
         print(f"Generated test profile: {profile_path}")
-        exit_code, output = run_pytest(tests, profile_path, validation_prefix)
+        exit_code, output = run_pytest(tests, profile_path, validation_prefix, esmini_exe)
 
         print(f"Passed:              {result_count(output, 'passed')}")
         print(f"Failed:              {result_count(output, 'failed')}")
         print(f"Deviated (xfailed):  {result_count(output, 'xfailed')}")
-        print(f"Excluded (not run):  {len(rules['EXCLUDE'])}")
+        print(f"Not run:")
+        print(f"Not supported:       {len(rules['NOT_SUPPORTED'])}")
+        print(f"Excluded:            {len(rules['EXCLUDE'])}")
         print(f"Unexpectedly passed: {result_count(output, 'xpassed')}")
 
         summary = create_summary(rules, output)

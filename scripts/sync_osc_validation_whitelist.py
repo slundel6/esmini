@@ -33,7 +33,7 @@ from pathlib import Path
 
 import yaml
 
-VALID_KEYWORDS = ("INCLUDE", "DEVIATION", "EXCLUDE")
+VALID_KEYWORDS = ("INCLUDE", "DEVIATION", "EXCLUDE", "NOT_SUPPORTED")
 # Matches pytest -q collect-only summary lines, e.g. "28 tests collected in 1.76s"
 # or "no tests collected", which should not be treated as test ids.
 SUMMARY_LINE_RE = re.compile(r"^(\d+ tests? collected|no tests collected)", re.IGNORECASE)
@@ -111,7 +111,7 @@ def sync(whitelist_path: Path, collected: list[str]) -> None:
     stale_tests = sorted(set(known) - set(collected))
 
     if new_tests:
-        document["rules"]["EXCLUDE"].extend({"id": test} for test in new_tests)
+        document["rules"]["EXCLUDE"].extend({"id": test, "reason": "Excluded: Not reviewed"} for test in new_tests)
         yaml_text = yaml.safe_dump(
             document, sort_keys=False, allow_unicode=True, width=4096
         )
@@ -122,11 +122,13 @@ def sync(whitelist_path: Path, collected: list[str]) -> None:
     included = sum(1 for keyword in known.values() if keyword == "INCLUDE")
     excluded = sum(1 for keyword in known.values() if keyword == "EXCLUDE")
     deviations = sum(1 for keyword in known.values() if keyword == "DEVIATION")
+    not_supported = sum(1 for keyword in known.values() if keyword == "NOT_SUPPORTED")
 
     print(f"Collected tests:     {len(collected)}")
     print(f"New tests added:     {len(new_tests)} (as EXCLUDE)")
     print(f"Existing included:   {included}")
     print(f"Existing deviations: {deviations}")
+    print(f"Existing not supported: {not_supported}")
     print(f"Existing excluded:   {excluded}")
     print(f"Existing total:      {len(known)}")
 
