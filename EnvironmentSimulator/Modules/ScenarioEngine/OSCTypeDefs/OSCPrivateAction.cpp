@@ -937,6 +937,21 @@ void LatLaneChangeAction::Step(double simTime, double dt)
         return;
     }
 
+    bool instant_transition = transition_.shape_ == DynamicsShape::STEP ||
+                              (transition_.dimension_ != DynamicsDimension::RATE && transition_.GetParamTargetVal() < SMALL_NUMBER);
+
+    if (dt == 0.0 && !instant_transition)
+    {
+        // dt == 0 should only initialize action state. Avoid lane/track/inertial round-trips for continuous transitions.
+        if (fabs(offset_agnostic - transition_.GetTargetVal()) < SMALL_NUMBER)
+        {
+            OSCAction::End();
+            object_->pos_.SetHeadingRelativeRoadDirection(0.0);
+        }
+        object_->dirty_.SetBits(Object::DirtyBit::SPEED);
+        return;
+    }
+
     double rate       = transition_.EvaluateScaledPrim();
     double step_len   = fabs(object_->speed_) * dt;  // travel distance total
     double delta_long = 0.0;
@@ -984,8 +999,7 @@ void LatLaneChangeAction::Step(double simTime, double dt)
                              internal_pos_.GetS(),
                              offset_agnostic * SIGN(internal_pos_.GetLaneId()));
 
-    if (transition_.shape_ == DynamicsShape::STEP ||
-        (transition_.dimension_ != DynamicsDimension::RATE && transition_.GetParamTargetVal() < SMALL_NUMBER))
+    if (instant_transition)
     {
         // not for step shape, since it is not a continuous function. Maintain longitudinal motion
         delta_long = step_len;
