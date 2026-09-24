@@ -213,6 +213,8 @@ Not run:
             exclusions.append(item)
         sections.append("\n\n".join(exclusions))
 
+    sections.append("\n\nFor more details, click the CI job and expand step 'Run osc validation'")
+
     return "\n\n".join(sections) + "\n"
 
 
