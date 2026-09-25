@@ -213,7 +213,7 @@ Not run:
             exclusions.append(item)
         sections.append("\n\n".join(exclusions))
 
-    sections.append("\n\nFor more details, click the CI job and expand step 'Run osc validation'")
+    sections.append("\n\nFor more details, click the CI job and expand step 'Run osc-validation'->'Run explicit permutations'")
 
     return "\n\n".join(sections) + "\n"
 
