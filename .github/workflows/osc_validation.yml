@@ -73,4 +73,4 @@ jobs:
         uses: ./.github/actions/run_osc_validation
         with:
           runner: test/osc_validation_test.py
-          whitelist: .github/actions/run_osc_validation/whitelist.yml
+          manifest: .github/actions/run_osc_validation/osc_validation_manifest.yml

@@ -1,14 +1,14 @@
 #!/usr/bin/env python3
 """
-Sync the osc-validation whitelist.yml with the tests currently discovered by
+Sync osc_validation_manifest.yml with the tests currently discovered by
 pytest's --collect-only.
 
 For every test currently discovered by pytest:
-  - if it already has an entry in whitelist.yml, its rule and reason are left
+  - if it already has an entry in osc_validation_manifest.yml, its rule and reason are left
     untouched
   - if it is new, it is appended to the EXCLUDE rule
 
-Tests listed in whitelist.yml that are no longer discovered by pytest are not
+Tests listed in osc_validation_manifest.yml that are no longer discovered by pytest are not
 removed automatically, they are only reported as a warning.
 
 Requirements:
@@ -20,8 +20,8 @@ Requirements:
 
 Example, run from the esmini repo root, assuming a sibling checkout of
 osc-validation with its venv already active:
-    python3 scripts/sync_osc_validation_whitelist.py \
-        --whitelist .github/actions/run_osc_validation/whitelist.yml \
+    python3 scripts/sync_osc_validation_manifest.py \
+        --manifest .github/actions/run_osc_validation/osc_validation_manifest.yml \
         --collect-root osc_validation/validation \
         --cwd ../osc-validation
 """
@@ -41,7 +41,7 @@ SUMMARY_LINE_RE = re.compile(r"^(\d+ tests? collected|no tests collected)", re.I
 
 def collect_tests(cwd: Path, collect_root: str) -> list[str]:
     """Run pytest --collect-only and return the collected test ids, prefixed
-    with collect_root so they match the format used in whitelist.yml."""
+    with collect_root so they match the format used in osc_validation_manifest.yml."""
     result = subprocess.run(
         ["pytest", collect_root, "--collect-only", "-q"],
         cwd=cwd,
@@ -64,22 +64,22 @@ def collect_tests(cwd: Path, collect_root: str) -> list[str]:
     return tests
 
 
-def parse_whitelist(path: Path) -> tuple[dict, dict[str, str], str]:
+def parse_manifest(path: Path) -> tuple[dict, dict[str, str], str]:
     """Return the YAML document, test id rules, and leading comments."""
     text = path.read_text(encoding="utf-8") if path.exists() else ""
     try:
         document = yaml.safe_load(text) or {"rules": {}}
     except yaml.YAMLError as error:
-        raise SystemExit(f"Unable to parse whitelist '{path}': {error}") from error
+        raise SystemExit(f"Unable to parse manifest '{path}': {error}") from error
 
     if not isinstance(document, dict) or not isinstance(document.get("rules"), dict):
-        raise SystemExit(f"Whitelist '{path}' must contain a 'rules' mapping")
+        raise SystemExit(f"Manifest '{path}' must contain a 'rules' mapping")
 
     rules = document["rules"]
     unknown_rules = set(rules) - set(VALID_KEYWORDS)
     if unknown_rules:
         raise SystemExit(
-            f"Unknown whitelist rule(s): {', '.join(sorted(unknown_rules))}"
+            f"Unknown manifest rule(s): {', '.join(sorted(unknown_rules))}"
         )
 
     known: dict[str, str] = {}
@@ -104,8 +104,8 @@ def parse_whitelist(path: Path) -> tuple[dict, dict[str, str], str]:
     return document, known, comment_block
 
 
-def sync(whitelist_path: Path, collected: list[str]) -> None:
-    document, known, leading_comments = parse_whitelist(whitelist_path)
+def sync(manifest_path: Path, collected: list[str]) -> None:
+    document, known, leading_comments = parse_manifest(manifest_path)
 
     new_tests = [t for t in collected if t not in known]
     stale_tests = sorted(set(known) - set(collected))
@@ -117,7 +117,7 @@ def sync(whitelist_path: Path, collected: list[str]) -> None:
         )
         if leading_comments:
             yaml_text = f"{leading_comments}\n\n{yaml_text}"
-        whitelist_path.write_text(yaml_text, encoding="utf-8")
+        manifest_path.write_text(yaml_text, encoding="utf-8")
 
     included = sum(1 for keyword in known.values() if keyword == "INCLUDE")
     excluded = sum(1 for keyword in known.values() if keyword == "EXCLUDE")
@@ -133,14 +133,19 @@ def sync(whitelist_path: Path, collected: list[str]) -> None:
     print(f"Existing total:      {len(known)}")
 
     if stale_tests:
-        print(f"\nWarning: {len(stale_tests)} whitelist entries were not collected by pytest (stale?):")
+        print(f"\nWarning: {len(stale_tests)} manifest entries were not collected by pytest (stale?):")
         for test in stale_tests:
             print(f"  - {test}")
 
 
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
-    parser.add_argument("-wl", "--whitelist", required=True, type=Path, help="Path to whitelist.yml")
+    parser.add_argument(
+        "--manifest",
+        required=True,
+        type=Path,
+        help="Path to osc_validation_manifest.yml",
+    )
     parser.add_argument(
         "-cwd",
         default=Path("."),
@@ -166,7 +171,7 @@ def main() -> None:
         )
 
     collected = collect_tests(args.cwd, args.collect_root)
-    sync(args.whitelist, collected)
+    sync(args.manifest, collected)
 
 
 if __name__ == "__main__":

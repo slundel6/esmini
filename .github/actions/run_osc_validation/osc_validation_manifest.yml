@@ -29,7 +29,9 @@ rules:
   - id: osc_validation/validation/scenario/triggers/val_simulation_time_start_trigger.py::test_simulation_time_start_trigger_delays_actor_trajectory[simple_trajectories/20240603T152322.095000Z_sv_370_3200_618_dronetracker_135_swerve.mcap-0.2-0.05-2-0-10.0-2-1-2]
   - id: osc_validation/validation/scenario/triggers/val_speed_start_trigger.py::test_speed_start_trigger_activates_target_actor[simple_trajectories/20240603T152322.095000Z_sv_370_3200_618_dronetracker_135_swerve.mcap]
   - id: osc_validation/validation/scenario/triggers/val_speed_start_trigger.py::test_speed_start_trigger_condition_edge_none_activates_when_initially_true[simple_trajectories/20240603T152322.095000Z_sv_370_3200_618_dronetracker_135_swerve.mcap]
-
+  - id: osc_validation/validation/scenario/triggers/val_speed_start_trigger.py::test_speed_start_trigger_condition_edge_falling_activates[simple_trajectories/20240603T152322.095000Z_sv_370_3200_618_dronetracker_135_swerve.mcap]
+  - id: osc_validation/validation/scenario/triggers/val_time_to_collision_start_trigger.py::test_time_to_collision_start_trigger_activates_target_actor[simple_trajectories/20240603T152322.095000Z_sv_370_3200_618_dronetracker_135_swerve.mcap-0.3-0.05-1-5.0-1-2]
+  - id: osc_validation/validation/scenario/triggers/val_traveled_distance_start_trigger.py::test_traveled_distance_start_trigger_activates_target_actor[simple_trajectories/20240603T152322.095000Z_sv_370_3200_618_dronetracker_135_swerve.mcap-0.2-0.05-1-55.0-1-2]
   DEVIATION:
   - id: osc_validation/validation/scenario/trajectories/val_follow_trajectory_future_time_reference.py::test_follow_trajectory_future_time_reference_continues_init_speed_until_first_vertex
     reason: 'Known deviation: esmini intentionally implements alternative behavior for OpenSCENARIO section 6.9.2.'
@@ -39,3 +41,5 @@ rules:
     reason: 'Known deviation: Supported soon'
   - id: osc_validation/validation/scenario/trajectories/val_follow_trajectory_teleport.py::test_follow_trajectory_position_mode_teleports_to_current_trajectory_time[between_trajectory_points-1.0]
     reason: 'Known deviation: Supported soon'
+  EXCLUDE: []
+  NOT_SUPPORTED: []

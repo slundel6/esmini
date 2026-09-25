@@ -18,10 +18,12 @@ ESMINI_EXECUTABLE = Path(__file__).resolve().parents[1] / "bin" / "esmini"
 
 def parse_arguments():
     parser = argparse.ArgumentParser(
-        description="Run whitelisted osc-validation test permutations"
+        description="Run osc-validation test permutations from a manifest"
     )
     parser.add_argument(
-        "-wl", "--whitelist", required=True, help="path to the whitelist YAML file"
+        "--manifest",
+        required=True,
+        help="path to the osc_validation_manifest.yml file",
     )
     parser.add_argument(
         "-vp",
@@ -42,21 +44,21 @@ def parse_arguments():
     return parser.parse_args()
 
 
-def load_rules(whitelist_path):
+def load_rules(manifest_path):
     try:
-        with whitelist_path.open(encoding="utf-8") as whitelist_file:
-            document = yaml.safe_load(whitelist_file)
+        with manifest_path.open(encoding="utf-8") as manifest_file:
+            document = yaml.safe_load(manifest_file)
     except (OSError, yaml.YAMLError) as error:
-        raise ValueError(f"Unable to read whitelist {whitelist_path}: {error}") from error
+        raise ValueError(f"Unable to read manifest {manifest_path}: {error}") from error
 
     if not isinstance(document, dict) or not isinstance(document.get("rules"), dict):
-        raise ValueError(f"{whitelist_path} must contain a 'rules' mapping")
+        raise ValueError(f"{manifest_path} must contain a 'rules' mapping")
 
     rules = document["rules"]
     unknown_rules = set(rules) - set(RULES)
     if unknown_rules:
         raise ValueError(
-            f"Unknown rule(s) in {whitelist_path}: {', '.join(sorted(unknown_rules))}"
+            f"Unknown rule(s) in {manifest_path}: {', '.join(sorted(unknown_rules))}"
         )
 
     parsed_rules = {}
@@ -220,7 +222,7 @@ Not run:
 
 def main():
     args = parse_arguments()
-    whitelist_path = Path(args.whitelist).resolve()
+    manifest_path = Path(args.manifest).resolve()
     validation_prefix = Path(args.validation_prefix).resolve()
 
     if not validation_prefix.is_dir():
@@ -230,7 +232,7 @@ def main():
         return 1
 
     try:
-        rules = load_rules(whitelist_path)
+        rules = load_rules(manifest_path)
     except ValueError as error:
         print(error, file=sys.stderr)
         return 1
@@ -240,7 +242,7 @@ def main():
         reason = f" ({entry['reason']})" if entry["reason"] else ""
         print(f"Excluding: {entry['id']}{reason}")
 
-    print(f"Using whitelist:     {whitelist_path}")
+    print(f"Using manifest:      {manifest_path}")
     print(f"Using validation:    {validation_prefix}")
     print(f"Using esmini binary: {ESMINI_EXECUTABLE}")
     print(f"Included tests:  {len(rules['INCLUDE'])}")
@@ -249,7 +251,7 @@ def main():
     print(f"Total tests:     {sum(len(rules[name]) for name in RULES)}")
 
     if not tests:
-        print(f"No INCLUDE/DEVIATION tests found in {whitelist_path}", file=sys.stderr)
+        print(f"No INCLUDE/DEVIATION tests found in {manifest_path}", file=sys.stderr)
         return 1
 
     print("Running tests:")

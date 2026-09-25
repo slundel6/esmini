@@ -4,7 +4,7 @@ inputs:
   runner:
     description: "Python script used to run the validation suite"
     required: true
-  whitelist:
+  manifest:
     description: "YAML file defining included, excluded, and deviating tests"
     required: true
 runs:
@@ -16,7 +16,7 @@ runs:
       run: |
         # Single source of truth for the pinned osc-validation tag/ref.
         # Update this value alone to bump the version used by the steps below.
-        echo "OSC_VALIDATION_REF=v0.1.0" >> "$GITHUB_ENV"
+        echo "OSC_VALIDATION_REF=v0.2.0" >> "$GITHUB_ENV"
 
     - name: Check for new osc-validation tags
       shell: bash
@@ -35,7 +35,7 @@ runs:
           VERSION_TEXT="A newer osc-validation tag is available: $LATEST_TAG (currently pinned to $PINNED_TAG)"
           echo "::notice::${VERSION_TEXT}."
 
-          echo "VERSION_NOTICE=${VERSION_TEXT}. Consider updating OSC_VALIDATION_REF in .github/actions/run_osc_validation/action.yml and generating an updated whitelist.yml using scripts/sync_osc_validation_whitelist.py." >> "$GITHUB_ENV"
+          echo "VERSION_NOTICE=${VERSION_TEXT}. Consider updating OSC_VALIDATION_REF in .github/actions/run_osc_validation/action.yml and generating an updated osc_validation_manifest.yml using scripts/sync_osc_validation_manifest.py." >> "$GITHUB_ENV"
         else
            echo "VERSION_NOTICE=osc-validation is up to date ($PINNED_TAG)." >> "$GITHUB_ENV"
         fi
@@ -62,7 +62,7 @@ runs:
       run: |
         "$GITHUB_WORKSPACE/osc-validation/.venv/bin/python" \
           "$GITHUB_WORKSPACE/${{ inputs.runner }}" \
-          --whitelist "$GITHUB_WORKSPACE/${{ inputs.whitelist }}" \
+          --manifest "$GITHUB_WORKSPACE/${{ inputs.manifest }}" \
           --validation-prefix "$GITHUB_WORKSPACE/osc-validation"
 
     - name: Upload osc-validation artifacts
