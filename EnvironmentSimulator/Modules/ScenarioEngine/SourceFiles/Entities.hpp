@@ -467,6 +467,29 @@ namespace scenarioengine
                      double&                           dist,
                      double                            maxDist = LARGE_NUMBER);
 
+        /**
+        Measure the relative speed of provided target object wrt this object, between reference points (no free-space).
+        The result corresponds to the rate of change of the distance measured by Distance() (freeSpace = false)
+        for the same cs and relDistType, i.e. positive value means that the distance is increasing.
+        Velocities are projected onto the axes of the coordinate system, rotation of the coordinate system itself
+        (e.g. yaw rate of the entity or curvature of road/trajectory) is not taken into account.
+         - CS_ENTITY: lateral/longitudinal in this object's local coordinate system
+         - CS_ROAD/CS_LANE: lateral (t) / longitudinal (s) along road, longitudinal sign according to this object's heading
+         - CS_TRAJECTORY: lateral (t) / longitudinal (s) along this object's trajectory (Euclidean if no trajectory)
+         - Euclidean (any cs): rate of change of signed Euclidean distance
+        @param target The object to check
+        @param cs CoordinateSystem, see roadmanager::CoordinateSystem
+        @param relDistType, see roadmanager::RelativeDistanceType
+        @param speed Relative speed (output parameter)
+        @param maxDist Max distance to search for road path (CS_ROAD/CS_LANE)
+        @return 0 if successful and speed is valid, else -1
+        */
+        int RelativeSpeed(Object*                           target,
+                          roadmanager::CoordinateSystem     cs,
+                          roadmanager::RelativeDistanceType relDistType,
+                          double&                           speed,
+                          double                            maxDist = LARGE_NUMBER);
+
         int TimeHeadway(Object*                           target,
                         roadmanager::CoordinateSystem     cs,
                         roadmanager::RelativeDistanceType relDistType,
