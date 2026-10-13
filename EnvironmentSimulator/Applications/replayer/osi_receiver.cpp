@@ -143,8 +143,8 @@ int main(int argc, char* argv[])
     while (!quit)
     {
         // Fetch and parse OSI message
-        buf.counter = 1;
-        int retval;
+        buf.counter           = 1;
+        int retval            = 0;
         int receivedDataBytes = 0;
         while (!quit && buf.counter > 0)
         {

@@ -9,15 +9,10 @@ import unittest
 import argparse
 import subprocess
 
-from test_common import ESMINI_PATH, set_timeout, run_scenario, use_package
+from test_common import ESMINI_PATH, set_timeout, run_scenario, check_config_bool_true
 
 SCENARIO_PATH = os.path.join(ESMINI_PATH, 'resources/xosc/cut-in.xosc')
 COMMON_ARGS = '--headless --fixed_timestep 0.05 --quit_at_end '
-
-
-def is_osi_supported():
-    return os.path.isfile(os.path.join(ESMINI_PATH, 'bin', 'osireceiver')) or \
-           os.path.isfile(os.path.join(ESMINI_PATH, 'bin', 'osireceiver.exe'))
 
 
 def get_macos_maxdgram():
@@ -82,7 +77,7 @@ class UdpPacketCollector:
 class TestSuite(unittest.TestCase):
 
     def test_osi_udp_custom_port(self):
-        if not use_package("OSI"):
+        if not check_config_bool_true("RUN_OSI_TESTS"):
             print('skipping test_osi_udp_custom_port for non-OSI builds ', end='', file=sys.stderr)
             return
 
@@ -104,11 +99,11 @@ class TestSuite(unittest.TestCase):
         self.assertGreater(datasize, 0, "Packet datasize should be positive")
 
     def test_osi_udp_custom_data_size(self):
-        if not is_osi_supported():
+        if not check_config_bool_true("RUN_OSI_TESTS"):
             print('skipping test_osi_udp_custom_data_size for non-OSI builds ', end='', file=sys.stderr)
             return
 
-        test_sizes = [1400, 9000, 65507]
+        test_sizes = [1463, 9000, 65507]
         port = 5000
 
         for max_size in test_sizes:
@@ -152,7 +147,7 @@ class TestSuite(unittest.TestCase):
                     )
 
     def test_osi_udp_default_values(self):
-        if not is_osi_supported():
+        if not check_config_bool_true("RUN_OSI_TESTS"):
             print('skipping test_osi_udp_default_values for non-OSI builds ', end='', file=sys.stderr)
             return
 
@@ -185,58 +180,62 @@ class TestSuite(unittest.TestCase):
             )
 
     def test_osi_udp_invalid_port_warning(self):
-        if not is_osi_supported():
+        if not check_config_bool_true("RUN_OSI_TESTS"):
             print('skipping test_osi_udp_invalid_port_warning for non-OSI builds ', end='', file=sys.stderr)
             return
 
         # Low port (< 1024)
+        recv_port = 1023
         log_low, _, _, err_low = run_scenario(
             SCENARIO_PATH,
-            COMMON_ARGS + '--osi_receiver_ip 127.0.0.1 --osi_receiver_port 500'
+            COMMON_ARGS + f'--osi_receiver_ip 127.0.0.1 --osi_receiver_port {recv_port}'
         )
         combined_low = (log_low or '') + (err_low or '')
         self.assertIsNotNone(
-            re.search(r'Requested OSI UDP port 500 is outside allowed range \[\d+, \d+\], using default port \d+', combined_low),
-            f"Expected port warning not found in log for port 500. Output:\n{combined_low}"
+            re.search(rf'Requested OSI UDP port {recv_port} is outside allowed range \[\d+, \d+\], using default port \d+', combined_low),
+            f"Expected port warning not found in log for port {recv_port}. Output:\n{combined_low}"
         )
 
-        # High port (> 65536)
+        # High port (> 65535)
+        recv_port = 65536
         log_high, _, _, err_high = run_scenario(
             SCENARIO_PATH,
-            COMMON_ARGS + '--osi_receiver_ip 127.0.0.1 --osi_receiver_port 70000'
+            COMMON_ARGS + f'--osi_receiver_ip 127.0.0.1 --osi_receiver_port {recv_port}'
         )
         combined_high = (log_high or '') + (err_high or '')
         self.assertIsNotNone(
-            re.search(r'Requested OSI UDP port 70000 is outside allowed range \[\d+, \d+\], using default port \d+', combined_high),
-            f"Expected port warning not found in log for port 70000. Output:\n{combined_high}"
+            re.search(rf'Requested OSI UDP port {recv_port} is outside allowed range \[\d+, \d+\], using default port \d+', combined_high),
+            f"Expected port warning not found in log for port {recv_port}. Output:\n{combined_high}"
         )
 
     def test_osi_udp_invalid_data_size_warning(self):
-        if not is_osi_supported():
+        if not check_config_bool_true("RUN_OSI_TESTS"):
             print('skipping test_osi_udp_invalid_data_size_warning for non-OSI builds ', end='', file=sys.stderr)
             return
 
         # Size below minimum (< 1464)
+        data_size = 1463
         log_low, _, _, err_low = run_scenario(
             SCENARIO_PATH,
-            COMMON_ARGS + '--osi_receiver_ip 127.0.0.1 --osi_receiver_udp_data_size 500'
+            COMMON_ARGS + f'--osi_receiver_ip 127.0.0.1 --osi_receiver_udp_data_size {data_size}'
         )
         combined_low = (log_low or '') + (err_low or '')
         self.assertIsNotNone(
             re.search(r'Requested OSI UDP data size \d+ is below minimum allowed size \d+, using minimum instead', combined_low),
-            f"Expected data size warning not found in log for size 500. Output:\n{combined_low}"
+            f"Expected data size warning not found in log for size {data_size}. Output:\n{combined_low}"
         )
 
-        # Size above maximum (> maximum allowed)
+        # Size above maximum (> 65507)
+        data_size = 65508
         log_high, _, _, err_high = run_scenario(
             SCENARIO_PATH,
-            COMMON_ARGS + '--osi_receiver_ip 127.0.0.1 --osi_receiver_udp_data_size 100000'
+            COMMON_ARGS + f'--osi_receiver_ip 127.0.0.1 --osi_receiver_udp_data_size {data_size}'
         )
         combined_high = (log_high or '') + (err_high or '')
-        # Regex matches any maximum allowed size (65499 on Linux/Windows or dynamic max on macOS)
+        # Regex matches any maximum allowed size (65507 on Linux/Windows or dynamic max on macOS)
         self.assertIsNotNone(
             re.search(r'Requested OSI UDP data size \d+ exceeds maximum allowed size \d+, using maximum instead', combined_high),
-            f"Expected data size warning not found in log for size 100000. Output:\n{combined_high}"
+            f"Expected data size warning not found in log for size {data_size}. Output:\n{combined_high}"
         )
 
 
