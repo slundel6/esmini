@@ -9,7 +9,7 @@ import unittest
 import argparse
 import subprocess
 
-from test_common import ESMINI_PATH, set_timeout, run_scenario
+from test_common import ESMINI_PATH, set_timeout, run_scenario, use_package
 
 SCENARIO_PATH = os.path.join(ESMINI_PATH, 'resources/xosc/cut-in.xosc')
 COMMON_ARGS = '--headless --fixed_timestep 0.05 --quit_at_end '
@@ -82,8 +82,7 @@ class UdpPacketCollector:
 class TestSuite(unittest.TestCase):
 
     def test_osi_udp_custom_port(self):
-        """Test sending OSI packets over a custom UDP port (127.0.0.1:5000)."""
-        if not is_osi_supported():
+        if not use_package("OSI"):
             print('skipping test_osi_udp_custom_port for non-OSI builds ', end='', file=sys.stderr)
             return
 
@@ -105,12 +104,11 @@ class TestSuite(unittest.TestCase):
         self.assertGreater(datasize, 0, "Packet datasize should be positive")
 
     def test_osi_udp_custom_data_size(self):
-        """Test sending OSI packets with a variety of max UDP data sizes: [1410, 9000, 65500]."""
         if not is_osi_supported():
             print('skipping test_osi_udp_custom_data_size for non-OSI builds ', end='', file=sys.stderr)
             return
 
-        test_sizes = [1410, 9000, 65500]
+        test_sizes = [1400, 9000, 65507]
         port = 5000
 
         for max_size in test_sizes:
@@ -154,7 +152,6 @@ class TestSuite(unittest.TestCase):
                     )
 
     def test_osi_udp_default_values(self):
-        """Test default UDP port (48198) and default max data size (8192 bytes)."""
         if not is_osi_supported():
             print('skipping test_osi_udp_default_values for non-OSI builds ', end='', file=sys.stderr)
             return
@@ -188,7 +185,6 @@ class TestSuite(unittest.TestCase):
             )
 
     def test_osi_udp_invalid_port_warning(self):
-        """Test warning messages when port is out of allowed range"""
         if not is_osi_supported():
             print('skipping test_osi_udp_invalid_port_warning for non-OSI builds ', end='', file=sys.stderr)
             return
@@ -216,7 +212,6 @@ class TestSuite(unittest.TestCase):
         )
 
     def test_osi_udp_invalid_data_size_warning(self):
-        """Test warning messages when data size is out of allowed range"""
         if not is_osi_supported():
             print('skipping test_osi_udp_invalid_data_size_warning for non-OSI builds ', end='', file=sys.stderr)
             return
