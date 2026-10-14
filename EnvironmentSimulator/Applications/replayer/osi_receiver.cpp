@@ -91,6 +91,9 @@ int main(int argc, char* argv[])
 
     quit = false;
 
+    // Disable stdout buffering so prints are flushed immediately when redirected to file or pipe
+    setvbuf(stdout, nullptr, _IONBF, 0);
+
     // Setup signal handler to catch Ctrl-C
     signal(SIGINT, signal_handler);
 

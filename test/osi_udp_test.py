@@ -8,8 +8,9 @@ import time
 import unittest
 import argparse
 import subprocess
+import signal
 
-from test_common import ESMINI_PATH, set_timeout, run_scenario, check_config_bool_true
+from test_common import ESMINI_PATH, env, set_timeout, run_scenario, check_config_bool_true
 
 SCENARIO_PATH = os.path.join(ESMINI_PATH, 'resources/xosc/cut-in.xosc')
 COMMON_ARGS = '--headless --fixed_timestep 0.05 --quit_at_end '
@@ -72,6 +73,66 @@ class UdpPacketCollector:
                 self.sock.close()
             except Exception:
                 pass
+
+
+class OsiReceiverRunner:
+    def __init__(self, output_file):
+        self.output_file = output_file
+        self.proc = None
+        self.thread = None
+        self.started_event = threading.Event()
+        self.stop_event = threading.Event()
+
+    def _run(self):
+        receiver_bin = os.path.join(ESMINI_PATH, 'bin', 'osireceiver')
+        if sys.platform == 'win32':
+            receiver_bin += '.exe'
+
+        with open(self.output_file, 'w') as out_f:
+            self.proc = subprocess.Popen(
+                [receiver_bin],
+                stdout=out_f,
+                stderr=subprocess.STDOUT,
+                env=env
+            )
+            start_time = time.time()
+            while time.time() - start_time < 5.0:
+                if self.proc.poll() is not None:
+                    break
+                if os.path.exists(self.output_file):
+                    try:
+                        with open(self.output_file, 'r') as r:
+                            if 'Socket open' in r.read():
+                                self.started_event.set()
+                                break
+                    except Exception:
+                        pass
+                time.sleep(0.05)
+
+            while not self.stop_event.is_set():
+                if self.proc.poll() is not None:
+                    break
+                time.sleep(0.05)
+
+    def start(self):
+        self.thread = threading.Thread(target=self._run)
+        self.thread.daemon = True
+        self.thread.start()
+        self.started_event.wait(timeout=5.0)
+
+    def stop(self):
+        self.stop_event.set()
+        if self.proc and self.proc.poll() is None:
+            if sys.platform != 'win32':
+                self.proc.send_signal(signal.SIGINT)
+            else:
+                self.proc.terminate()
+            try:
+                self.proc.wait(timeout=2.0)
+            except subprocess.TimeoutExpired:
+                self.proc.kill()
+        if self.thread:
+            self.thread.join(timeout=2.0)
 
 
 class TestSuite(unittest.TestCase):
@@ -237,6 +298,55 @@ class TestSuite(unittest.TestCase):
             re.search(r'Requested OSI UDP data size \d+ exceeds maximum allowed size \d+, using maximum instead', combined_high),
             f"Expected data size warning not found in log for size {data_size}. Output:\n{combined_high}"
         )
+
+    def test_osi_receiver(self):
+        if not check_config_bool_true("RUN_OSI_TESTS"):
+            print('skipping test_osi_receiver for non-OSI builds ', end='', file=sys.stderr)
+            return
+
+        receiver_bin = os.path.join(ESMINI_PATH, 'bin', 'osireceiver')
+        if sys.platform == 'win32':
+            receiver_bin += '.exe'
+        if not os.path.isfile(receiver_bin):
+            print(f'skipping test_osi_receiver: {receiver_bin} not found ', end='', file=sys.stderr)
+            return
+
+        output_file = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'osireceiver_output.txt')
+        if os.path.exists(output_file):
+            os.remove(output_file)
+
+        runner = OsiReceiverRunner(output_file)
+        runner.start()
+
+        scenario_path = os.path.join(ESMINI_PATH, 'resources/xosc/straight_500m.xosc')
+        try:
+            run_scenario(
+                scenario_path,
+                '--fixed_timestep 2.0 --osi_receiver_ip 127.0.0.1 --headless'
+            )
+            time.sleep(0.5)
+        finally:
+            runner.stop()
+
+        self.assertTrue(os.path.exists(output_file), f"Output file {output_file} was not created")
+        with open(output_file, 'r') as f:
+            content = f.read()
+
+        if os.path.exists(output_file):
+            os.remove(output_file)
+
+        self.assertIn("Socket open. Waiting for OSI messages on port 48198.", content)
+        self.assertIn("timestamp: 0.00", content)
+        self.assertIn("obj id 14 pos (51.40, -1.53, 0.90) orientation (0.00, 0.00, 0.00) velocity (20.00, 0.00, 0.00) assigned lane: 6", content)
+        self.assertIn("obj id 15 pos (351.45, -1.53, 0.75) orientation (0.00, 0.00, 0.00) velocity (0.00, 0.00, 0.00) assigned lane: 6", content)
+
+        self.assertIn("timestamp: 10.00", content)
+        self.assertIn("obj id 14 pos (251.40, -1.53, 0.90) orientation (0.00, 0.00, 0.00) velocity (20.00, 0.00, 0.00) assigned lane: 6", content)
+        self.assertIn("obj id 15 pos (351.45, -1.53, 0.75) orientation (0.00, 0.00, 0.00) velocity (0.00, 0.00, 0.00) assigned lane: 6", content)
+
+        self.assertIn("timestamp: 30.00", content)
+        self.assertIn("obj id 14 pos (501.40, -1.53, 0.90) orientation (0.00, 0.00, 0.00) velocity (0.00, 0.00, 0.00) assigned lane: 6", content)
+        self.assertIn("obj id 15 pos (351.45, -1.53, 0.75) orientation (0.00, 0.00, 0.00) velocity (0.00, 0.00, 0.00) assigned lane: 6", content)
 
 
 if __name__ == "__main__":
