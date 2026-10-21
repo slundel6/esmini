@@ -264,6 +264,12 @@ class TestSuite(unittest.TestCase):
 
         self.assertGreater(permutations, 0)
 
+        # Remove any logfiles that might exist prior to execution
+        for i in range(1, permutations + 1):
+            for filename in (f"log_{i}_of_{permutations}.txt", f"sim_{i}_of_{permutations}.dat"):
+                if os.path.isfile(filename):
+                    os.remove(filename)
+
         _, _, _, _ = run_scenario(scenario, COMMON_ESMINI_ARGS, read_log=False)
 
         for i in range(1, permutations + 1):

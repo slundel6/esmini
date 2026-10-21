@@ -148,6 +148,12 @@ if [[ "$skip_smoke_test" == false ]]; then
     if ! ${PYTHON} ncap_suite.py -t $timeout; then
         exit_with_msg "ncap_suite test failed"
     fi
+
+    echo $'\n'Run ASAM OSC example suite:
+
+    if ! ${PYTHON} asam_osc_examples_suite.py -t $timeout; then
+        exit_with_msg "asam_osc_examples_suite test failed"
+    fi
 fi
 
 if  [[ "$add_performance_test" == true ]] && [[ "$build_type" == "Release" ]]; then
