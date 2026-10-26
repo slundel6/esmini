@@ -1596,6 +1596,12 @@ extern "C"
     SE_DLL_API void SE_DisableOSIFile();
 
     /**
+            Switch on logging to OSI file(s) with a custom suffix appended to the name
+            @param filename Optional suffix, including path. Set to 0 or "" to use default.
+    */
+    SE_DLL_API void SE_EnableOSIFileWithSuffix(const char *suffix);
+
+    /**
             Switch on logging to OSI file(s)
             @param filename Optional filename, including path. Set to 0 or "" to use default.
     */

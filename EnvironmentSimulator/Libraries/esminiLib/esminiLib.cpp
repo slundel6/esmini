@@ -2304,6 +2304,20 @@ extern "C"
         }
     }
 
+    SE_DLL_API void SE_EnableOSIFileWithSuffix(const char *suffix)
+    {
+#ifdef _USE_OSI
+        SE_Env::Inst().GetOptions().SetOptionValue("osi_file_suffix", suffix == nullptr ? "" : suffix);
+        if (player != nullptr)
+        {
+            player->SetOSIFileStatus(true, suffix);
+            player->osiReporter->UpdateOSIGroundTruth(player->scenarioEngine->entities_.object_);
+        }
+#else
+        (void)filename;
+#endif  // _USE_OSI
+    }
+
     SE_DLL_API void SE_EnableOSIFile(const char *filename)
     {
 #ifdef _USE_OSI
