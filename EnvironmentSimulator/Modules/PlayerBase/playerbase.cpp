@@ -135,10 +135,19 @@ void ScenarioPlayer::SetOSIFileStatus(bool is_on, const char* filename)
     {
         if (is_on)
         {
-            const std::string default_filename = osiReporter->CreateOSIFilename("gt");
+            std::string suffix = SE_Env::Inst().GetOptions().GetOptionValue("osi_file_suffix");
+            if (suffix == ".")
+            {
+                suffix.clear();
+            }
+            const std::string default_filename = osiReporter->CreateOSIFilename("gt", suffix);
             std::string       strFileName = esmini::common::ValidateAndCreateFilePath(filename == nullptr ? "" : filename, default_filename, "osi");
             const bool        is_iso_filename = FileNameOf(strFileName) == default_filename;
-            filename                          = strFileName.c_str();
+            if (!is_iso_filename && !suffix.empty())
+            {
+                strFileName = FilePathWithoutExtOf(strFileName) + "_" + suffix + FileNameExtOf(strFileName);
+            }
+            filename = strFileName.c_str();
             if (OSCParameterDistribution::Inst().GetNumPermutations() > 0)
             {
                 osiReporter->OpenOSIFile(OSCParameterDistribution::Inst().AddInfoToFilepath(filename).c_str(), is_iso_filename);
@@ -1568,7 +1577,7 @@ int ScenarioPlayer::Init()
     opt.AddOption("osi_crop_dynamic", "Crop the dynamic osi data around the given object id with given radius", "id,radius", "", false, false);
     opt.AddOption("osi_exclude_ghost", "Excludes ghost from osi dynamic osi ground truth");
     opt.AddOption("osi_file", "Save osi trace file", "filename", ".");
-    opt.AddOption("osi_file", "Save osi trace file", "filename", ".");
+    opt.AddOption("osi_file_suffix", "Save osi trace file with an optional suffix before the extension (default: no suffix)", "suffix", ".");
     opt.AddOption("osi_freq", "Decrease OSI file entries, e.g. --osi_freq 2 -> OSI written every two simulation steps", "frequency");
     opt.AddOption("osi_lines", "Show OSI road lines. Toggle key 'u'");
     opt.AddOption("osi_points", "Show OSI road points. Toggle key 'y'");
@@ -2023,7 +2032,7 @@ int ScenarioPlayer::Init()
 
     std::string osi_filename;
     // First check arguments
-    if (opt.GetOptionSet("osi_file"))
+    if (opt.GetOptionSet("osi_file") || opt.GetOptionSet("osi_file_suffix"))
     {
         osi_filename = opt.GetOptionValue("osi_file");
         if (osiReporter->GetOSIFrequency() == 0)
