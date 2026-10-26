@@ -16,6 +16,23 @@
 #include "pugixml.hpp"
 #include "simple_expr.h"
 
+#if defined(_USE_OSI) && _RUN_OSI_TESTS
+#include "playerbase.hpp"
+#include <chrono>
+#include <regex>
+#include <tuple>
+
+#if __has_include(<filesystem>)
+#include <filesystem>
+namespace fs = std::filesystem;
+#elif __has_include(<experimental/filesystem>)
+#include <experimental/filesystem>
+namespace fs = std::experimental::filesystem;
+#else
+#error "Missing <filesystem> header"
+#endif
+#endif
+
 using namespace roadmanager;
 using namespace scenarioengine;
 
@@ -31,6 +48,100 @@ static void scenario_step(ScenarioEngine* scenario_engine, double dt)
     scenario_engine->SwapAndClearDirtyBits();
     DirtyBits::SetReadBack();
 }
+
+#if defined(_USE_OSI) && _RUN_OSI_TESTS
+class OSIFileOptionsTest : public ::testing::TestWithParam<std::tuple<int, int>>
+{
+protected:
+    void SetUp() override
+    {
+        original_directory_ = fs::current_path();
+        scenario_           = fs::absolute("../../../resources/xosc/cut-in_simple.xosc").string();
+        ASSERT_TRUE(fs::exists(scenario_));
+        const fs::path directory =
+            fs::temp_directory_path() / ("esmini-osi-options-" + std::to_string(std::chrono::steady_clock::now().time_since_epoch().count()));
+        ASSERT_TRUE(fs::create_directory(directory));
+        directory_ = directory;
+        fs::current_path(directory_);
+    }
+
+    void TearDown() override
+    {
+        fs::current_path(original_directory_);
+        if (!directory_.empty())
+        {
+            fs::remove_all(directory_);
+        }
+    }
+
+    fs::path    original_directory_;
+    fs::path    directory_;
+    std::string scenario_;
+};
+
+TEST_P(OSIFileOptionsTest, FilenameCombinations)
+{
+    // File: absent, bare, explicit. Suffix: absent, bare, empty, named.
+    const int                file_mode   = std::get<0>(GetParam());
+    const int                suffix_mode = std::get<1>(GetParam());
+    std::vector<std::string> args        = {"esmini", "--osc", scenario_, "--headless", "--disable_log"};
+    if (file_mode != 0)
+    {
+        args.push_back("--osi_file");
+        if (file_mode == 2)
+        {
+            args.push_back("gt.osi");
+        }
+    }
+    if (suffix_mode != 0)
+    {
+        args.push_back("--osi_file_suffix");
+        if (suffix_mode >= 2)
+        {
+            args.push_back(suffix_mode == 2 ? "" : "my_file");
+        }
+    }
+    std::vector<char*> argv;
+    for (auto& arg : args)
+    {
+        argv.push_back(&arg[0]);
+    }
+    {
+        ScenarioPlayer player(static_cast<int>(argv.size()), argv.data());
+        ASSERT_EQ(player.Init(), 0);
+        player.Frame(0.01);
+        player.Frame(0.01);
+    }
+
+    std::vector<fs::path> traces;
+    for (const auto& entry : fs::directory_iterator(directory_))
+    {
+        if (entry.path().extension() == ".osi")
+        {
+            traces.push_back(entry.path());
+        }
+    }
+    if (file_mode == 0 && suffix_mode == 0)
+    {
+        EXPECT_TRUE(traces.empty());
+        return;
+    }
+    ASSERT_EQ(traces.size(), 1u);
+    EXPECT_GT(fs::file_size(traces[0]), 0u);
+    const std::string suffix = suffix_mode == 3 ? "_my_file" : "";
+    if (file_mode == 2)
+    {
+        EXPECT_EQ(traces[0].filename().string(), "gt" + suffix + ".osi");
+    }
+    else
+    {
+        EXPECT_TRUE(std::regex_match(traces[0].filename().string(), std::regex("[0-9]{8}T[0-9]{6}Z_gt_[0-9]+_[0-9]+_3" + suffix + "\\.osi")));
+    }
+}
+
+// File: 0=absent, 1=bare, 2=explicit; suffix: 0=absent, 1=bare, 2=empty, 3=named (range ends are exclusive).
+INSTANTIATE_TEST_SUITE_P(OSIFileOptions, OSIFileOptionsTest, ::testing::Combine(::testing::Range(0, 3), ::testing::Range(0, 4)));
+#endif
 
 TEST(DistanceTest, CalcDistanceVariations)
 {

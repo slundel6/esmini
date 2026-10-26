@@ -20,6 +20,8 @@
 #include <sstream>
 #include <stdio.h>
 #include <tuple>
+#include <chrono>
+#include <regex>
 #include "pugixml.hpp"
 
 #if __has_include(<filesystem>)
@@ -1379,13 +1381,100 @@ TEST_P(GetOSILaneBoundaryTests, lane_boundary_id_not_existing)
 
 INSTANTIATE_TEST_SUITE_P(EsminiAPITests, GetOSILaneBoundaryTests, ::testing::Values(std::make_tuple(36, 0), std::make_tuple(-36, 0)));
 
+class OSIFileOptionsAPITest : public ::testing::TestWithParam<std::tuple<int, int>>
+{
+protected:
+    void SetUp() override
+    {
+        original_directory_ = fs::current_path();
+        scenario_           = fs::absolute("../../../resources/xosc/cut-in_simple.xosc").string();
+        ASSERT_TRUE(fs::exists(scenario_));
+        const fs::path directory =
+            fs::temp_directory_path() / ("esmini-osi-api-options-" + std::to_string(std::chrono::steady_clock::now().time_since_epoch().count()));
+        ASSERT_TRUE(fs::create_directory(directory));
+        directory_ = directory;
+        fs::current_path(directory_);
+    }
+
+    void TearDown() override
+    {
+        SE_Close();
+        fs::current_path(original_directory_);
+        if (!directory_.empty())
+        {
+            fs::remove_all(directory_);
+        }
+    }
+
+    fs::path    original_directory_;
+    fs::path    directory_;
+    std::string scenario_;
+};
+
+TEST_P(OSIFileOptionsAPITest, FilenameCombinations)
+{
+    // File: absent, bare, explicit.
+    // Suffix: absent, bare, empty, named.
+    const int file_mode   = std::get<0>(GetParam());
+    const int suffix_mode = std::get<1>(GetParam());
+    ASSERT_EQ(SE_SetOption("disable_log"), 0);
+    if (file_mode != 0)
+    {
+        SE_EnableOSIFile(file_mode == 2 ? "gt.osi" : nullptr);
+    }
+    if (suffix_mode == 1)
+    {
+        ASSERT_EQ(SE_SetOption("osi_file_suffix"), 0);
+    }
+    else if (suffix_mode >= 2)
+    {
+        ASSERT_EQ(SE_SetOptionValue("osi_file_suffix", suffix_mode == 2 ? "" : "my_file"), 0);
+    }
+    ASSERT_EQ(SE_Init(scenario_.c_str(), 0, 0, 0, 0), 0);
+    SE_StepDT(0.01);
+    SE_StepDT(0.01);
+    SE_Close();
+
+    std::vector<fs::path> traces;
+    for (const auto& entry : fs::directory_iterator(directory_))
+    {
+        if (entry.path().extension() == ".osi")
+        {
+            traces.push_back(entry.path());
+        }
+    }
+    // No OSI file
+    if (file_mode == 0 && suffix_mode == 0)
+    {
+        EXPECT_TRUE(traces.empty());
+        return;
+    }
+
+    ASSERT_EQ(traces.size(), 1u);
+    EXPECT_GT(fs::file_size(traces[0]), 0u);
+    const std::string suffix = suffix_mode == 3 ? "_my_file" : "";
+    if (file_mode == 2)
+    {
+        EXPECT_EQ(traces[0].filename().string(), "gt" + suffix + ".osi");
+    }
+    else
+    {
+        // Ensure filename follows <timestamp>_<type>_<osi-version>_<protobuf-version>_<number-of-frames>_<custom-trace-name>.osi
+        EXPECT_TRUE(std::regex_match(traces[0].filename().string(), std::regex("[0-9]{8}T[0-9]{6}Z_gt_[0-9]+_[0-9]+_3" + suffix + "\\.osi")));
+    }
+}
+
+// Note: run specific permutation with e.g: ./ScenarioEngineDll_test --gtest_filter="OSIFileOptionsAPI/OSIFileOptionsAPITest.FilenameCombinations/0"
+// File: 0=absent, 1=bare, 2=explicit; suffix: 0=absent, 1=bare, 2=empty, 3=named with all 12 permutations (0,0) -> (0,1) ... (3,4)
+INSTANTIATE_TEST_SUITE_P(OSIFileOptionsAPI, OSIFileOptionsAPITest, ::testing::Combine(::testing::Range(0, 3), ::testing::Range(0, 4)));
+
 TEST(OSIFile, writeosifile_two_step)
 {
     std::string    scenario_file = "../../../resources/xosc/cut-in.xosc";
     const char*    Scenario_file = scenario_file.c_str();
     std::streamoff file_size1, file_size2;
 
-    SE_EnableOSIFile("");
+    SE_EnableOSIFile("ground_truth.osi");
     SE_Init(Scenario_file, 0, 0, 0, 0);
     SE_SetOSIFrequency(1);
 
