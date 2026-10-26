@@ -113,11 +113,11 @@ OSIReporter::OSIReporter(ScenarioEngine *scenarioengine)
     obj_osi_external.tc                = new osi3::TrafficCommand();
 
     // Read version number of the OSI code base
-    auto current_osi_version = osi3::InterfaceVersion::descriptor()->file()->options().GetExtension(osi3::current_interface_version);
+    current_osi_version_ = osi3::InterfaceVersion::descriptor()->file()->options().GetExtension(osi3::current_interface_version);
 
-    obj_osi_internal.static_gt->mutable_version()->set_version_major(current_osi_version.version_major());
-    obj_osi_internal.static_gt->mutable_version()->set_version_minor(current_osi_version.version_minor());
-    obj_osi_internal.static_gt->mutable_version()->set_version_patch(current_osi_version.version_patch());
+    obj_osi_internal.static_gt->mutable_version()->set_version_major(current_osi_version_.version_major());
+    obj_osi_internal.static_gt->mutable_version()->set_version_minor(current_osi_version_.version_minor());
+    obj_osi_internal.static_gt->mutable_version()->set_version_patch(current_osi_version_.version_patch());
 
     obj_osi_external.tc->mutable_timestamp()->set_seconds(0);
     obj_osi_external.tc->mutable_timestamp()->set_nanos(0);
@@ -254,7 +254,30 @@ void OSIReporter::ReportSensors(std::vector<ObjectSensor *> sensor)
     }
 }
 
-bool OSIReporter::OpenOSIFile(const char *filename)
+std::string OSIReporter::CreateOSIFilename(const std::string &type, const std::string &custom_name)
+{
+    std::string timestamp = SE_Env::Inst().CreateISOTimestamp();
+
+    std::string version_major = std::to_string(current_osi_version_.version_major());
+    std::string version_minor = std::to_string(current_osi_version_.version_minor());
+    std::string version_patch = std::to_string(current_osi_version_.version_patch());
+    std::string version       = version_major + version_minor + version_patch;
+
+    constexpr int protobuf_version = GOOGLE_PROTOBUF_MIN_LIBRARY_VERSION;
+    std::string   min_protobuf_version =
+        std::to_string(protobuf_version / 1000000) + std::to_string((protobuf_version / 1000) % 1000) + std::to_string(protobuf_version % 1000);
+
+    std::string suffix = "";
+    if (!custom_name.empty())
+    {
+        suffix += "_" + custom_name;
+    }
+
+    // Set _0 for the frames when file is created, updated to actual frames at file close
+    return timestamp + "_" + type + "_" + version + "_" + min_protobuf_version + "_0" + suffix + ".osi";
+}
+
+bool OSIReporter::OpenOSIFile(const char *filename, bool is_iso_filename)
 {
     // Ensure any previous stream chain is torn down in a safe order before re-opening.
     CloseOSIFile();
@@ -265,6 +288,10 @@ bool OSIReporter::OpenOSIFile(const char *filename)
         LOG_ERROR("Failed open OSI tracefile {}", filename);
         return false;
     }
+
+    osi_filename_       = filename;
+    is_iso_filename_    = is_iso_filename;
+    osi_frames_written_ = 0;
 
     if (SE_Env::Inst().GetOptions().GetOptionSetByEnum(esmini_options::CONFIG_ENUM::OSI_COMPRESS))
     {
@@ -294,12 +321,50 @@ void OSIReporter::CloseOSIFile()
     if (osi_file.is_open())
     {
         osi_file.close();
+        if (osi_file.fail())
+        {
+            LOG_ERROR("Failed close OSI tracefile {}", osi_filename_);
+            return;
+        }
+
+        if (is_iso_filename_)
+        {
+            RenameISOFile();
+        }
+    }
+}
+
+void OSIReporter::RenameISOFile()
+{
+    std::string  name      = FileNameOf(osi_filename_);
+    const size_t name_pos  = osi_filename_.size() - name.size();
+    size_t       frame_pos = 0;
+    for (int field = 0; field < 4; ++field)
+    {
+        frame_pos = name.find('_', frame_pos);
+        if (frame_pos == std::string::npos)
+        {
+            LOG_ERROR("Invalid ISO trace filename {}", osi_filename_);
+            return;
+        }
+        ++frame_pos;
+    }
+    if (frame_pos + 1 >= name.size() || name[frame_pos] != '0' || (name[frame_pos + 1] != '_' && name[frame_pos + 1] != '.'))
+    {
+        LOG_ERROR("Missing frame-count placeholder in ISO trace filename {}", osi_filename_);
+        return;
+    }
+    name.replace(frame_pos, 1, std::to_string(osi_frames_written_));
+    const std::string renamed_path = osi_filename_.substr(0, name_pos) + name;
+    if (renamed_path != osi_filename_ && RenameFile(osi_filename_, renamed_path))
+    {
+        LOG_INFO("OSI tracefile name updated to {}", renamed_path);
     }
 }
 
 bool OSIReporter::WriteOSIFile()
 {
-    if (!osi_file.good())
+    if (!osi_file.is_open() || !osi_file.good())
     {
         return false;
     }
@@ -315,9 +380,18 @@ bool OSIReporter::WriteOSIFile()
                 google::protobuf::io::CodedOutputStream coded_output(gzip_write_stream_.gzip_output.get());
                 coded_output.WriteRaw(reinterpret_cast<char *>(&osiGroundTruth.size), sizeof(osiGroundTruth.size));
                 coded_output.WriteRaw(osiGroundTruth.ground_truth.c_str(), static_cast<int>(osiGroundTruth.size));
+                if (coded_output.HadError())
+                {
+                    LOG_ERROR("Failed write compressed osi file");
+                    return false;
+                }
             }
 
-            gzip_write_stream_.gzip_output->Flush();
+            if (!gzip_write_stream_.gzip_output->Flush())
+            {
+                LOG_ERROR("Failed flush compressed osi file");
+                return false;
+            }
         }
     }
     else
@@ -330,6 +404,10 @@ bool OSIReporter::WriteOSIFile()
     {
         LOG_ERROR("Failed write osi file");
         return false;
+    }
+    if (!gzip_write_stream_.gzip_output || osiGroundTruth.size > 0)
+    {
+        ++osi_frames_written_;
     }
     return true;
 }

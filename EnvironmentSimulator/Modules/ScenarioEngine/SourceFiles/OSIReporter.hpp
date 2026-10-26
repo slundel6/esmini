@@ -26,6 +26,7 @@
 #include <osi_version.pb.h>
 #include <google/protobuf/io/gzip_stream.h>
 #include <google/protobuf/io/zero_copy_stream_impl.h>
+#include <google/protobuf/stubs/common.h>
 #include <iostream>
 #include <fstream>
 #include <string>
@@ -69,11 +70,13 @@ public:
         API_AND_LOG,
     };
 
+    std::string CreateOSIFilename(const std::string& type, const std::string& custom_name = "");
     /**
     Creates and opens osi file
-    @param filename Optional filename, including path. Set to 0 to use default.
+    @param filename Filename, including path.
+    @param is_iso_filename Update the frame-count field of a generated ISO filename when closing.
     */
-    bool OpenOSIFile(const char* filename);
+    bool OpenOSIFile(const char* filename, bool is_iso_filename = false);
     /**
     Closes any open osi file
     */
@@ -302,10 +305,15 @@ public:
     int SetOSITimeStampExplicit(unsigned long long nanoseconds);
 
 private:
+    void RenameISOFile();
+
     UDPClient*                                      udp_client_;
     unsigned int                                    udp_data_size_ = DEFAULT_OSI_UDP_DATA_SIZE;
     ScenarioEngine*                                 scenario_engine_;
     std::ofstream                                   osi_file;
+    std::string                                     osi_filename_       = "";
+    bool                                            is_iso_filename_    = false;
+    size_t                                          osi_frames_written_ = 0;
     int*                                            osi_update_counter_ = nullptr;
     int                                             counter_offset_     = 0;
     int                                             osi_freq_           = 0;
@@ -326,4 +334,5 @@ private:
         std::unique_ptr<google::protobuf::io::OstreamOutputStream> raw_output;
         std::unique_ptr<google::protobuf::io::GzipOutputStream>    gzip_output;
     } gzip_write_stream_;
+    osi3::InterfaceVersion current_osi_version_;
 };

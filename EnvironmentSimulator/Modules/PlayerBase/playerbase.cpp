@@ -135,19 +135,17 @@ void ScenarioPlayer::SetOSIFileStatus(bool is_on, const char* filename)
     {
         if (is_on)
         {
-            if (filename == nullptr || !strcmp(filename, ""))
-            {
-                filename = DEFAULT_OSI_TRACE_FILENAME;
-            }
-            std::string strFileName = esmini::common::ValidateAndCreateFilePath(filename, DEFAULT_OSI_TRACE_FILENAME, "osi");
-            filename                = strFileName.c_str();
+            const std::string default_filename = osiReporter->CreateOSIFilename("gt");
+            std::string       strFileName = esmini::common::ValidateAndCreateFilePath(filename == nullptr ? "" : filename, default_filename, "osi");
+            const bool        is_iso_filename = FileNameOf(strFileName) == default_filename;
+            filename                          = strFileName.c_str();
             if (OSCParameterDistribution::Inst().GetNumPermutations() > 0)
             {
-                osiReporter->OpenOSIFile(OSCParameterDistribution::Inst().AddInfoToFilepath(filename).c_str());
+                osiReporter->OpenOSIFile(OSCParameterDistribution::Inst().AddInfoToFilepath(filename).c_str(), is_iso_filename);
             }
             else
             {
-                osiReporter->OpenOSIFile(filename);
+                osiReporter->OpenOSIFile(filename, is_iso_filename);
             }
         }
         else
@@ -1569,7 +1567,8 @@ int ScenarioPlayer::Init()
     opt.AddOption("osi_compress", "Compress OSI data with gzip");
     opt.AddOption("osi_crop_dynamic", "Crop the dynamic osi data around the given object id with given radius", "id,radius", "", false, false);
     opt.AddOption("osi_exclude_ghost", "Excludes ghost from osi dynamic osi ground truth");
-    opt.AddOption("osi_file", "Save osi trace file", "filename", DEFAULT_OSI_TRACE_FILENAME);
+    opt.AddOption("osi_file", "Save osi trace file", "filename", ".");
+    opt.AddOption("osi_file", "Save osi trace file", "filename", ".");
     opt.AddOption("osi_freq", "Decrease OSI file entries, e.g. --osi_freq 2 -> OSI written every two simulation steps", "frequency");
     opt.AddOption("osi_lines", "Show OSI road lines. Toggle key 'u'");
     opt.AddOption("osi_points", "Show OSI road points. Toggle key 'y'");
