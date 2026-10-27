@@ -1869,6 +1869,13 @@ namespace ESMini
         public static extern void SE_DisableOSIFile();
 
         /// <summary>
+        /// Switch on logging to OSI file(s) with a custom suffix appended to the name
+        /// </summary>
+        /// <param name="filename">Optional suffix, including path. Set to 0 or "" to use default.</param>
+        [DllImport(NativeLibrary, CallingConvention = CallingConvention.Cdecl, CharSet = CharSet.Ansi)]
+        public static extern void SE_EnableOSIFileWithSuffix(string suffix);
+
+        /// <summary>
         /// Switch on logging to OSI file(s)
         /// </summary>
         /// <param name="filename">Optional filename, including path. Set to 0 or "" to use default.</param>
