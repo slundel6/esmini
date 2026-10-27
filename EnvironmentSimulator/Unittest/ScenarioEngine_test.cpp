@@ -18,6 +18,7 @@
 
 #if defined(_USE_OSI) && _RUN_OSI_TESTS
 #include "playerbase.hpp"
+#include <google/protobuf/io/coded_stream.h>
 #include <chrono>
 #include <regex>
 #include <tuple>
@@ -141,6 +142,99 @@ TEST_P(OSIFileOptionsTest, FilenameCombinations)
 
 // File: 0=absent, 1=bare, 2=explicit; suffix: 0=absent, 1=bare, 2=empty, 3=named (range ends are exclusive).
 INSTANTIATE_TEST_SUITE_P(OSIFileOptions, OSIFileOptionsTest, ::testing::Combine(::testing::Range(0, 3), ::testing::Range(0, 4)));
+
+class OSITraceWriterTest : public ::testing::TestWithParam<bool>
+{
+protected:
+    void SetUp() override
+    {
+        directory_ = fs::temp_directory_path() / ("esmini-osi-writer-" + std::to_string(std::chrono::steady_clock::now().time_since_epoch().count()));
+        ASSERT_TRUE(fs::create_directory(directory_));
+    }
+
+    void TearDown() override
+    {
+        if (!directory_.empty())
+        {
+            fs::remove_all(directory_);
+        }
+    }
+
+    void ExpectMessages(const fs::path& path, bool compressed, const std::vector<std::string>& messages)
+    {
+        std::ifstream file(path.string(), std::ios::binary);
+        ASSERT_TRUE(file.good());
+        google::protobuf::io::IstreamInputStream               raw_input(&file);
+        std::unique_ptr<google::protobuf::io::GzipInputStream> gzip_input;
+        google::protobuf::io::ZeroCopyInputStream*             input = &raw_input;
+        if (compressed)
+        {
+            gzip_input = std::make_unique<google::protobuf::io::GzipInputStream>(&raw_input);
+            input      = gzip_input.get();
+        }
+        google::protobuf::io::CodedInputStream coded_input(input);
+        for (const auto& expected : messages)
+        {
+            unsigned int size = 0;
+            ASSERT_TRUE(coded_input.ReadRaw(&size, sizeof(size)));
+            ASSERT_EQ(size, expected.size());
+            std::string message(size, '\0');
+            if (size > 0)
+            {
+                ASSERT_TRUE(coded_input.ReadRaw(&message[0], static_cast<int>(size)));
+            }
+            EXPECT_EQ(message, expected);
+        }
+        unsigned int size = 0;
+        EXPECT_FALSE(coded_input.ReadRaw(&size, sizeof(size)));
+    }
+
+    fs::path directory_;
+};
+
+TEST_P(OSITraceWriterTest, IndependentFilesAndFinalization)
+{
+    const fs::path    gt_path = directory_ / "20261027T120000Z_gt_370_3150_0.osi";
+    const fs::path    tc_path = directory_ / "20261027T120000Z_tc_370_3150_0.osi";
+    const std::string gt_message("ground\0truth", 12);
+    {
+        OSITraceWriter gt_writer;
+        OSITraceWriter tc_writer;
+        ASSERT_TRUE(gt_writer.Open(gt_path.string(), true, GetParam()));
+        ASSERT_TRUE(gt_writer.Write(gt_message));
+        ASSERT_TRUE(tc_writer.Open(tc_path.string(), true, GetParam()));
+        ASSERT_TRUE(tc_writer.Write("command1"));
+        ASSERT_TRUE(gt_writer.Write("groundtruth2"));
+        ASSERT_TRUE(gt_writer.Flush());
+        ASSERT_TRUE(tc_writer.Flush());
+        ASSERT_TRUE(gt_writer.Close());
+        EXPECT_FALSE(gt_writer.IsOpen());
+        EXPECT_TRUE(tc_writer.IsOpen());
+        ASSERT_TRUE(tc_writer.Write("command2"));
+        ASSERT_TRUE(tc_writer.Write("command3"));
+    }
+    EXPECT_FALSE(fs::exists(gt_path));
+    EXPECT_FALSE(fs::exists(tc_path));
+    ExpectMessages(directory_ / "20261027T120000Z_gt_370_3150_2.osi", GetParam(), {gt_message, "groundtruth2"});
+    ExpectMessages(directory_ / "20261027T120000Z_tc_370_3150_3.osi", GetParam(), {"command1", "command2", "command3"});
+}
+
+TEST_P(OSITraceWriterTest, ReopenResetsStateAndRecoversFromOpenFailure)
+{
+    OSITraceWriter writer;
+    ASSERT_FALSE(writer.Open((directory_ / "missing" / "trace.osi").string(), false, GetParam()));
+    ASSERT_TRUE(writer.Open((directory_ / "20261027T120000Z_gt_370_3150_0_first.osi").string(), true, GetParam()));
+    ASSERT_TRUE(writer.Write("first"));
+    ASSERT_TRUE(writer.Open((directory_ / "20261027T120000Z_tc_370_3150_0_second.osi").string(), true, !GetParam()));
+    ASSERT_TRUE(writer.Write("second"));
+    ASSERT_TRUE(writer.Write("third"));
+    ASSERT_TRUE(writer.Close());
+    ASSERT_TRUE(writer.Close());
+    ExpectMessages(directory_ / "20261027T120000Z_gt_370_3150_1_first.osi", GetParam(), {"first"});
+    ExpectMessages(directory_ / "20261027T120000Z_tc_370_3150_2_second.osi", !GetParam(), {"second", "third"});
+}
+
+INSTANTIATE_TEST_SUITE_P(OSITraceWriter, OSITraceWriterTest, ::testing::Bool());
 #endif
 
 TEST(DistanceTest, CalcDistanceVariations)

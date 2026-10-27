@@ -19,6 +19,8 @@
 #include <array>
 #include <algorithm>
 #include <cctype>
+#include <limits>
+#include <google/protobuf/io/coded_stream.h>
 
 #ifdef _WIN32
 #include <winsock2.h>
@@ -173,7 +175,7 @@ OSIReporter::~OSIReporter()
 
     delete udp_client_;
 
-    CloseOSIFile();
+    CloseAllOSIFiles();
 
     SE_Env::Inst().ResetOSITimeStamp();
 }
@@ -277,148 +279,234 @@ std::string OSIReporter::CreateOSIFilename(const std::string &type, const std::s
     return timestamp + "_" + type + "_" + version + "_" + min_protobuf_version + "_0" + suffix + ".osi";
 }
 
-bool OSIReporter::OpenOSIFile(const char *filename, bool is_iso_filename)
+bool OSIReporter::OpenOSIFile(const char *filename, bool is_iso_filename, const OSITraceType type)
 {
-    // Ensure any previous stream chain is torn down in a safe order before re-opening.
-    CloseOSIFile();
+    if (filename == nullptr || filename[0] == '\0')
+    {
+        LOG_ERROR("Cannot open OSI tracefile without a filename");
+        return false;
+    }
 
-    osi_file.open(filename, std::ios_base::binary);
-    if (!osi_file.good())
+    return GetTraceWriter(type).Open(filename,
+                                     is_iso_filename,
+                                     SE_Env::Inst().GetOptions().GetOptionSetByEnum(esmini_options::CONFIG_ENUM::OSI_COMPRESS));
+}
+
+void OSIReporter::CloseOSIFile(const OSITraceType type)
+{
+    GetTraceWriter(type).Close();
+}
+
+void OSIReporter::CloseAllOSIFiles()
+{
+    for (auto &writer : trace_writers_)
+    {
+        writer.Close();
+    }
+}
+
+bool OSIReporter::WriteOSIFile()
+{
+    return WriteOSIFile(OSITraceType::GROUND_TRUTH, osiGroundTruth.ground_truth);
+}
+
+bool OSIReporter::WriteOSIFile(OSITraceType type, const std::string &serialized_message)
+{
+    return GetTraceWriter(type).Write(serialized_message);
+}
+
+void OSIReporter::FlushOSIFile(OSITraceType type)
+{
+    auto &writer = GetTraceWriter(type);
+    if (writer.IsOpen())
+    {
+        writer.Flush();
+    }
+}
+
+bool OSIReporter::IsFileOpen(OSITraceType type) const
+{
+    return GetTraceWriter(type).IsOpen();
+}
+
+OSITraceWriter::~OSITraceWriter()
+{
+    Close();
+}
+
+bool OSITraceWriter::Open(const std::string &filename, bool is_iso_filename, bool compress)
+{
+    if (!Close())
+    {
+        return false;
+    }
+    file_.clear();
+    file_.open(filename, std::ios_base::binary);
+    if (!file_.good())
     {
         LOG_ERROR("Failed open OSI tracefile {}", filename);
         return false;
     }
 
-    osi_filename_       = filename;
-    is_iso_filename_    = is_iso_filename;
-    osi_frames_written_ = 0;
-
-    if (SE_Env::Inst().GetOptions().GetOptionSetByEnum(esmini_options::CONFIG_ENUM::OSI_COMPRESS))
+    filename_        = filename;
+    is_iso_filename_ = is_iso_filename;
+    frames_written_  = 0;
+    if (compress)
     {
-        options_.format            = google::protobuf::io::GzipOutputStream::GZIP;
-        options_.compression_level = 1;
-
-        gzip_write_stream_.raw_output  = std::make_unique<google::protobuf::io::OstreamOutputStream>(&osi_file);
-        gzip_write_stream_.gzip_output = std::make_unique<google::protobuf::io::GzipOutputStream>(gzip_write_stream_.raw_output.get(), options_);
-        LOG_INFO("OSI tracefile {} opened with compression", filename);
+        google::protobuf::io::GzipOutputStream::Options options;
+        options.format            = google::protobuf::io::GzipOutputStream::GZIP;
+        options.compression_level = 1;
+        raw_output_               = std::make_unique<google::protobuf::io::OstreamOutputStream>(&file_);
+        gzip_output_              = std::make_unique<google::protobuf::io::GzipOutputStream>(raw_output_.get(), options);
     }
-    else
-    {
-        LOG_INFO("OSI tracefile {} opened", filename);
-    }
-
+    LOG_INFO("OSI tracefile {} opened{}", filename_, compress ? " with compression" : "");
     return true;
 }
 
-void OSIReporter::CloseOSIFile()
+bool OSITraceWriter::Close()
 {
-    if (gzip_write_stream_.gzip_output)
+    if (!file_.is_open())
     {
-        gzip_write_stream_.gzip_output.reset();  // This finishes and flushes the Gzip block
-        gzip_write_stream_.raw_output.reset();
+        return true;
     }
 
-    if (osi_file.is_open())
+    bool success = true;
+    if (gzip_output_)
     {
-        osi_file.close();
-        if (osi_file.fail())
+        if (!gzip_output_->Close())
         {
-            LOG_ERROR("Failed close OSI tracefile {}", osi_filename_);
-            return;
+            LOG_ERROR("Failed finalize compressed OSI tracefile {}", filename_);
+            success = false;
         }
-
-        if (is_iso_filename_)
-        {
-            RenameISOFile();
-        }
+        gzip_output_.reset();
+        raw_output_.reset();
     }
+    file_.close();
+    if (file_.fail())
+    {
+        LOG_ERROR("Failed close OSI tracefile {}", filename_);
+        return false;
+    }
+    if (success && is_iso_filename_)
+    {
+        return RenameISOFile();
+    }
+    return success;
 }
 
-void OSIReporter::RenameISOFile()
+bool OSITraceWriter::RenameISOFile()
 {
-    std::string  name      = FileNameOf(osi_filename_);
-    const size_t name_pos  = osi_filename_.size() - name.size();
+    std::string  name      = FileNameOf(filename_);
+    const size_t name_pos  = filename_.size() - name.size();
     size_t       frame_pos = 0;
     for (int field = 0; field < 4; ++field)
     {
         frame_pos = name.find('_', frame_pos);
         if (frame_pos == std::string::npos)
         {
-            LOG_ERROR("Invalid ISO trace filename {}", osi_filename_);
-            return;
+            LOG_ERROR("Invalid ISO trace filename {}", filename_);
+            return false;
         }
         ++frame_pos;
     }
     if (frame_pos + 1 >= name.size() || name[frame_pos] != '0' || (name[frame_pos + 1] != '_' && name[frame_pos + 1] != '.'))
     {
-        LOG_ERROR("Missing frame-count placeholder in ISO trace filename {}", osi_filename_);
-        return;
-    }
-    name.replace(frame_pos, 1, std::to_string(osi_frames_written_));
-    const std::string renamed_path = osi_filename_.substr(0, name_pos) + name;
-    if (renamed_path != osi_filename_ && RenameFile(osi_filename_, renamed_path))
-    {
-        LOG_INFO("OSI tracefile name updated to {}", renamed_path);
-    }
-}
-
-bool OSIReporter::WriteOSIFile()
-{
-    if (!osi_file.is_open() || !osi_file.good())
-    {
+        LOG_ERROR("Missing frame-count placeholder in ISO trace filename {}", filename_);
         return false;
     }
-
-    // write to file, first size of message then the message itself
-    if (gzip_write_stream_.gzip_output)
+    name.replace(frame_pos, 1, std::to_string(frames_written_));
+    const std::string renamed_path = filename_.substr(0, name_pos) + name;
+    if (renamed_path != filename_)
     {
-        if (osiGroundTruth.size > 0)
+        if (!RenameFile(filename_, renamed_path))
         {
-            // Keep gzip stream persistent, but keep coded stream short-lived.
-            // This avoids backup/trim state issues in protobuf when flushing gzip.
-            {
-                google::protobuf::io::CodedOutputStream coded_output(gzip_write_stream_.gzip_output.get());
-                coded_output.WriteRaw(reinterpret_cast<char *>(&osiGroundTruth.size), sizeof(osiGroundTruth.size));
-                coded_output.WriteRaw(osiGroundTruth.ground_truth.c_str(), static_cast<int>(osiGroundTruth.size));
-                if (coded_output.HadError())
-                {
-                    LOG_ERROR("Failed write compressed osi file");
-                    return false;
-                }
-            }
-
-            if (!gzip_write_stream_.gzip_output->Flush())
-            {
-                LOG_ERROR("Failed flush compressed osi file");
-                return false;
-            }
+            return false;
         }
-    }
-    else
-    {
-        osi_file.write(reinterpret_cast<char *>(&osiGroundTruth.size), sizeof(osiGroundTruth.size));
-        osi_file.write(osiGroundTruth.ground_truth.c_str(), osiGroundTruth.size);
-    }
-
-    if (!osi_file.good())
-    {
-        LOG_ERROR("Failed write osi file");
-        return false;
-    }
-    if (!gzip_write_stream_.gzip_output || osiGroundTruth.size > 0)
-    {
-        ++osi_frames_written_;
+        filename_ = renamed_path;
+        LOG_INFO("OSI tracefile name updated to {}", renamed_path);
     }
     return true;
 }
 
-void OSIReporter::FlushOSIFile()
+bool OSITraceWriter::Write(const std::string &serialized_message)
 {
-    if (osi_file.good())
+    if (!file_.is_open() || !file_.good())
     {
-        osi_file.flush();
+        LOG_ERROR("Cannot write OSI tracefile {}: stream is not writable", filename_);
+        return false;
     }
+    if (serialized_message.size() > static_cast<size_t>(std::numeric_limits<int>::max()))
+    {
+        LOG_ERROR("OSI message too large for tracefile {}: {} bytes", filename_, serialized_message.size());
+        return false;
+    }
+    const unsigned int size = static_cast<unsigned int>(serialized_message.size());
+
+    // write to file, first size of message then the message itself
+    if (gzip_output_)
+    {
+        if (size == 0)
+        {
+            return true;
+        }
+        // Destroy the coded stream before flushing the persistent gzip stream.
+        {
+            google::protobuf::io::CodedOutputStream coded_output(gzip_output_.get());
+            coded_output.WriteRaw(reinterpret_cast<const char *>(&size), sizeof(size));
+            coded_output.WriteRaw(serialized_message.data(), static_cast<int>(size));
+            if (coded_output.HadError())
+            {
+                LOG_ERROR("Failed write compressed OSI tracefile {}", filename_);
+                return false;
+            }
+        }
+        if (!gzip_output_->Flush())
+        {
+            LOG_ERROR("Failed flush compressed OSI tracefile {}", filename_);
+            return false;
+        }
+    }
+    else
+    {
+        file_.write(reinterpret_cast<const char *>(&size), sizeof(size));
+        file_.write(serialized_message.data(), size);
+    }
+
+    if (!file_.good())
+    {
+        LOG_ERROR("Failed write OSI tracefile {}", filename_);
+        return false;
+    }
+    ++frames_written_;
+    return true;
 }
+
+bool OSITraceWriter::Flush()
+{
+    if (!file_.is_open())
+    {
+        LOG_ERROR("Cannot flush OSI tracefile {}: stream is not open", filename_);
+        return false;
+    }
+    if (gzip_output_ && !gzip_output_->Flush())
+    {
+        LOG_ERROR("Failed flush compressed OSI tracefile {}", filename_);
+        return false;
+    }
+    file_.flush();
+    if (!file_.good())
+    {
+        LOG_ERROR("Failed flush OSI tracefile {}", filename_);
+        return false;
+    }
+    return true;
+}
+
+bool OSITraceWriter::IsOpen() const
+{
+    return file_.is_open();
+}
+
 void OSIReporter::SetOSIStaticReportMode(OSIStaticReportMode mode)
 {
     static_update_mode_ = mode;
@@ -3466,12 +3554,8 @@ void OSIReporter::AddTrafficLightToGt(osi3::GroundTruth *gt, roadmanager::Signal
 int OSIReporter::UpdateOSITrafficCommand()
 {
     obj_osi_external.tc->Clear();
-
-    if (GetUDPClientStatus() == 0 || IsFileOpen())
-    {
-        obj_osi_external.tc->SerializeToString(&osiTrafficCommand.traffic_command);
-        osiTrafficCommand.size = static_cast<unsigned int>(obj_osi_external.tc->ByteSizeLong());
-    }
+    osiTrafficCommand.traffic_command.clear();
+    osiTrafficCommand.size = 0;
 
     for (auto state_change : traffic_command_state_changes_)
     {
@@ -3482,6 +3566,20 @@ int OSIReporter::UpdateOSITrafficCommand()
     }
 
     traffic_command_state_changes_.clear();
+
+    if (GetUDPClientStatus() == 0 || IsFileOpen(OSITraceType::TRAFFIC_COMMAND))
+    {
+        if (!obj_osi_external.tc->SerializeToString(&osiTrafficCommand.traffic_command))
+        {
+            LOG_ERROR("Failed serialize OSI TrafficCommand");
+            return -1;
+        }
+        osiTrafficCommand.size = static_cast<unsigned int>(osiTrafficCommand.traffic_command.size());
+    }
+    if (IsFileOpen(OSITraceType::TRAFFIC_COMMAND) && !WriteOSIFile(OSITraceType::TRAFFIC_COMMAND, osiTrafficCommand.traffic_command))
+    {
+        return -1;
+    }
 
     return 0;
 }

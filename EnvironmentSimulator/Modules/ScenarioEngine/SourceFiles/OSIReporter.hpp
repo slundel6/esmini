@@ -29,9 +29,10 @@
 #include <google/protobuf/stubs/common.h>
 #include <iostream>
 #include <fstream>
+#include <memory>
 #include <string>
 #include <vector>
-#include <map>
+#include <array>
 #include <math.h>
 
 #define DEFAULT_OSI_TRACE_FILENAME "ground_truth.osi"
@@ -49,6 +50,34 @@
 #define MINIMUM_OSI_UDP_DATA_SIZE 1464
 
 using namespace scenarioengine;
+
+class OSITraceWriter
+{
+public:
+    OSITraceWriter() = default;
+    ~OSITraceWriter();
+    OSITraceWriter(const OSITraceWriter&)            = delete;
+    OSITraceWriter& operator=(const OSITraceWriter&) = delete;
+    OSITraceWriter(OSITraceWriter&&)                 = delete;
+    OSITraceWriter& operator=(OSITraceWriter&&)      = delete;
+
+    bool Open(const std::string& filename, bool is_iso_filename, bool compress);
+    bool Write(const std::string& serialized_message);
+    bool Flush();
+    bool Close();
+    bool IsOpen() const;
+
+private:
+    bool RenameISOFile();
+
+    std::ofstream file_;
+    std::string   filename_;
+    bool          is_iso_filename_ = false;
+    size_t        frames_written_  = 0;
+
+    std::unique_ptr<google::protobuf::io::OstreamOutputStream> raw_output_;
+    std::unique_ptr<google::protobuf::io::GzipOutputStream>    gzip_output_;
+};
 
 class OSIReporter
 {
@@ -70,25 +99,34 @@ public:
         API_AND_LOG,
     };
 
+    enum class OSITraceType
+    {
+        GROUND_TRUTH,
+        TRAFFIC_COMMAND,
+        COUNT,
+    };
+
     std::string CreateOSIFilename(const std::string& type, const std::string& custom_name = "");
     /**
     Creates and opens osi file
     @param filename Filename, including path.
     @param is_iso_filename Update the frame-count field of a generated ISO filename when closing.
     */
-    bool OpenOSIFile(const char* filename, bool is_iso_filename = false);
+    bool OpenOSIFile(const char* filename, bool is_iso_filename = false, const OSITraceType type = OSITraceType::GROUND_TRUTH);
     /**
     Closes any open osi file
     */
-    void CloseOSIFile();
+    void CloseOSIFile(const OSITraceType type = OSITraceType::GROUND_TRUTH);
+    void CloseAllOSIFiles();
     /**
     Writes GroundTruth in the OSI file
     */
     bool WriteOSIFile();
+    bool WriteOSIFile(OSITraceType type, const std::string& serialized_message);
     /**
     Flush (force write) the OSI file
     */
-    void FlushOSIFile();
+    void FlushOSIFile(OSITraceType type = OSITraceType::GROUND_TRUTH);
     /**
     Decide how the static data should be handled during each frame
     */
@@ -244,10 +282,7 @@ public:
     {
         return (udp_client_ ? udp_client_->GetStatus() : -1);
     }
-    bool IsFileOpen() const
-    {
-        return osi_file.is_open();
-    }
+    bool IsFileOpen(OSITraceType type = OSITraceType::GROUND_TRUTH) const;
     void ReportSensors(std::vector<ObjectSensor*> sensor);
 
     void SetUpdated(bool value)
@@ -305,34 +340,33 @@ public:
     int SetOSITimeStampExplicit(unsigned long long nanoseconds);
 
 private:
-    void RenameISOFile();
-
-    UDPClient*                                      udp_client_;
-    unsigned int                                    udp_data_size_ = DEFAULT_OSI_UDP_DATA_SIZE;
-    ScenarioEngine*                                 scenario_engine_;
-    std::ofstream                                   osi_file;
-    std::string                                     osi_filename_       = "";
-    bool                                            is_iso_filename_    = false;
-    size_t                                          osi_frames_written_ = 0;
-    int*                                            osi_update_counter_ = nullptr;
-    int                                             counter_offset_     = 0;
-    int                                             osi_freq_           = 0;
-    std::string                                     stationary_model_reference;
-    void                                            CreateMovingObjectFromSensorData(const osi3::SensorData& sd, int obj_nr);
-    void                                            CreateLaneBoundaryFromSensordata(const osi3::SensorData& sd, int lane_boundary_nr);
-    bool                                            osi_updated_        = false;
-    bool                                            osi_initialized_    = false;
-    bool                                            report_ghost_       = true;
-    OSIStaticReportMode                             static_update_mode_ = OSIStaticReportMode::DEFAULT;
-    std::vector<std::pair<int, double>>             osi_crop_           = {};       // id, radius
-    std::optional<int64_t>                          environment_timestamp_offset_;  // Offset to apply to environment timestamp, in seconds
-    std::optional<double>                           surface_water_film_;            // water film height currently applied to the OSI lanes, in mm
-    std::vector<uint8_t>                            has_lightstate_action_ = {};
-    google::protobuf::io::GzipOutputStream::Options options_;
-    struct
+    OSITraceWriter& GetTraceWriter(OSITraceType type)
     {
-        std::unique_ptr<google::protobuf::io::OstreamOutputStream> raw_output;
-        std::unique_ptr<google::protobuf::io::GzipOutputStream>    gzip_output;
-    } gzip_write_stream_;
-    osi3::InterfaceVersion current_osi_version_;
+        return trace_writers_.at(static_cast<size_t>(type));
+    }
+
+    const OSITraceWriter& GetTraceWriter(OSITraceType type) const
+    {
+        return trace_writers_.at(static_cast<size_t>(type));
+    }
+
+    UDPClient*                                                           udp_client_;
+    unsigned int                                                         udp_data_size_ = DEFAULT_OSI_UDP_DATA_SIZE;
+    ScenarioEngine*                                                      scenario_engine_;
+    std::array<OSITraceWriter, static_cast<size_t>(OSITraceType::COUNT)> trace_writers_;
+    int*                                                                 osi_update_counter_ = nullptr;
+    int                                                                  counter_offset_     = 0;
+    int                                                                  osi_freq_           = 0;
+    std::string                                                          stationary_model_reference;
+    void                                                                 CreateMovingObjectFromSensorData(const osi3::SensorData& sd, int obj_nr);
+    void                                CreateLaneBoundaryFromSensordata(const osi3::SensorData& sd, int lane_boundary_nr);
+    bool                                osi_updated_        = false;
+    bool                                osi_initialized_    = false;
+    bool                                report_ghost_       = true;
+    OSIStaticReportMode                 static_update_mode_ = OSIStaticReportMode::DEFAULT;
+    std::vector<std::pair<int, double>> osi_crop_           = {};       // id, radius
+    std::optional<int64_t>              environment_timestamp_offset_;  // Offset to apply to environment timestamp, in seconds
+    std::optional<double>               surface_water_film_;            // water film height currently applied to the OSI lanes, in mm
+    std::vector<uint8_t>                has_lightstate_action_ = {};
+    osi3::InterfaceVersion              current_osi_version_;
 };
