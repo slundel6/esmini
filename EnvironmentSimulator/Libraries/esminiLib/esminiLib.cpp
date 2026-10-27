@@ -2314,7 +2314,7 @@ extern "C"
             player->osiReporter->UpdateOSIGroundTruth(player->scenarioEngine->entities_.object_);
         }
 #else
-        (void)filename;
+        (void)suffix;
 #endif  // _USE_OSI
     }
 
