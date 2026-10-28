@@ -2332,7 +2332,7 @@ extern "C"
     SE_DLL_API int SE_DisableOSIFileEx(SE_OSITraceMessage message, SE_TraceType type)
     {
 #ifdef _USE_OSI
-        (void)type;
+        (void)type;  // Placeholder
         const auto trace_message = ToOSITraceMessage(message);
         if (!trace_message)
         {
@@ -2377,7 +2377,7 @@ extern "C"
     {
 #ifdef _USE_OSI
 
-        (void)type;
+        (void)type;  // Placeholder
         const auto trace_message = ToOSITraceMessage(message);
         if (!trace_message)
         {
@@ -2432,7 +2432,7 @@ extern "C"
     SE_DLL_API int SE_FlushOSIFileEx(SE_OSITraceMessage message, SE_TraceType type)
     {
 #ifdef _USE_OSI
-        (void)type;
+        (void)type;  // Placeholder
         const auto trace_message = ToOSITraceMessage(message);
         if (!trace_message)
         {
