@@ -454,13 +454,14 @@ bool OSITraceWriter::Write(const std::string &serialized_message)
     }
     const unsigned int size = static_cast<unsigned int>(serialized_message.size());
 
-    // write to file, first size of message then the message itself
+    // Nothing to write, we bail out
+    if (size == 0)
+    {
+        return true;
+    }
+
     if (gzip_output_)
     {
-        if (size == 0)
-        {
-            return true;
-        }
         // Destroy the coded stream before flushing the persistent gzip stream.
         {
             google::protobuf::io::CodedOutputStream coded_output(gzip_output_.get());
@@ -480,6 +481,7 @@ bool OSITraceWriter::Write(const std::string &serialized_message)
     }
     else
     {
+        // write to file, first size of message then the message itself
         file_.write(reinterpret_cast<const char *>(&size), sizeof(size));
         file_.write(serialized_message.data(), size);
     }
@@ -489,6 +491,7 @@ bool OSITraceWriter::Write(const std::string &serialized_message)
         LOG_ERROR("Failed write OSI tracefile {}", filename_);
         return false;
     }
+
     ++frames_written_;
     return true;
 }
