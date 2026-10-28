@@ -97,6 +97,9 @@ namespace scenarioengine
             return quit_request;
         }
         void SetOSIFileStatus(bool is_on, const char *filename = 0);
+#ifdef _USE_OSI
+        bool OpenOSIFile(const char *filename, OSIReporter::OSITraceMessage message);
+#endif
         int  Frame(bool server_mode = false);  // let player calculate actual time step
         void Draw();
         int  Frame(double timestep_s, bool server_mode = false);

@@ -143,6 +143,7 @@ TEST_P(OSIFileOptionsTest, FilenameCombinations)
 // File: 0=absent, 1=bare, 2=explicit; suffix: 0=absent, 1=bare, 2=empty, 3=named (range ends are exclusive).
 INSTANTIATE_TEST_SUITE_P(OSIFileOptions, OSIFileOptionsTest, ::testing::Combine(::testing::Range(0, 3), ::testing::Range(0, 4)));
 
+// GetParam() selects compression. Each test uses its own temporary directory, removed by TearDown().
 class OSITraceWriterTest : public ::testing::TestWithParam<bool>
 {
 protected:
@@ -162,6 +163,8 @@ protected:
 
     void ExpectMessages(const fs::path& path, bool compressed, const std::vector<std::string>& messages)
     {
+        // Check the file format and exact payload bytes, not OSI message semantics.
+        // The writer accepts arbitrary serialized bytes, so real protobuf messages are unnecessary here.
         std::ifstream file(path.string(), std::ios::binary);
         ASSERT_TRUE(file.good());
         google::protobuf::io::IstreamInputStream               raw_input(&file);
@@ -169,12 +172,14 @@ protected:
         google::protobuf::io::ZeroCopyInputStream*             input = &raw_input;
         if (compressed)
         {
+            // Decompress before reading the same size-prefixed records used by uncompressed files.
             gzip_input = std::make_unique<google::protobuf::io::GzipInputStream>(&raw_input);
             input      = gzip_input.get();
         }
         google::protobuf::io::CodedInputStream coded_input(input);
         for (const auto& expected : messages)
         {
+            // Each record is [unsigned int payload length][that many payload bytes].
             unsigned int size = 0;
             ASSERT_TRUE(coded_input.ReadRaw(&size, sizeof(size)));
             ASSERT_EQ(size, expected.size());
@@ -186,6 +191,7 @@ protected:
             EXPECT_EQ(message, expected);
         }
         unsigned int size = 0;
+        // There must not be another record after the expected messages.
         EXPECT_FALSE(coded_input.ReadRaw(&size, sizeof(size)));
     }
 
@@ -194,25 +200,30 @@ protected:
 
 TEST_P(OSITraceWriterTest, IndependentFilesAndFinalization)
 {
+    // The "_0" field is a placeholder that Close() replaces with this file's frame count.
     const fs::path    gt_path = directory_ / "20261027T120000Z_gt_370_3150_0.osi";
     const fs::path    tc_path = directory_ / "20261027T120000Z_tc_370_3150_0.osi";
-    const std::string gt_message("ground\0truth", 12);
+    const std::string gt_message("ground\0truth", 12);  // Embedded NUL detects accidental C-string truncation.
     {
         OSITraceWriter gt_writer;
         OSITraceWriter tc_writer;
         ASSERT_TRUE(gt_writer.Open(gt_path.string(), true, GetParam()));
         ASSERT_TRUE(gt_writer.Write(gt_message));
+        // Open and interleave a second writer to expose accidentally shared file/compression state.
         ASSERT_TRUE(tc_writer.Open(tc_path.string(), true, GetParam()));
         ASSERT_TRUE(tc_writer.Write("command1"));
         ASSERT_TRUE(gt_writer.Write("groundtruth2"));
         ASSERT_TRUE(gt_writer.Flush());
         ASSERT_TRUE(tc_writer.Flush());
+        // Closing GT must not close TC or prevent further TC writes.
         ASSERT_TRUE(gt_writer.Close());
         EXPECT_FALSE(gt_writer.IsOpen());
         EXPECT_TRUE(tc_writer.IsOpen());
         ASSERT_TRUE(tc_writer.Write("command2"));
         ASSERT_TRUE(tc_writer.Write("command3"));
     }
+    // TC was not explicitly closed: its destructor must finalize compression and rename the file.
+    // The separate counts (GT=2, TC=3) and payload checks detect mixed counters or output streams.
     EXPECT_FALSE(fs::exists(gt_path));
     EXPECT_FALSE(fs::exists(tc_path));
     ExpectMessages(directory_ / "20261027T120000Z_gt_370_3150_2.osi", GetParam(), {gt_message, "groundtruth2"});
@@ -222,18 +233,23 @@ TEST_P(OSITraceWriterTest, IndependentFilesAndFinalization)
 TEST_P(OSITraceWriterTest, ReopenResetsStateAndRecoversFromOpenFailure)
 {
     OSITraceWriter writer;
+    // A missing parent directory forces Open() to fail; the same writer must remain reusable.
     ASSERT_FALSE(writer.Open((directory_ / "missing" / "trace.osi").string(), false, GetParam()));
     ASSERT_TRUE(writer.Open((directory_ / "20261027T120000Z_gt_370_3150_0_first.osi").string(), true, GetParam()));
     ASSERT_TRUE(writer.Write("first"));
+    // Reopening must finalize the first file, reset the frame count, and switch compression mode.
+    // !GetParam() exercises both compressed -> plain and plain -> compressed across the two runs.
     ASSERT_TRUE(writer.Open((directory_ / "20261027T120000Z_tc_370_3150_0_second.osi").string(), true, !GetParam()));
     ASSERT_TRUE(writer.Write("second"));
     ASSERT_TRUE(writer.Write("third"));
     ASSERT_TRUE(writer.Close());
-    ASSERT_TRUE(writer.Close());
+    ASSERT_TRUE(writer.Close());  // Repeated close must succeed without another rename/finalization.
+    // Both files must retain their own payloads, compression mode, frame count, and filename suffix.
     ExpectMessages(directory_ / "20261027T120000Z_gt_370_3150_1_first.osi", GetParam(), {"first"});
     ExpectMessages(directory_ / "20261027T120000Z_tc_370_3150_2_second.osi", !GetParam(), {"second", "third"});
 }
 
+// Run both test bodies with GetParam()=false and true: four test cases in total.
 INSTANTIATE_TEST_SUITE_P(OSITraceWriter, OSITraceWriterTest, ::testing::Bool());
 #endif
 

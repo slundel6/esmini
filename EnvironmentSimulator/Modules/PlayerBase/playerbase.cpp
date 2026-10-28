@@ -135,27 +135,7 @@ void ScenarioPlayer::SetOSIFileStatus(bool is_on, const char* filename)
     {
         if (is_on)
         {
-            std::string suffix = SE_Env::Inst().GetOptions().GetOptionValue("osi_file_suffix");
-            if (suffix == ".")
-            {
-                suffix.clear();
-            }
-            const std::string default_filename = osiReporter->CreateOSIFilename("gt", suffix);
-            std::string       strFileName = esmini::common::ValidateAndCreateFilePath(filename == nullptr ? "" : filename, default_filename, "osi");
-            const bool        is_iso_filename = FileNameOf(strFileName) == default_filename;
-            if (!is_iso_filename && !suffix.empty())
-            {
-                strFileName = FilePathWithoutExtOf(strFileName) + "_" + suffix + FileNameExtOf(strFileName);
-            }
-            filename = strFileName.c_str();
-            if (OSCParameterDistribution::Inst().GetNumPermutations() > 0)
-            {
-                osiReporter->OpenOSIFile(OSCParameterDistribution::Inst().AddInfoToFilepath(filename).c_str(), is_iso_filename);
-            }
-            else
-            {
-                osiReporter->OpenOSIFile(filename, is_iso_filename);
-            }
+            OpenOSIFile(filename, OSIReporter::OSITraceMessage::GROUND_TRUTH);
         }
         else
         {
@@ -164,6 +144,30 @@ void ScenarioPlayer::SetOSIFileStatus(bool is_on, const char* filename)
     }
 #endif  // _USE_OSI
 }
+
+#ifdef _USE_OSI
+bool ScenarioPlayer::OpenOSIFile(const char* filename, OSIReporter::OSITraceMessage message)
+{
+    const bool  ground_truth = message == OSIReporter::OSITraceMessage::GROUND_TRUTH;
+    std::string suffix       = SE_Env::Inst().GetOptions().GetOptionValue(ground_truth ? "osi_file_suffix" : "osi_tc_file_suffix");
+    if (suffix == ".")
+    {
+        suffix.clear();
+    }
+    const std::string default_filename = osiReporter->CreateOSIFilename(ground_truth ? "gt" : "tc", suffix);
+    std::string       path             = esmini::common::ValidateAndCreateFilePath(filename == nullptr ? "" : filename, default_filename, "osi");
+    const bool        is_iso_filename  = FileNameOf(path) == default_filename;
+    if (!is_iso_filename && !suffix.empty())
+    {
+        path = FilePathWithoutExtOf(path) + "_" + suffix + FileNameExtOf(path);
+    }
+    if (OSCParameterDistribution::Inst().GetNumPermutations() > 0)
+    {
+        path = OSCParameterDistribution::Inst().AddInfoToFilepath(path);
+    }
+    return osiReporter->OpenOSIFile(path.c_str(), is_iso_filename, message);
+}
+#endif
 
 void ScenarioPlayer::Draw()
 {
@@ -1578,6 +1582,8 @@ int ScenarioPlayer::Init()
     opt.AddOption("osi_exclude_ghost", "Excludes ghost from osi dynamic osi ground truth");
     opt.AddOption("osi_file", "Save osi trace file", "filename", ".");
     opt.AddOption("osi_file_suffix", "Save osi trace file with an optional suffix before the extension (default: no suffix)", "suffix", ".");
+    opt.AddOption("osi_tc_file", "Save OSI TrafficCommand trace file", "filename", ".");
+    opt.AddOption("osi_tc_file_suffix", "Save OSI TrafficCommand trace file with an optional suffix before the extension", "suffix", ".");
     opt.AddOption("osi_freq", "Decrease OSI file entries, e.g. --osi_freq 2 -> OSI written every two simulation steps", "frequency");
     opt.AddOption("osi_lines", "Show OSI road lines. Toggle key 'u'");
     opt.AddOption("osi_points", "Show OSI road points. Toggle key 'y'");
@@ -2030,16 +2036,20 @@ int ScenarioPlayer::Init()
         osiReporter->ExcludeGhost();
     }
 
-    std::string osi_filename;
-    // First check arguments
-    if (opt.GetOptionSet("osi_file") || opt.GetOptionSet("osi_file_suffix"))
+    for (const auto message : {OSIReporter::OSITraceMessage::GROUND_TRUTH, OSIReporter::OSITraceMessage::TRAFFIC_COMMAND})
     {
-        osi_filename = opt.GetOptionValue("osi_file");
-        if (osiReporter->GetOSIFrequency() == 0)
+        const std::string option = message == OSIReporter::OSITraceMessage::GROUND_TRUTH ? "osi_file" : "osi_tc_file";
+        if (opt.GetOptionSet(option) || opt.GetOptionSet(option + "_suffix"))
         {
-            osiReporter->SetOSIFrequency(1);
+            if (!OpenOSIFile(opt.GetOptionValue(option).c_str(), message))
+            {
+                return -1;
+            }
+            if (osiReporter->GetOSIFrequency() == 0)
+            {
+                osiReporter->SetOSIFrequency(1);
+            }
         }
-        SetOSIFileStatus(true, osi_filename.c_str());
     }
 
     if ((arg_str = opt.GetOptionValue("osi_freq")) != "")

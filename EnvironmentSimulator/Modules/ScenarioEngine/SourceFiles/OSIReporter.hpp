@@ -99,7 +99,7 @@ public:
         API_AND_LOG,
     };
 
-    enum class OSITraceType
+    enum class OSITraceMessage
     {
         GROUND_TRUTH,
         TRAFFIC_COMMAND,
@@ -112,21 +112,22 @@ public:
     @param filename Filename, including path.
     @param is_iso_filename Update the frame-count field of a generated ISO filename when closing.
     */
-    bool OpenOSIFile(const char* filename, bool is_iso_filename = false, const OSITraceType type = OSITraceType::GROUND_TRUTH);
+    bool OpenOSIFile(const char* filename, bool is_iso_filename = false, const OSITraceMessage message = OSITraceMessage::GROUND_TRUTH);
     /**
     Closes any open osi file
     */
-    void CloseOSIFile(const OSITraceType type = OSITraceType::GROUND_TRUTH);
+    bool CloseOSIFile(const OSITraceMessage message = OSITraceMessage::GROUND_TRUTH);
     void CloseAllOSIFiles();
     /**
     Writes GroundTruth in the OSI file
     */
     bool WriteOSIFile();
-    bool WriteOSIFile(OSITraceType type, const std::string& serialized_message);
+    bool WriteOSIFile(OSITraceMessage message, const std::string& serialized_message);
     /**
     Flush (force write) the OSI file
     */
-    void FlushOSIFile(OSITraceType type = OSITraceType::GROUND_TRUTH);
+    bool FlushOSIFile(OSITraceMessage message = OSITraceMessage::GROUND_TRUTH);
+    void FlushAllOSIFiles();
     /**
     Decide how the static data should be handled during each frame
     */
@@ -282,7 +283,7 @@ public:
     {
         return (udp_client_ ? udp_client_->GetStatus() : -1);
     }
-    bool IsFileOpen(OSITraceType type = OSITraceType::GROUND_TRUTH) const;
+    bool IsFileOpen(OSITraceMessage message = OSITraceMessage::GROUND_TRUTH) const;
     void ReportSensors(std::vector<ObjectSensor*> sensor);
 
     void SetUpdated(bool value)
@@ -340,25 +341,25 @@ public:
     int SetOSITimeStampExplicit(unsigned long long nanoseconds);
 
 private:
-    OSITraceWriter& GetTraceWriter(OSITraceType type)
+    OSITraceWriter& GetTraceWriter(OSITraceMessage message)
     {
-        return trace_writers_.at(static_cast<size_t>(type));
+        return trace_writers_.at(static_cast<size_t>(message));
     }
 
-    const OSITraceWriter& GetTraceWriter(OSITraceType type) const
+    const OSITraceWriter& GetTraceWriter(OSITraceMessage message) const
     {
-        return trace_writers_.at(static_cast<size_t>(type));
+        return trace_writers_.at(static_cast<size_t>(message));
     }
 
-    UDPClient*                                                           udp_client_;
-    unsigned int                                                         udp_data_size_ = DEFAULT_OSI_UDP_DATA_SIZE;
-    ScenarioEngine*                                                      scenario_engine_;
-    std::array<OSITraceWriter, static_cast<size_t>(OSITraceType::COUNT)> trace_writers_;
-    int*                                                                 osi_update_counter_ = nullptr;
-    int                                                                  counter_offset_     = 0;
-    int                                                                  osi_freq_           = 0;
-    std::string                                                          stationary_model_reference;
-    void                                                                 CreateMovingObjectFromSensorData(const osi3::SensorData& sd, int obj_nr);
+    UDPClient*                                                              udp_client_;
+    unsigned int                                                            udp_data_size_ = DEFAULT_OSI_UDP_DATA_SIZE;
+    ScenarioEngine*                                                         scenario_engine_;
+    std::array<OSITraceWriter, static_cast<size_t>(OSITraceMessage::COUNT)> trace_writers_;
+    int*                                                                    osi_update_counter_ = nullptr;
+    int                                                                     counter_offset_     = 0;
+    int                                                                     osi_freq_           = 0;
+    std::string                                                             stationary_model_reference;
+    void                                                                    CreateMovingObjectFromSensorData(const osi3::SensorData& sd, int obj_nr);
     void                                CreateLaneBoundaryFromSensordata(const osi3::SensorData& sd, int lane_boundary_nr);
     bool                                osi_updated_        = false;
     bool                                osi_initialized_    = false;

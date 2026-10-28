@@ -279,7 +279,7 @@ std::string OSIReporter::CreateOSIFilename(const std::string &type, const std::s
     return timestamp + "_" + type + "_" + version + "_" + min_protobuf_version + "_0" + suffix + ".osi";
 }
 
-bool OSIReporter::OpenOSIFile(const char *filename, bool is_iso_filename, const OSITraceType type)
+bool OSIReporter::OpenOSIFile(const char *filename, bool is_iso_filename, const OSITraceMessage message)
 {
     if (filename == nullptr || filename[0] == '\0')
     {
@@ -287,14 +287,14 @@ bool OSIReporter::OpenOSIFile(const char *filename, bool is_iso_filename, const 
         return false;
     }
 
-    return GetTraceWriter(type).Open(filename,
-                                     is_iso_filename,
-                                     SE_Env::Inst().GetOptions().GetOptionSetByEnum(esmini_options::CONFIG_ENUM::OSI_COMPRESS));
+    return GetTraceWriter(message).Open(filename,
+                                        is_iso_filename,
+                                        SE_Env::Inst().GetOptions().GetOptionSetByEnum(esmini_options::CONFIG_ENUM::OSI_COMPRESS));
 }
 
-void OSIReporter::CloseOSIFile(const OSITraceType type)
+bool OSIReporter::CloseOSIFile(const OSITraceMessage message)
 {
-    GetTraceWriter(type).Close();
+    return GetTraceWriter(message).Close();
 }
 
 void OSIReporter::CloseAllOSIFiles()
@@ -307,26 +307,38 @@ void OSIReporter::CloseAllOSIFiles()
 
 bool OSIReporter::WriteOSIFile()
 {
-    return WriteOSIFile(OSITraceType::GROUND_TRUTH, osiGroundTruth.ground_truth);
+    return WriteOSIFile(OSITraceMessage::GROUND_TRUTH, osiGroundTruth.ground_truth);
 }
 
-bool OSIReporter::WriteOSIFile(OSITraceType type, const std::string &serialized_message)
+bool OSIReporter::WriteOSIFile(OSITraceMessage message, const std::string &serialized_message)
 {
-    return GetTraceWriter(type).Write(serialized_message);
+    return GetTraceWriter(message).Write(serialized_message);
 }
 
-void OSIReporter::FlushOSIFile(OSITraceType type)
+bool OSIReporter::FlushOSIFile(OSITraceMessage message)
 {
-    auto &writer = GetTraceWriter(type);
+    auto &writer = GetTraceWriter(message);
     if (writer.IsOpen())
     {
-        writer.Flush();
+        return writer.Flush();
+    }
+    return true;
+}
+
+void OSIReporter::FlushAllOSIFiles()
+{
+    for (auto &writer : trace_writers_)
+    {
+        if (writer.IsOpen())
+        {
+            writer.Flush();
+        }
     }
 }
 
-bool OSIReporter::IsFileOpen(OSITraceType type) const
+bool OSIReporter::IsFileOpen(OSITraceMessage message) const
 {
-    return GetTraceWriter(type).IsOpen();
+    return GetTraceWriter(message).IsOpen();
 }
 
 OSITraceWriter::~OSITraceWriter()
@@ -3567,7 +3579,7 @@ int OSIReporter::UpdateOSITrafficCommand()
 
     traffic_command_state_changes_.clear();
 
-    if (GetUDPClientStatus() == 0 || IsFileOpen(OSITraceType::TRAFFIC_COMMAND))
+    if (GetUDPClientStatus() == 0 || IsFileOpen(OSITraceMessage::TRAFFIC_COMMAND))
     {
         if (!obj_osi_external.tc->SerializeToString(&osiTrafficCommand.traffic_command))
         {
@@ -3576,7 +3588,7 @@ int OSIReporter::UpdateOSITrafficCommand()
         }
         osiTrafficCommand.size = static_cast<unsigned int>(osiTrafficCommand.traffic_command.size());
     }
-    if (IsFileOpen(OSITraceType::TRAFFIC_COMMAND) && !WriteOSIFile(OSITraceType::TRAFFIC_COMMAND, osiTrafficCommand.traffic_command))
+    if (IsFileOpen(OSITraceMessage::TRAFFIC_COMMAND) && !WriteOSIFile(OSITraceMessage::TRAFFIC_COMMAND, osiTrafficCommand.traffic_command))
     {
         return -1;
     }

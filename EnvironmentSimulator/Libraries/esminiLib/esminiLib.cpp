@@ -12,6 +12,7 @@
 
 #include <string>
 #include <clocale>
+#include <optional>
 
 #include "CommonMini.hpp"
 #include "playerbase.hpp"
@@ -442,6 +443,22 @@ static int InitScenario()
 
     return 0;
 }
+
+#ifdef _USE_OSI
+static std::optional<OSIReporter::OSITraceMessage> ToOSITraceMessage(SE_OSITraceMessage message)
+{
+    switch (message)
+    {
+        case SE_OSI_GROUND_TRUTH:
+            return OSIReporter::OSITraceMessage::GROUND_TRUTH;
+        case SE_OSI_TRAFFIC_COMMAND:
+            return OSIReporter::OSITraceMessage::TRAFFIC_COMMAND;
+        default:
+            LOG_ERROR("Invalid OSI message type {}", static_cast<int>(message));
+            return std::nullopt;
+    }
+}
+#endif
 
 extern "C"
 {
@@ -2293,10 +2310,18 @@ extern "C"
 
     SE_DLL_API void SE_DisableOSIFile()
     {
-        SE_Env::Inst().GetOptions().SetOptionValue("osi_file", "");
+        for (const char *option : {"osi_file", "osi_file_suffix", "osi_tc_file", "osi_tc_file_suffix"})
+        {
+            SE_Env::Inst().GetOptions().UnsetOption(option);
+        }
         if (player != nullptr)
         {
-            player->SetOSIFileStatus(false);
+#ifdef _USE_OSI
+            if (player->osiReporter != nullptr)
+            {
+                player->osiReporter->CloseAllOSIFiles();
+            }
+#endif
         }
         else
         {
@@ -2304,18 +2329,34 @@ extern "C"
         }
     }
 
-    SE_DLL_API void SE_EnableOSIFileWithSuffix(const char *suffix)
+    SE_DLL_API int SE_DisableOSIFileEx(SE_OSITraceMessage message, SE_TraceType type)
     {
 #ifdef _USE_OSI
-        SE_Env::Inst().GetOptions().SetOptionValue("osi_file_suffix", suffix == nullptr ? "" : suffix);
-        if (player != nullptr)
+        (void)type;
+        const auto trace_message = ToOSITraceMessage(message);
+        if (!trace_message)
         {
-            player->SetOSIFileStatus(true, suffix);
-            player->osiReporter->UpdateOSIGroundTruth(player->scenarioEngine->entities_.object_);
+            return -1;
         }
+        const std::string option = message == SE_OSI_GROUND_TRUTH ? "osi_file" : "osi_tc_file";
+        SE_Env::Inst().GetOptions().UnsetOption(option);
+        SE_Env::Inst().GetOptions().UnsetOption(option + "_suffix");
+        if (player == nullptr)
+        {
+            return 0;
+        }
+        if (player->osiReporter == nullptr)
+        {
+            LOG_ERROR("SE_DisableOSIFileEx: OSI reporter unavailable");
+            return -1;
+        }
+        return player->osiReporter->CloseOSIFile(*trace_message) ? 0 : -1;
 #else
-        (void)suffix;
-#endif  // _USE_OSI
+        (void)message;
+        (void)type;
+        LOG_ERROR("SE_DisableOSIFileEx requires OSI support");
+        return -1;
+#endif
     }
 
     SE_DLL_API void SE_EnableOSIFile(const char *filename)
@@ -2332,14 +2373,88 @@ extern "C"
 #endif  // _USE_OSI
     }
 
+    SE_DLL_API int SE_EnableOSIFileEx(const char *filename, bool override_filename, SE_OSITraceMessage message, SE_TraceType type)
+    {
+#ifdef _USE_OSI
+
+        (void)type;
+        const auto trace_message = ToOSITraceMessage(message);
+        if (!trace_message)
+        {
+            return -1;
+        }
+        const std::string option          = message == SE_OSI_GROUND_TRUTH ? "osi_file" : "osi_tc_file";
+        auto             &options         = SE_Env::Inst().GetOptions();
+        const std::string selected_option = override_filename ? option : option + "_suffix";
+        options.ClearOption(selected_option);
+        if (options.SetOptionValue(selected_option, filename == nullptr ? "" : filename) != 0)
+        {
+            return -1;
+        }
+        if (player == nullptr)
+        {
+            return 0;
+        }
+        if (player->osiReporter == nullptr)
+        {
+            LOG_ERROR("SE_EnableOSIFileEx: OSI reporter unavailable");
+            return -1;
+        }
+        if (!player->OpenOSIFile(options.GetOptionValue(option).c_str(), *trace_message))
+        {
+            return -1;
+        }
+        if (message == SE_OSI_GROUND_TRUTH && player->osiReporter->UpdateOSIGroundTruth(player->scenarioEngine->entities_.object_) < 0)
+        {
+            return -1;
+        }
+        return 0;
+#else
+        (void)filename;
+        (void)override_filename;
+        (void)message;
+        (void)type;
+        LOG_ERROR("SE_EnableOSIFileEx requires OSI support");
+        return -1;
+#endif  // _USE_OSI
+    }
+
     SE_DLL_API void SE_FlushOSIFile()
     {
 #ifdef _USE_OSI
         if (player != nullptr && player->osiReporter != nullptr)
         {
-            player->osiReporter->FlushOSIFile();
+            player->osiReporter->FlushAllOSIFiles();
         }
 #endif  // _USE_OSI
+    }
+
+    SE_DLL_API int SE_FlushOSIFileEx(SE_OSITraceMessage message, SE_TraceType type)
+    {
+#ifdef _USE_OSI
+        (void)type;
+        const auto trace_message = ToOSITraceMessage(message);
+        if (!trace_message)
+        {
+            return -1;
+        }
+        if (player == nullptr || player->osiReporter == nullptr)
+        {
+            LOG_ERROR("SE_FlushOSIFileEx requires an initialized scenario");
+            return -1;
+        }
+        if (!player->osiReporter->IsFileOpen(*trace_message))
+        {
+            LOG_ERROR("SE_FlushOSIFileEx: no open OSI tracefile for message type {}", static_cast<int>(message));
+            return -1;
+        }
+        return player->osiReporter->FlushOSIFile(*trace_message) ? 0 : -1;
+#else
+        (void)message;
+        (void)type;
+        LOG_ERROR("SE_FlushOSIFileEx requires OSI support");
+        return -1;
+#endif
     }
 
     SE_DLL_API int SE_FetchSensorObjectList(int sensor_id, int *list)
