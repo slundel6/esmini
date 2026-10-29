@@ -148,15 +148,27 @@ void ScenarioPlayer::SetOSIFileStatus(bool is_on, const char* filename)
 #ifdef _USE_OSI
 bool ScenarioPlayer::OpenOSIFile(const char* filename, OSIReporter::OSITraceMessage message)
 {
-    const bool  ground_truth = message == OSIReporter::OSITraceMessage::GROUND_TRUTH;
-    std::string suffix       = SE_Env::Inst().GetOptions().GetOptionValue(ground_truth ? "osi_file_suffix" : "osi_tc_file_suffix");
+    // Check if its a groundtruth message, if not we know its a TrafficCommand (for now)
+    const bool ground_truth = message == OSIReporter::OSITraceMessage::GROUND_TRUTH;
+    // Get the option of suffix depending on message type
+    const std::string suffix_path = SE_Env::Inst().GetOptions().GetOptionValue(ground_truth ? "osi_file_suffix" : "osi_tc_file_suffix");
+    // Extract suffix in case we have received a path and suffix
+    std::string suffix = FileNameOf(suffix_path);
+    // path is input filename
+    std::string path = filename == nullptr ? "" : filename;
+    // No path received through filename, then path is from the suffix option
+    if (path.empty() || path == ".")
+    {
+        path = suffix_path.substr(0, suffix_path.size() - suffix.size());
+    }
     if (suffix == ".")
     {
         suffix.clear();
     }
+    // Create a filename based on ISO guidelines
     const std::string default_filename = osiReporter->CreateOSIFilename(ground_truth ? "gt" : "tc", suffix);
-    std::string       path             = esmini::common::ValidateAndCreateFilePath(filename == nullptr ? "" : filename, default_filename, "osi");
-    const bool        is_iso_filename  = FileNameOf(path) == default_filename;
+    path                               = esmini::common::ValidateAndCreateFilePath(path, default_filename, "osi");
+    const bool is_iso_filename         = FileNameOf(path) == default_filename;
     if (!is_iso_filename && !suffix.empty())
     {
         path = FilePathWithoutExtOf(path) + "_" + suffix + FileNameExtOf(path);

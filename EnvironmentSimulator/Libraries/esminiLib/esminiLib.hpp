@@ -1616,7 +1616,13 @@ extern "C"
     SE_DLL_API int SE_DisableOSIFileEx(SE_OSITraceMessage message, SE_TraceType type);
 
     /**
-            Switch on logging to OSI file(s)
+            Switch on logging to OSI files
+            @param filename Optional suffix, including path. Set to 0 or "" to use default.
+    */
+    SE_DLL_API void SE_EnableOSIFiles(const char *suffix);
+
+    /**
+            Switch on logging to OSI groundtruth
             @param filename Optional filename, including path. Set to 0 or "" to use default.
     */
     SE_DLL_API void SE_EnableOSIFile(const char *filename);

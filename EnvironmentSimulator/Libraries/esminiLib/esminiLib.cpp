@@ -2359,6 +2359,16 @@ extern "C"
 #endif
     }
 
+    SE_DLL_API void SE_EnableOSIFiles(const char *suffix)
+    {
+#ifdef _USE_OSI
+        SE_EnableOSIFileEx(suffix, false, SE_OSI_GROUND_TRUTH, SE_TRACE_SINGLE_CHANNEL);
+        SE_EnableOSIFileEx(suffix, false, SE_OSI_TRAFFIC_COMMAND, SE_TRACE_SINGLE_CHANNEL);
+#else
+        (void)filename;
+#endif  // _USE_OSI
+    }
+
     SE_DLL_API void SE_EnableOSIFile(const char *filename)
     {
 #ifdef _USE_OSI

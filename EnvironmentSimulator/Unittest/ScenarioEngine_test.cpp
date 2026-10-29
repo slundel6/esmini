@@ -82,7 +82,7 @@ protected:
 
 TEST_P(OSIFileOptionsTest, FilenameCombinations)
 {
-    // File: absent, bare, explicit. Suffix: absent, bare, empty, named.
+    // File: absent, bare, explicit. Suffix also covers relative/absolute paths and a directory without a suffix.
     const int                file_mode   = std::get<0>(GetParam());
     const int                suffix_mode = std::get<1>(GetParam());
     std::vector<std::string> args        = {"esmini", "--osc", scenario_, "--headless", "--disable_log"};
@@ -99,7 +99,28 @@ TEST_P(OSIFileOptionsTest, FilenameCombinations)
         args.push_back("--osi_file_suffix");
         if (suffix_mode >= 2)
         {
-            args.push_back(suffix_mode == 2 ? "" : "my_file");
+            if (suffix_mode >= 4)
+            {
+                ASSERT_TRUE(fs::create_directory("traces"));
+            }
+            switch (suffix_mode)
+            {
+                case 2:
+                    args.push_back("");
+                    break;
+                case 3:
+                    args.push_back("my_file");
+                    break;
+                case 4:
+                    args.push_back("traces/my_file");
+                    break;
+                case 5:
+                    args.push_back((directory_ / "traces" / "my_file").string());
+                    break;
+                case 6:
+                    args.push_back("traces/");
+                    break;
+            }
         }
     }
     std::vector<char*> argv;
@@ -115,7 +136,7 @@ TEST_P(OSIFileOptionsTest, FilenameCombinations)
     }
 
     std::vector<fs::path> traces;
-    for (const auto& entry : fs::directory_iterator(directory_))
+    for (const auto& entry : fs::recursive_directory_iterator(directory_))
     {
         if (entry.path().extension() == ".osi")
         {
@@ -129,7 +150,8 @@ TEST_P(OSIFileOptionsTest, FilenameCombinations)
     }
     ASSERT_EQ(traces.size(), 1u);
     EXPECT_GT(fs::file_size(traces[0]), 0u);
-    const std::string suffix = suffix_mode == 3 ? "_my_file" : "";
+    const std::string suffix = suffix_mode >= 3 && suffix_mode <= 5 ? "_my_file" : "";
+    EXPECT_EQ(traces[0].parent_path(), file_mode != 2 && suffix_mode >= 4 ? directory_ / "traces" : directory_);
     if (file_mode == 2)
     {
         EXPECT_EQ(traces[0].filename().string(), "gt" + suffix + ".osi");
@@ -140,8 +162,8 @@ TEST_P(OSIFileOptionsTest, FilenameCombinations)
     }
 }
 
-// File: 0=absent, 1=bare, 2=explicit; suffix: 0=absent, 1=bare, 2=empty, 3=named (range ends are exclusive).
-INSTANTIATE_TEST_SUITE_P(OSIFileOptions, OSIFileOptionsTest, ::testing::Combine(::testing::Range(0, 3), ::testing::Range(0, 4)));
+// File: 0=absent, 1=bare, 2=explicit; suffix: 0=absent, 1=bare, 2=empty, 3=named, 4=relative, 5=absolute, 6=directory.
+INSTANTIATE_TEST_SUITE_P(OSIFileOptions, OSIFileOptionsTest, ::testing::Combine(::testing::Range(0, 3), ::testing::Range(0, 7)));
 
 // GetParam() selects compression. Each test uses its own temporary directory, removed by TearDown().
 class OSITraceWriterTest : public ::testing::TestWithParam<bool>
