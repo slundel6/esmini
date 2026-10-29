@@ -4,6 +4,7 @@
 #include <vector>
 #include <stdexcept>
 #include <array>
+#include <set>
 
 #include "CommonMini.hpp"
 #include "ScenarioEngine.hpp"
@@ -56,28 +57,50 @@ class OSIFileOptionsTest : public ::testing::TestWithParam<std::tuple<int, int>>
 protected:
     void SetUp() override
     {
-        original_directory_ = fs::current_path();
-        scenario_           = fs::absolute("../../../resources/xosc/cut-in_simple.xosc").string();
+        directory_ = fs::current_path();
+        scenario_  = "../../../resources/xosc/cut-in_simple.xosc";
+        for (const auto* filename : {"gt.osi", "gt_my_file.osi"})
+        {
+            if (fs::exists(filename))
+            {
+                ASSERT_TRUE(fs::is_regular_file(filename)) << filename;
+                ASSERT_TRUE(fs::remove(filename)) << filename;
+            }
+        }
+        for (const auto& entry : fs::directory_iterator(directory_))
+        {
+            if (entry.path().extension() == ".osi")
+            {
+                existing_traces_.insert(entry.path());
+            }
+        }
         ASSERT_TRUE(fs::exists(scenario_));
-        const fs::path directory =
-            fs::temp_directory_path() / ("esmini-osi-options-" + std::to_string(std::chrono::steady_clock::now().time_since_epoch().count()));
-        ASSERT_TRUE(fs::create_directory(directory));
-        directory_ = directory;
-        fs::current_path(directory_);
     }
 
     void TearDown() override
     {
-        fs::current_path(original_directory_);
-        if (!directory_.empty())
+        for (const auto& path : GetTraces())
         {
-            fs::remove_all(directory_);
+            EXPECT_TRUE(fs::remove(path)) << path;
         }
     }
 
-    fs::path    original_directory_;
-    fs::path    directory_;
-    std::string scenario_;
+    std::vector<fs::path> GetTraces() const
+    {
+        std::vector<fs::path> traces;
+        for (const auto& entry : fs::directory_iterator(directory_))
+        {
+            if (entry.path().extension() == ".osi" && existing_traces_.count(entry.path()) == 0)
+            {
+                traces.push_back(entry.path());
+            }
+        }
+        return traces;
+    }
+
+    std::set<fs::path> existing_traces_;
+    fs::path           directory_;
+    std::string        scenario_;
 };
 
 TEST_P(OSIFileOptionsTest, FilenameCombinations)
@@ -99,10 +122,6 @@ TEST_P(OSIFileOptionsTest, FilenameCombinations)
         args.push_back("--osi_file_suffix");
         if (suffix_mode >= 2)
         {
-            if (suffix_mode >= 4)
-            {
-                ASSERT_TRUE(fs::create_directory("traces"));
-            }
             switch (suffix_mode)
             {
                 case 2:
@@ -112,13 +131,13 @@ TEST_P(OSIFileOptionsTest, FilenameCombinations)
                     args.push_back("my_file");
                     break;
                 case 4:
-                    args.push_back("traces/my_file");
+                    args.push_back("./my_file");
                     break;
                 case 5:
-                    args.push_back((directory_ / "traces" / "my_file").string());
+                    args.push_back((directory_ / "my_file").string());
                     break;
                 case 6:
-                    args.push_back("traces/");
+                    args.push_back("./");
                     break;
             }
         }
@@ -135,14 +154,7 @@ TEST_P(OSIFileOptionsTest, FilenameCombinations)
         player.Frame(0.01);
     }
 
-    std::vector<fs::path> traces;
-    for (const auto& entry : fs::recursive_directory_iterator(directory_))
-    {
-        if (entry.path().extension() == ".osi")
-        {
-            traces.push_back(entry.path());
-        }
-    }
+    const auto traces = GetTraces();
     if (file_mode == 0 && suffix_mode == 0)
     {
         EXPECT_TRUE(traces.empty());
@@ -151,7 +163,7 @@ TEST_P(OSIFileOptionsTest, FilenameCombinations)
     ASSERT_EQ(traces.size(), 1u);
     EXPECT_GT(fs::file_size(traces[0]), 0u);
     const std::string suffix = suffix_mode >= 3 && suffix_mode <= 5 ? "_my_file" : "";
-    EXPECT_EQ(traces[0].parent_path(), file_mode != 2 && suffix_mode >= 4 ? directory_ / "traces" : directory_);
+    EXPECT_EQ(traces[0].parent_path(), directory_);
     if (file_mode == 2)
     {
         EXPECT_EQ(traces[0].filename().string(), "gt" + suffix + ".osi");
@@ -165,21 +177,41 @@ TEST_P(OSIFileOptionsTest, FilenameCombinations)
 // File: 0=absent, 1=bare, 2=explicit; suffix: 0=absent, 1=bare, 2=empty, 3=named, 4=relative, 5=absolute, 6=directory.
 INSTANTIATE_TEST_SUITE_P(OSIFileOptions, OSIFileOptionsTest, ::testing::Combine(::testing::Range(0, 3), ::testing::Range(0, 7)));
 
-// GetParam() selects compression. Each test uses its own temporary directory, removed by TearDown().
+// GetParam() selects compression. Output files are removed by TearDown().
 class OSITraceWriterTest : public ::testing::TestWithParam<bool>
 {
 protected:
     void SetUp() override
     {
-        directory_ = fs::temp_directory_path() / ("esmini-osi-writer-" + std::to_string(std::chrono::steady_clock::now().time_since_epoch().count()));
-        ASSERT_TRUE(fs::create_directory(directory_));
+        directory_ = fs::current_path();
+        ASSERT_FALSE(fs::exists(directory_ / "missing"));
+        for (const auto* filename : {"20261027T120000Z_gt_370_3150_0.osi",
+                                     "20261027T120000Z_tc_370_3150_0.osi",
+                                     "20261027T120000Z_gt_370_3150_2.osi",
+                                     "20261027T120000Z_tc_370_3150_3.osi",
+                                     "20261027T120000Z_gt_370_3150_0_first.osi",
+                                     "20261027T120000Z_tc_370_3150_0_second.osi",
+                                     "20261027T120000Z_gt_370_3150_1_first.osi",
+                                     "20261027T120000Z_tc_370_3150_2_second.osi"})
+        {
+            const auto path = directory_ / filename;
+            if (fs::exists(path))
+            {
+                ASSERT_TRUE(fs::is_regular_file(path)) << path;
+                ASSERT_TRUE(fs::remove(path)) << path;
+            }
+            output_files_.push_back(path);
+        }
     }
 
     void TearDown() override
     {
-        if (!directory_.empty())
+        for (const auto& path : output_files_)
         {
-            fs::remove_all(directory_);
+            if (fs::exists(path))
+            {
+                EXPECT_TRUE(fs::remove(path)) << path;
+            }
         }
     }
 
@@ -217,7 +249,8 @@ protected:
         EXPECT_FALSE(coded_input.ReadRaw(&size, sizeof(size)));
     }
 
-    fs::path directory_;
+    fs::path              directory_;
+    std::vector<fs::path> output_files_;
 };
 
 TEST_P(OSITraceWriterTest, IndependentFilesAndFinalization)

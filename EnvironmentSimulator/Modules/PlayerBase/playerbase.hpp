@@ -254,7 +254,10 @@ namespace scenarioengine
         std::unique_ptr<PlayerServer> player_server_;
 
 #ifdef _USE_OSI
-        OSIReporter *osiReporter;
+        OSIReporter                                                  *osiReporter;
+        std::unordered_map<OSIReporter::OSITraceMessage, std::string> osi_message_to_arg = {
+            {OSIReporter::OSITraceMessage::GROUND_TRUTH, "osi_file"},
+            {OSIReporter::OSITraceMessage::TRAFFIC_COMMAND, "osi_tc_file"}};
 #else
         void *osiReporter;
 #endif  // _USE_OSI

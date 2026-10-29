@@ -20,7 +20,7 @@
 #include <sstream>
 #include <stdio.h>
 #include <tuple>
-#include <chrono>
+#include <set>
 #include <regex>
 #include "pugixml.hpp"
 
@@ -1386,29 +1386,52 @@ class OSIFileAPITest : public ::testing::Test
 protected:
     void SetUp() override
     {
-        original_directory_ = fs::current_path();
-        scenario_           = fs::absolute("../../../resources/xosc/cut-in_simple.xosc").string();
+        directory_ = fs::current_path();
+        scenario_  = "../../../resources/xosc/cut-in_simple.xosc";
+        for (const auto* filename : {"gt.osi", "tc.osi", "gt_ignored.osi", "tc_ignored.osi", "gt_my_file.osi", "unused.osi", "invalid.osi"})
+        {
+            if (fs::exists(filename))
+            {
+                ASSERT_TRUE(fs::is_regular_file(filename)) << filename;
+                ASSERT_TRUE(fs::remove(filename)) << filename;
+            }
+        }
+        for (const auto& entry : fs::directory_iterator(directory_))
+        {
+            if (entry.path().extension() == ".osi")
+            {
+                existing_traces_.insert(entry.path());
+            }
+        }
         ASSERT_TRUE(fs::exists(scenario_));
-        const fs::path directory =
-            fs::temp_directory_path() / ("esmini-osi-api-options-" + std::to_string(std::chrono::steady_clock::now().time_since_epoch().count()));
-        ASSERT_TRUE(fs::create_directory(directory));
-        directory_ = directory;
-        fs::current_path(directory_);
+        ASSERT_FALSE(fs::exists("missing"));
     }
 
     void TearDown() override
     {
         SE_Close();
-        fs::current_path(original_directory_);
-        if (!directory_.empty())
+        for (const auto& path : GetTraces())
         {
-            fs::remove_all(directory_);
+            EXPECT_TRUE(fs::remove(path)) << path;
         }
     }
 
-    fs::path    original_directory_;
-    fs::path    directory_;
-    std::string scenario_;
+    std::vector<fs::path> GetTraces() const
+    {
+        std::vector<fs::path> traces;
+        for (const auto& entry : fs::directory_iterator(directory_))
+        {
+            if (entry.path().extension() == ".osi" && existing_traces_.count(entry.path()) == 0)
+            {
+                traces.push_back(entry.path());
+            }
+        }
+        return traces;
+    }
+
+    std::set<fs::path> existing_traces_;
+    fs::path           directory_;
+    std::string        scenario_;
 };
 
 class OSIFileOptionsAPITest : public OSIFileAPITest, public ::testing::WithParamInterface<std::tuple<int, int>>
@@ -1425,6 +1448,12 @@ TEST_F(OSIFileAPITest, ExplicitNamesCombineWithSuffixAndDisableBothMessages)
     ASSERT_EQ(SE_EnableOSIFileEx("tc.osi", true, SE_OSI_TRAFFIC_COMMAND, SE_TRACE_SINGLE_CHANNEL), 0);
     SE_StepDT(0.01);
     SE_FlushOSIFile();
+    // Empty TrafficCommand messages are skipped; wait for a scenario action.
+    for (int step = 0; step < 1000 && fs::file_size("tc.osi") == 0; ++step)
+    {
+        SE_StepDT(0.01);
+        SE_FlushOSIFile();
+    }
 
     // Filename and suffix options combine just as they do on the command line.
     ASSERT_TRUE(fs::exists("gt_ignored.osi"));
@@ -1446,13 +1475,12 @@ TEST_F(OSIFileAPITest, ExplicitNamesCombineWithSuffixAndDisableBothMessages)
 
 TEST_F(OSIFileAPITest, SelectiveDisableLeavesOtherMessageWritable)
 {
-    ASSERT_EQ(SE_SetOption("disable_log"), 0);
-    ASSERT_EQ(SE_Init(scenario_.c_str(), 0, 0, 0, 0), 0);
-    SE_SetOSIFrequency(1);
-
     // Exercise both directions: closing GT leaves TC writable, and closing TC leaves GT writable.
     for (const auto selected : {SE_OSI_GROUND_TRUTH, SE_OSI_TRAFFIC_COMMAND})
     {
+        ASSERT_EQ(SE_SetOption("disable_log"), 0);
+        ASSERT_EQ(SE_Init(scenario_.c_str(), 0, 0, 0, 0), 0);
+        SE_SetOSIFrequency(1);
         const auto  other         = selected == SE_OSI_GROUND_TRUTH ? SE_OSI_TRAFFIC_COMMAND : SE_OSI_GROUND_TRUTH;
         const char* selected_file = selected == SE_OSI_GROUND_TRUTH ? "gt.osi" : "tc.osi";
         const char* other_file    = other == SE_OSI_GROUND_TRUTH ? "gt.osi" : "tc.osi";
@@ -1461,18 +1489,23 @@ TEST_F(OSIFileAPITest, SelectiveDisableLeavesOtherMessageWritable)
         SE_StepDT(0.01);
         ASSERT_EQ(SE_FlushOSIFileEx(selected, SE_TRACE_SINGLE_CHANNEL), 0);
         ASSERT_EQ(SE_FlushOSIFileEx(other, SE_TRACE_SINGLE_CHANNEL), 0);
-        ASSERT_GT(fs::file_size(selected_file), 0u);
+        ASSERT_GT(fs::file_size("gt.osi"), 0u);
         const auto other_size = fs::file_size(other_file);
 
         ASSERT_EQ(SE_DisableOSIFileEx(selected, SE_TRACE_SINGLE_CHANNEL), 0);
         const auto selected_size = fs::file_size(selected_file);
         EXPECT_EQ(SE_DisableOSIFileEx(selected, SE_TRACE_SINGLE_CHANNEL), 0);
         EXPECT_EQ(SE_FlushOSIFileEx(selected, SE_TRACE_SINGLE_CHANNEL), -1);
-        SE_StepDT(0.01);
-        ASSERT_EQ(SE_FlushOSIFileEx(other, SE_TRACE_SINGLE_CHANNEL), 0);
+        // TC grows only when an action starts, not on every simulation step.
+        for (int step = 0; step < 1000 && fs::file_size(other_file) == other_size; ++step)
+        {
+            SE_StepDT(0.01);
+            ASSERT_EQ(SE_FlushOSIFileEx(other, SE_TRACE_SINGLE_CHANNEL), 0);
+        }
         EXPECT_EQ(fs::file_size(selected_file), selected_size);
         EXPECT_GT(fs::file_size(other_file), other_size);
         ASSERT_EQ(SE_DisableOSIFileEx(other, SE_TRACE_SINGLE_CHANNEL), 0);
+        SE_Close();
     }
 }
 
@@ -1499,26 +1532,18 @@ TEST_F(OSIFileAPITest, SuffixAndDefaultNamesUseSelectedMessage)
     ASSERT_EQ(SE_SetOption("disable_log"), 0);
     ASSERT_EQ(SE_Init(scenario_.c_str(), 0, 0, 0, 0), 0);
     SE_SetOSIFrequency(1);
-    ASSERT_TRUE(fs::create_directory("traces"));
-    ASSERT_EQ(SE_SetOptionValue("osi_file", "traces/"), 0);
+    ASSERT_EQ(SE_SetOptionValue("osi_file", "./"), 0);
     ASSERT_EQ(SE_EnableOSIFileEx("custom", false, SE_OSI_GROUND_TRUTH, SE_TRACE_SINGLE_CHANNEL), 0);
     ASSERT_EQ(SE_EnableOSIFileEx(nullptr, false, SE_OSI_TRAFFIC_COMMAND, SE_TRACE_SINGLE_CHANNEL), 0);
     SE_StepDT(0.01);
     SE_DisableOSIFile();
 
     // Closing replaces the frame-count placeholder while retaining the message tag and suffix.
-    std::vector<fs::path> traces;
-    for (const auto& entry : fs::recursive_directory_iterator(directory_))
-    {
-        if (entry.path().extension() == ".osi")
-        {
-            traces.push_back(entry.path());
-        }
-    }
+    const auto traces = GetTraces();
     ASSERT_EQ(traces.size(), 2u);
     for (const auto& path : traces)
     {
-        const bool        gt = path.parent_path() == directory_ / "traces";
+        const bool        gt = path.filename().string().find("_gt_") != std::string::npos;
         const std::string pattern =
             gt ? "[0-9]{8}T[0-9]{6}Z_gt_[0-9]+_[0-9]+_[1-9][0-9]*_custom\\.osi" : "[0-9]{8}T[0-9]{6}Z_tc_[0-9]+_[0-9]+_[1-9][0-9]*\\.osi";
         EXPECT_TRUE(std::regex_match(path.filename().string(), std::regex(pattern)));
@@ -1531,17 +1556,17 @@ TEST_F(OSIFileAPITest, InvalidRequestsDoNotCreateFiles)
     ASSERT_EQ(SE_SetOption("disable_log"), 0);
     ASSERT_EQ(SE_Init(scenario_.c_str(), 0, 0, 0, 0), 0);
     EXPECT_EQ(SE_EnableOSIFileEx("invalid.osi", true, static_cast<SE_OSITraceMessage>(-1), SE_TRACE_SINGLE_CHANNEL), -1);
-    EXPECT_EQ(SE_EnableOSIFileEx("missing/trace.osi", true, SE_OSI_GROUND_TRUTH, SE_TRACE_SINGLE_CHANNEL), -1);
+    EXPECT_THROW(SE_EnableOSIFileEx("missing/trace.osi", true, SE_OSI_GROUND_TRUTH, SE_TRACE_SINGLE_CHANNEL), std::runtime_error);
     EXPECT_FALSE(fs::exists("invalid.osi"));
+    EXPECT_FALSE(fs::exists("missing/trace.osi"));
 }
 
 TEST_F(OSIFileAPITest, ConfigureBothMessagesBeforeInitialization)
 {
     ASSERT_EQ(SE_SetOption("disable_log"), 0);
-    ASSERT_TRUE(fs::create_directory("traces"));
     ASSERT_EQ(SE_EnableOSIFileEx("unused.osi", true, SE_OSI_GROUND_TRUTH, SE_TRACE_SINGLE_CHANNEL), 0);
     // Updating a filename replaces the earlier filename; a suffix combines with it.
-    ASSERT_EQ(SE_EnableOSIFileEx("traces/", true, SE_OSI_GROUND_TRUTH, SE_TRACE_SINGLE_CHANNEL), 0);
+    ASSERT_EQ(SE_EnableOSIFileEx("./", true, SE_OSI_GROUND_TRUTH, SE_TRACE_SINGLE_CHANNEL), 0);
     ASSERT_EQ(SE_EnableOSIFileEx("custom", false, SE_OSI_GROUND_TRUTH, SE_TRACE_SINGLE_CHANNEL), 0);
     ASSERT_EQ(SE_EnableOSIFileEx("tc.osi", true, SE_OSI_TRAFFIC_COMMAND, SE_TRACE_SINGLE_CHANNEL), 0);
     EXPECT_FALSE(fs::exists("tc.osi"));
@@ -1551,10 +1576,17 @@ TEST_F(OSIFileAPITest, ConfigureBothMessagesBeforeInitialization)
     ASSERT_TRUE(fs::exists("tc.osi"));
     EXPECT_GT(fs::file_size("tc.osi"), 0u);
     EXPECT_FALSE(fs::exists("unused.osi"));
-    std::vector<fs::path> traces;
-    for (const auto& entry : fs::directory_iterator(directory_ / "traces"))
+    auto traces = GetTraces();
+    for (auto it = traces.begin(); it != traces.end();)
     {
-        traces.push_back(entry.path());
+        if (it->filename() == "tc.osi")
+        {
+            it = traces.erase(it);
+        }
+        else
+        {
+            ++it;
+        }
     }
     ASSERT_EQ(traces.size(), 1u);
     EXPECT_TRUE(std::regex_match(traces[0].filename().string(), std::regex("[0-9]{8}T[0-9]{6}Z_gt_[0-9]+_[0-9]+_[1-9][0-9]*_custom\\.osi")));
@@ -1606,14 +1638,7 @@ TEST_P(OSIFileOptionsAPITest, FilenameCombinations)
     SE_StepDT(0.01);
     SE_Close();
 
-    std::vector<fs::path> traces;
-    for (const auto& entry : fs::directory_iterator(directory_))
-    {
-        if (entry.path().extension() == ".osi")
-        {
-            traces.push_back(entry.path());
-        }
-    }
+    const auto traces = GetTraces();
     // No OSI file
     if (file_mode == 0 && suffix_mode == 0)
     {

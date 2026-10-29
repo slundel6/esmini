@@ -445,14 +445,15 @@ static int InitScenario()
 }
 
 #ifdef _USE_OSI
-static std::optional<OSIReporter::OSITraceMessage> ToOSITraceMessage(SE_OSITraceMessage message)
+// Get map the API osi trace type to internal osi trace type and associated option values
+static std::optional<std::pair<OSIReporter::OSITraceMessage, std::string>> ToOSITraceMessage(SE_OSITraceMessage message)
 {
     switch (message)
     {
         case SE_OSI_GROUND_TRUTH:
-            return OSIReporter::OSITraceMessage::GROUND_TRUTH;
+            return std::make_pair(OSIReporter::OSITraceMessage::GROUND_TRUTH, "osi_file");
         case SE_OSI_TRAFFIC_COMMAND:
-            return OSIReporter::OSITraceMessage::TRAFFIC_COMMAND;
+            return std::make_pair(OSIReporter::OSITraceMessage::TRAFFIC_COMMAND, "osi_tc_file");
         default:
             LOG_ERROR("Invalid OSI message type {}", static_cast<int>(message));
             return std::nullopt;
@@ -2338,7 +2339,7 @@ extern "C"
         {
             return -1;
         }
-        const std::string option = message == SE_OSI_GROUND_TRUTH ? "osi_file" : "osi_tc_file";
+        const std::string option = trace_message->second;
         SE_Env::Inst().GetOptions().UnsetOption(option);
         SE_Env::Inst().GetOptions().UnsetOption(option + "_suffix");
         if (player == nullptr)
@@ -2350,7 +2351,7 @@ extern "C"
             LOG_ERROR("SE_DisableOSIFileEx: OSI reporter unavailable");
             return -1;
         }
-        return player->osiReporter->CloseOSIFile(*trace_message) ? 0 : -1;
+        return player->osiReporter->CloseOSIFile(trace_message->first) ? 0 : -1;
 #else
         (void)message;
         (void)type;
@@ -2365,7 +2366,7 @@ extern "C"
         SE_EnableOSIFileEx(suffix, false, SE_OSI_GROUND_TRUTH, SE_TRACE_SINGLE_CHANNEL);
         SE_EnableOSIFileEx(suffix, false, SE_OSI_TRAFFIC_COMMAND, SE_TRACE_SINGLE_CHANNEL);
 #else
-        (void)filename;
+        (void)suffix;
 #endif  // _USE_OSI
     }
 
@@ -2393,7 +2394,7 @@ extern "C"
         {
             return -1;
         }
-        const std::string option          = message == SE_OSI_GROUND_TRUTH ? "osi_file" : "osi_tc_file";
+        const std::string option          = trace_message->second;
         auto             &options         = SE_Env::Inst().GetOptions();
         const std::string selected_option = override_filename ? option : option + "_suffix";
         options.ClearOption(selected_option);
@@ -2410,7 +2411,7 @@ extern "C"
             LOG_ERROR("SE_EnableOSIFileEx: OSI reporter unavailable");
             return -1;
         }
-        if (!player->OpenOSIFile(options.GetOptionValue(option).c_str(), *trace_message))
+        if (!player->OpenOSIFile(options.GetOptionValue(option).c_str(), trace_message->first))
         {
             return -1;
         }
@@ -2453,12 +2454,12 @@ extern "C"
             LOG_ERROR("SE_FlushOSIFileEx requires an initialized scenario");
             return -1;
         }
-        if (!player->osiReporter->IsFileOpen(*trace_message))
+        if (!player->osiReporter->IsFileOpen(trace_message->first))
         {
             LOG_ERROR("SE_FlushOSIFileEx: no open OSI tracefile for message type {}", static_cast<int>(message));
             return -1;
         }
-        return player->osiReporter->FlushOSIFile(*trace_message) ? 0 : -1;
+        return player->osiReporter->FlushOSIFile(trace_message->first) ? 0 : -1;
 #else
         (void)message;
         (void)type;

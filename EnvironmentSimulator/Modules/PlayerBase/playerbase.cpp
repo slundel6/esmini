@@ -2056,9 +2056,11 @@ int ScenarioPlayer::Init()
         opt.SetOptionValue("osi_tc_file_suffix", arg);
     }
 
-    for (const auto message : {OSIReporter::OSITraceMessage::GROUND_TRUTH, OSIReporter::OSITraceMessage::TRAFFIC_COMMAND})
+    for (size_t i = 0; i < static_cast<size_t>(OSIReporter::OSITraceMessage::COUNT); i++)
     {
-        const std::string option = message == OSIReporter::OSITraceMessage::GROUND_TRUTH ? "osi_file" : "osi_tc_file";
+        const auto  message = static_cast<OSIReporter::OSITraceMessage>(i);
+        std::string option  = osi_message_to_arg.at(message);
+
         if (opt.GetOptionSet(option) || opt.GetOptionSet(option + "_suffix"))
         {
             if (!OpenOSIFile(opt.GetOptionValue(option).c_str(), message))
