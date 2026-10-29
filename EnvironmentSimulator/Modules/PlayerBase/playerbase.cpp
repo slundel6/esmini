@@ -1584,6 +1584,7 @@ int ScenarioPlayer::Init()
     opt.AddOption("osi_file_suffix", "Save osi trace file with an optional suffix before the extension (default: no suffix)", "suffix", ".");
     opt.AddOption("osi_tc_file", "Save OSI TrafficCommand trace file", "filename", ".");
     opt.AddOption("osi_tc_file_suffix", "Save OSI TrafficCommand trace file with an optional suffix before the extension", "suffix", ".");
+    opt.AddOption("osi_files", "Save all available osi trace files", "suffix", ".");
     opt.AddOption("osi_freq", "Decrease OSI file entries, e.g. --osi_freq 2 -> OSI written every two simulation steps", "frequency");
     opt.AddOption("osi_lines", "Show OSI road lines. Toggle key 'u'");
     opt.AddOption("osi_points", "Show OSI road points. Toggle key 'y'");
@@ -2034,6 +2035,13 @@ int ScenarioPlayer::Init()
     if (opt.GetOptionSet("osi_exclude_ghost"))
     {
         osiReporter->ExcludeGhost();
+    }
+
+    if (opt.GetOptionSet("osi_files"))
+    {
+        std::string arg = opt.GetOptionValue("osi_files");
+        opt.SetOptionValue("osi_file_suffix", arg);
+        opt.SetOptionValue("osi_tc_file_suffix", arg);
     }
 
     for (const auto message : {OSIReporter::OSITraceMessage::GROUND_TRUTH, OSIReporter::OSITraceMessage::TRAFFIC_COMMAND})
