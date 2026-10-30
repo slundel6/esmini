@@ -146,7 +146,27 @@ OSI data can be retrieved in three ways:
 
 ===== OSI tracefile
 
-Call `SE_EnableOSIFile(filename)` in order to create a OSI tracefile. Specify custom filename or set 0 or "" to use default filename (currently "ground_truth.osi").
+Call `SE_EnableOSIFile(filename)` to record OSI GroundTruth. Specify a custom filename including a path (to a folder which already exists), or set `0` or `""` to use a generated filename:
+`<timestamp>_gt_<osi-version>_<protobuf-version>_<frames>.osi`.
+The frame count is finalized when the file is closed. If frames are `0` it indicates something probably went wrong with writing and/or closing the file.
+
+Call `SE_EnableOSIFiles(suffix)` to record both GroundTruth and TrafficCommand in separate files with an optional path and suffix.
+
+Examples: +
+
+* `SE_EnableOSIFile("traces/my_run")` would generate `traces/my_run.osi`.
+* `SE_EnableOSIFiles("traces/my_run")` would generate +
+** `traces/<timestamp>_gt_<osi-version>_<protobuf-version>_<frames>_my_run.osi` and +
+** `traces/<timestamp>_tc_<osi-version>_<protobuf-version>_<frames>_my_run.osi`. +
+
+
+Call `SE_DisableOSIFile()` to close only the GroundTruth file, and call `SE_DisableOSIFiles()` to close all OSI trace files.
+`SE_EnableOSIFileEx(filename, override_filename, message, type)`, `SE_DisableOSIFileEx(message, type)` and `SE_FlushOSIFileEx(message, type)` operate on one message type.
+  Select `SE_OSI_GROUND_TRUTH` or `SE_OSI_TRAFFIC_COMMAND` and `SE_TRACE_SINGLE_CHANNEL` (the only supported trace format). `SE_FlushOSIFile()` flushes all open OSI trace files.
+
+
+Files can be enabled before initialization (opened during initialization) or while a scenario is running.
+TrafficCommand records are written when actions generate commands, not on every simulation step.
 
 ===== OSI timestamps
 
@@ -342,4 +362,3 @@ int main()
 
 from Linux terminal or Windows PowerShell: +
 `./bin/my_player`
-

@@ -584,11 +584,18 @@ esmini can provide OSI groundtruth data in three ways:
 . API to fetch via function call from a custom application
 . Save to OSI trace file
 
-Only trace file way is described here. To save OSI data, add argument `--osi_file [filename]`. The filename is optional. If omitted it will be named `ground_truth.osi`. Example:
+Only trace file way is described here. To save OSI GroundTruth, add argument `--osi_file [filename]`. The filename is optional. If omitted, a filename is generated:
+`<timestamp>_gt_<osi-version>_<protobuf-version>_<frames>[_<suffix>].osi`.
+The frame count is finalized when the file is closed. To use a fixed filename:
 
-``./bin/esmini --window 60 60 800 400 --osc ./resources/xosc/cut-in.xosc --osi_file``
+``./bin/esmini --window 60 60 800 400 --osc ./resources/xosc/cut-in.xosc --osi_file ground_truth.osi``
 
 will create `ground_truth.osi` in the current folder. The format is according to the OSI standard "Binary trace file", see OSI documentation https://opensimulationinterface.github.io/osi-antora-generator/asamosi/V3.5.0/interface/architecture/trace_file_formats.html[2.2.6 OSI trace files].
+
+Use `--osi_tc_file [filename]` to record TrafficCommand instead, or `--osi_files [suffix]` to record both message types in separate files (`gt` and `tc` in the generated names).
+`--osi_file_suffix [suffix]` and `--osi_tc_file_suffix [suffix]` enable the respective files with an optional suffix.
+Suffix arguments may include a directory, e.g. `--osi_files traces/my_run`; the directory must already exist.
+TrafficCommand files contain records only when actions generate commands.
 
 esmini provides a script, osi2csv.py, that converts an OSI trace file into .csv format. The script can also serve as example how to parse and extract data from an OSI trace file:
 
@@ -658,4 +665,3 @@ Run:
 Select (click on) esmini-player in Hierarchy to show up in Inspector, where you can specify scenario file and a few parameters. Note that scenario file and dependent OpenDRIVE and optional 3D scenegraph file must be present in StreamingAssets folder.
 
 Plugins can be updated, but NOTE that you need to restart Unity to (re)load shared library plugins. And, of course, scenario files and other content can be added or replaced.
-

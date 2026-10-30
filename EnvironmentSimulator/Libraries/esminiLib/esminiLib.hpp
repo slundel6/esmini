@@ -1622,12 +1622,9 @@ extern "C"
 
     /**
             Switch on logging to OSI files
-            @param filename Filename (including optional path) if override_filename is true; otherwise a suffix.
-                            Set to 0 or "" to use the default filename or no suffix.
-            @param override_filename If true, filename will completely override OSI recommended filename
-                                     If false, filename will act as suffix to the OSI recommended filename
+            @param filename suffix (including optional path) Set to 0 or "" to use the default filename or no suffix.
     */
-    SE_DLL_API void SE_EnableOSIFiles(const char *filename, bool override_filename);
+    SE_DLL_API void SE_EnableOSIFiles(const char *suffix);
 
     /**
             Switch on logging to OSI groundtruth

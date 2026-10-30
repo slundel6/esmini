@@ -2354,13 +2354,13 @@ extern "C"
 #endif
     }
 
-    SE_DLL_API void SE_EnableOSIFiles(const char *filename, bool override_filename)
+    SE_DLL_API void SE_EnableOSIFiles(const char *suffix)
     {
 #ifdef _USE_OSI
-        SE_EnableOSIFileEx(filename, override_filename, SE_OSI_GROUND_TRUTH, SE_TRACE_SINGLE_CHANNEL);
-        SE_EnableOSIFileEx(filename, override_filename, SE_OSI_TRAFFIC_COMMAND, SE_TRACE_SINGLE_CHANNEL);
+        SE_EnableOSIFileEx(suffix, false, SE_OSI_GROUND_TRUTH, SE_TRACE_SINGLE_CHANNEL);
+        SE_EnableOSIFileEx(suffix, false, SE_OSI_TRAFFIC_COMMAND, SE_TRACE_SINGLE_CHANNEL);
 #else
-        (void)filename;
+        (void)suffix;
 #endif  // _USE_OSI
     }
 

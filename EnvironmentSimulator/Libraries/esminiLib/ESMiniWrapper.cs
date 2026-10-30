@@ -1897,10 +1897,9 @@ namespace ESMini
         /// <summary>
         /// Switch on logging to OSI files
         /// </summary>
-        /// <param name="filename">Filename (including optional path) if override_filename is true; otherwise a suffix. Set to 0 or "" to use the default filename or no suffix.</param>
-        /// <param name="override_filename">If true, filename will completely override OSI recommended filename If false, filename will act as suffix to the OSI recommended filename</param>
+        /// <param name="filename">suffix (including optional path) Set to 0 or "" to use the default filename or no suffix.</param>
         [DllImport(NativeLibrary, CallingConvention = CallingConvention.Cdecl, CharSet = CharSet.Ansi)]
-        public static extern void SE_EnableOSIFiles(string filename, [MarshalAs(UnmanagedType.I1)] bool override_filename);
+        public static extern void SE_EnableOSIFiles(string suffix);
 
         /// <summary>
         /// Switch on logging to OSI groundtruth
