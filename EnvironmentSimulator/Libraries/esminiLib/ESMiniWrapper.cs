@@ -1876,6 +1876,12 @@ namespace ESMini
         /// Switch off logging to all OSI files.
         /// </summary>
         [DllImport(NativeLibrary, CallingConvention = CallingConvention.Cdecl, CharSet = CharSet.Ansi)]
+        public static extern void SE_DisableOSIFiles();
+
+        /// <summary>
+        /// Switch off logging to the OSI GroundTruth file, leaving other message types unchanged.
+        /// </summary>
+        [DllImport(NativeLibrary, CallingConvention = CallingConvention.Cdecl, CharSet = CharSet.Ansi)]
         public static extern void SE_DisableOSIFile();
 
         /// <summary>
@@ -1891,9 +1897,10 @@ namespace ESMini
         /// <summary>
         /// Switch on logging to OSI files
         /// </summary>
-        /// <param name="filename">Optional suffix, including path. Set to 0 or "" to use default.</param>
+        /// <param name="filename">Filename (including optional path) if override_filename is true; otherwise a suffix. Set to 0 or "" to use the default filename or no suffix.</param>
+        /// <param name="override_filename">If true, filename will completely override OSI recommended filename If false, filename will act as suffix to the OSI recommended filename</param>
         [DllImport(NativeLibrary, CallingConvention = CallingConvention.Cdecl, CharSet = CharSet.Ansi)]
-        public static extern void SE_EnableOSIFiles(string suffix);
+        public static extern void SE_EnableOSIFiles(string filename, [MarshalAs(UnmanagedType.I1)] bool override_filename);
 
         /// <summary>
         /// Switch on logging to OSI groundtruth
