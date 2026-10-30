@@ -1603,6 +1603,11 @@ extern "C"
     /**
             Switch off logging to all OSI files.
     */
+    SE_DLL_API void SE_DisableOSIFiles();
+
+    /**
+            Switch off logging to the OSI GroundTruth file, leaving other message types unchanged.
+    */
     SE_DLL_API void SE_DisableOSIFile();
 
     /**
@@ -1617,9 +1622,12 @@ extern "C"
 
     /**
             Switch on logging to OSI files
-            @param filename Optional suffix, including path. Set to 0 or "" to use default.
+            @param filename Filename (including optional path) if override_filename is true; otherwise a suffix.
+                            Set to 0 or "" to use the default filename or no suffix.
+            @param override_filename If true, filename will completely override OSI recommended filename
+                                     If false, filename will act as suffix to the OSI recommended filename
     */
-    SE_DLL_API void SE_EnableOSIFiles(const char *suffix);
+    SE_DLL_API void SE_EnableOSIFiles(const char *filename, bool override_filename);
 
     /**
             Switch on logging to OSI groundtruth

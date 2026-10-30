@@ -1429,6 +1429,17 @@ protected:
         return traces;
     }
 
+    void WaitForTrafficCommand(const fs::path& path)
+    {
+        SE_FlushOSIFile();
+        for (int step = 0; step < 1000 && fs::file_size(path) == 0; ++step)
+        {
+            SE_StepDT(0.01);
+            SE_FlushOSIFile();
+        }
+        EXPECT_GT(fs::file_size(path), 0u);
+    }
+
     std::set<fs::path> existing_traces_;
     fs::path           directory_;
     std::string        scenario_;
@@ -1449,11 +1460,7 @@ TEST_F(OSIFileAPITest, ExplicitNamesCombineWithSuffixAndDisableBothMessages)
     SE_StepDT(0.01);
     SE_FlushOSIFile();
     // Empty TrafficCommand messages are skipped; wait for a scenario action.
-    for (int step = 0; step < 1000 && fs::file_size("tc.osi") == 0; ++step)
-    {
-        SE_StepDT(0.01);
-        SE_FlushOSIFile();
-    }
+    WaitForTrafficCommand("tc.osi");
 
     // Filename and suffix options combine just as they do on the command line.
     ASSERT_TRUE(fs::exists("gt_ignored.osi"));
@@ -1466,7 +1473,7 @@ TEST_F(OSIFileAPITest, ExplicitNamesCombineWithSuffixAndDisableBothMessages)
     EXPECT_FALSE(fs::exists("tc_ignored.osi"));
 
     // Disabling must close TC as well as GT, not merely stop one message type.
-    SE_DisableOSIFile();
+    SE_DisableOSIFiles();
     SE_StepDT(0.01);
     SE_FlushOSIFile();
     EXPECT_EQ(fs::file_size("gt_ignored.osi"), gt_size);
@@ -1536,7 +1543,14 @@ TEST_F(OSIFileAPITest, SuffixAndDefaultNamesUseSelectedMessage)
     ASSERT_EQ(SE_EnableOSIFileEx("custom", false, SE_OSI_GROUND_TRUTH, SE_TRACE_SINGLE_CHANNEL), 0);
     ASSERT_EQ(SE_EnableOSIFileEx(nullptr, false, SE_OSI_TRAFFIC_COMMAND, SE_TRACE_SINGLE_CHANNEL), 0);
     SE_StepDT(0.01);
-    SE_DisableOSIFile();
+    for (const auto& path : GetTraces())
+    {
+        if (path.filename().string().find("_tc_") != std::string::npos)
+        {
+            WaitForTrafficCommand(path);
+        }
+    }
+    SE_DisableOSIFiles();
 
     // Closing replaces the frame-count placeholder while retaining the message tag and suffix.
     const auto traces = GetTraces();
@@ -1572,7 +1586,8 @@ TEST_F(OSIFileAPITest, ConfigureBothMessagesBeforeInitialization)
     EXPECT_FALSE(fs::exists("tc.osi"));
     ASSERT_EQ(SE_Init(scenario_.c_str(), 0, 0, 0, 0), 0);
     SE_StepDT(0.01);
-    SE_DisableOSIFile();
+    WaitForTrafficCommand("tc.osi");
+    SE_DisableOSIFiles();
     ASSERT_TRUE(fs::exists("tc.osi"));
     EXPECT_GT(fs::file_size("tc.osi"), 0u);
     EXPECT_FALSE(fs::exists("unused.osi"));
@@ -1601,7 +1616,8 @@ TEST_F(OSIFileAPITest, CancelPendingMessageBeforeInitialization)
     ASSERT_EQ(SE_DisableOSIFileEx(SE_OSI_GROUND_TRUTH, SE_TRACE_SINGLE_CHANNEL), 0);
     ASSERT_EQ(SE_Init(scenario_.c_str(), 0, 0, 0, 0), 0);
     SE_StepDT(0.01);
-    SE_DisableOSIFile();
+    WaitForTrafficCommand("tc.osi");
+    SE_DisableOSIFiles();
     EXPECT_FALSE(fs::exists("gt.osi"));
     ASSERT_TRUE(fs::exists("tc.osi"));
     EXPECT_GT(fs::file_size("tc.osi"), 0u);

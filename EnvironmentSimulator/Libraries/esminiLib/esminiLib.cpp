@@ -2309,25 +2309,19 @@ extern "C"
         return 0;
     }
 
+    SE_DLL_API void SE_DisableOSIFiles()
+    {
+#ifdef _USE_OSI
+        SE_DisableOSIFileEx(SE_OSI_GROUND_TRUTH, SE_TRACE_SINGLE_CHANNEL);
+        SE_DisableOSIFileEx(SE_OSI_TRAFFIC_COMMAND, SE_TRACE_SINGLE_CHANNEL);
+#endif
+    }
+
     SE_DLL_API void SE_DisableOSIFile()
     {
-        for (const char *option : {"osi_file", "osi_file_suffix", "osi_tc_file", "osi_tc_file_suffix"})
-        {
-            SE_Env::Inst().GetOptions().UnsetOption(option);
-        }
-        if (player != nullptr)
-        {
 #ifdef _USE_OSI
-            if (player->osiReporter != nullptr)
-            {
-                player->osiReporter->CloseAllOSIFiles();
-            }
+        SE_DisableOSIFileEx(SE_OSI_GROUND_TRUTH, SE_TRACE_SINGLE_CHANNEL);
 #endif
-        }
-        else
-        {
-            LOG_WARN("SE_DisableOSIFile called before scenario initialized");
-        }
     }
 
     SE_DLL_API int SE_DisableOSIFileEx(SE_OSITraceMessage message, SE_TraceType type)
@@ -2360,25 +2354,20 @@ extern "C"
 #endif
     }
 
-    SE_DLL_API void SE_EnableOSIFiles(const char *suffix)
+    SE_DLL_API void SE_EnableOSIFiles(const char *filename, bool override_filename)
     {
 #ifdef _USE_OSI
-        SE_EnableOSIFileEx(suffix, false, SE_OSI_GROUND_TRUTH, SE_TRACE_SINGLE_CHANNEL);
-        SE_EnableOSIFileEx(suffix, false, SE_OSI_TRAFFIC_COMMAND, SE_TRACE_SINGLE_CHANNEL);
+        SE_EnableOSIFileEx(filename, override_filename, SE_OSI_GROUND_TRUTH, SE_TRACE_SINGLE_CHANNEL);
+        SE_EnableOSIFileEx(filename, override_filename, SE_OSI_TRAFFIC_COMMAND, SE_TRACE_SINGLE_CHANNEL);
 #else
-        (void)suffix;
+        (void)filename;
 #endif  // _USE_OSI
     }
 
     SE_DLL_API void SE_EnableOSIFile(const char *filename)
     {
 #ifdef _USE_OSI
-        SE_Env::Inst().GetOptions().SetOptionValue("osi_file", filename == nullptr ? "" : filename);
-        if (player != nullptr)
-        {
-            player->SetOSIFileStatus(true, filename);
-            player->osiReporter->UpdateOSIGroundTruth(player->scenarioEngine->entities_.object_);
-        }
+        SE_EnableOSIFileEx(filename, true, SE_OSI_GROUND_TRUTH, SE_TRACE_SINGLE_CHANNEL);
 #else
         (void)filename;
 #endif  // _USE_OSI
