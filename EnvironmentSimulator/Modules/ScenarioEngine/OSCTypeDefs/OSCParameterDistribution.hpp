@@ -27,7 +27,66 @@ namespace scenarioengine
             std::string value;
         };
 
+    public:
+        struct DistributionRange
+        {
+            bool   is_set      = false;
+            double lower_limit = 0.0;
+            double upper_limit = 0.0;
+        };
+
+        struct ProbabilityDistributionSetElement
+        {
+            std::string value;
+            double      weight = 0.0;
+        };
+
+        struct HistogramBin
+        {
+            DistributionRange range;
+            double            weight = 0.0;
+        };
+
+        enum class StochasticDistributionType
+        {
+            UNDEFINED,
+            PROBABILITY_DISTRIBUTION_SET,
+            NORMAL,
+            LOG_NORMAL,
+            UNIFORM,
+            POISSON,
+            HISTOGRAM,
+            USER_DEFINED
+        };
+
+        struct StochasticDistribution
+        {
+            std::string                                    parameter_name;
+            StochasticDistributionType                     type           = StochasticDistributionType::UNDEFINED;
+            double                                         expected_value = 0.0;  // Normal, LogNormal, Poisson
+            double                                         variance       = 0.0;  // Normal, LogNormal
+            DistributionRange                              range;                 // optional for Normal, LogNormal, Poisson; required for Uniform
+            std::vector<ProbabilityDistributionSetElement> elements;              // ProbabilityDistributionSet
+            std::vector<HistogramBin>                      bins;                  // Histogram
+            std::string                                    user_defined_type;     // UserDefinedDistribution
+            std::string                                    user_defined_content;  // UserDefinedDistribution
+        };
+
+        struct Stochastic
+        {
+            unsigned int                        number_of_test_runs = 0;
+            bool                                random_seed_set     = false;
+            double                              random_seed         = 0.0;
+            std::vector<StochasticDistribution> distributions;
+        };
+
+    private:
+        int ParseStochastic(pugi::xml_node stochastic);
+        int ParseStochasticDistribution(pugi::xml_node node, StochasticDistribution& dist);
+        int ParseRange(pugi::xml_node node, DistributionRange& range, bool required);
+
         std::vector<std::vector<std::vector<ParameterValueEntry>>> param_list_;
+        Stochastic                                                 stochastic_;
         std::string                                                filename_;
         std::string                                                scenario_filename_;
         int                                                        index_;
@@ -70,6 +129,10 @@ namespace scenarioengine
         std::string         GetParamValue(unsigned int param_index);
         std::string         AddInfoToFilename(std::string filename);
         std::string         AddInfoToFilepath(std::string filepath);
-        bool                IsParamDist = true;
+        const Stochastic&   GetStochastic() const
+        {
+            return stochastic_;
+        }
+        bool IsParamDist = true;
     };
 }  // namespace scenarioengine
