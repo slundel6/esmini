@@ -17,6 +17,8 @@
 #include <vector>
 #include "pugixml.hpp"
 
+class SE_Rand;
+
 namespace scenarioengine
 {
     class OSCParameterDistribution
@@ -85,8 +87,15 @@ namespace scenarioengine
         int ParseStochasticDistribution(pugi::xml_node node, StochasticDistribution& dist);
         int ParseRange(pugi::xml_node node, DistributionRange& range, bool required);
 
+        // Stochastic sampling. Samples for a given run index are deterministic (seeded by randomSeed + index),
+        // so any run can be reproduced in isolation, e.g. via --param_permutation
+        const std::vector<ParameterValueEntry>& GetStochasticSample();
+        std::string                             SampleDistribution(const StochasticDistribution& dist, SE_Rand& rand);
+
         std::vector<std::vector<std::vector<ParameterValueEntry>>> param_list_;
         Stochastic                                                 stochastic_;
+        std::vector<ParameterValueEntry>                           stochastic_sample_;             // values for current run
+        int                                                        stochastic_sample_index_ = -1;  // run index of stochastic_sample_
         std::string                                                filename_;
         std::string                                                scenario_filename_;
         int                                                        index_;
@@ -133,6 +142,7 @@ namespace scenarioengine
         {
             return stochastic_;
         }
-        bool IsParamDist = true;
+        bool IsParamDist     = true;
+        bool isDeterministic = true;
     };
 }  // namespace scenarioengine
