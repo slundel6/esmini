@@ -273,9 +273,8 @@ int OSCParameterDistribution::Parse()
             isDeterministic = false;
             if (!stochastic_.random_seed_set)
             {
-                // no seed given, pick one and report it so the batch can be reproduced
-                stochastic_.random_seed = static_cast<double>(SE_Rand().GetSeed());
-                LOG_INFO("Stochastic distribution: no randomSeed specified, using {:.0f}", stochastic_.random_seed);
+                // Retain one generated seed for the entire parameter set.
+                stochastic_.random_seed = SE_Rand().GetSeed();
             }
         }
     }
@@ -487,7 +486,7 @@ int OSCParameterDistribution::ParseStochastic(pugi::xml_node stochastic)
 
     if (!stochastic.attribute("randomSeed").empty())
     {
-        stochastic_.random_seed     = stochastic.attribute("randomSeed").as_double();
+        stochastic_.random_seed     = stochastic.attribute("randomSeed").as_uint();
         stochastic_.random_seed_set = true;
     }
 
@@ -619,6 +618,17 @@ OSCParameterDistribution::ParameterValueEntry OSCParameterDistribution::GetParam
     }
 
     return {"", ""};
+}
+
+void OSCParameterDistribution::SetStochasticSeed(unsigned int seed)
+{
+    if (stochastic_.random_seed != seed)
+    {
+        stochastic_sample_.clear();
+        stochastic_sample_index_ = -1;
+    }
+    stochastic_.random_seed     = seed;
+    stochastic_.random_seed_set = true;
 }
 
 const std::vector<OSCParameterDistribution::ParameterValueEntry>& OSCParameterDistribution::GetStochasticSample()

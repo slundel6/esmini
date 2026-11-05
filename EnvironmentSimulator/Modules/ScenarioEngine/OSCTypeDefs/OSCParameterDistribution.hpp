@@ -78,7 +78,7 @@ namespace scenarioengine
         {
             unsigned int                        number_of_test_runs = 0;
             bool                                random_seed_set     = false;
-            double                              random_seed         = 0.0;
+            unsigned int                        random_seed         = 0;
             std::vector<StochasticDistribution> distributions;
         };
 
@@ -142,6 +142,7 @@ namespace scenarioengine
         {
             return stochastic_;
         }
+        void SetStochasticSeed(unsigned int seed);
         bool IsParamDist     = true;
         bool isDeterministic = true;
     };

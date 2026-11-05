@@ -1904,6 +1904,25 @@ int ScenarioPlayer::Init()
         unsigned int seed = static_cast<unsigned int>(std::stoul(arg_str));
         LOG_INFO("Using specified seed {}", seed);
         SE_Env::Inst().GetRand().SetSeed(seed);
+        if (!dist.isDeterministic)
+        {
+            dist.SetStochasticSeed(seed);
+        }
+    }
+    else if (!dist.isDeterministic)
+    {
+        const auto& stochastic = dist.GetStochastic();
+        // stochastid.random_seed is already populated when seed element is parsed earlier
+        // here we just need to give the seed to SE_Rand and print it
+        SE_Env::Inst().GetRand().SetSeed(stochastic.random_seed);
+        if (stochastic.random_seed_set)
+        {
+            LOG_INFO("Using parameter distribution seed {}", stochastic.random_seed);
+        }
+        else
+        {
+            LOG_INFO("Generated seed {}", stochastic.random_seed);
+        }
     }
     else
     {
