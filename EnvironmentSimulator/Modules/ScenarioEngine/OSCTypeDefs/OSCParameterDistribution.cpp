@@ -15,7 +15,6 @@
 #include "logger.hpp"
 #include <iomanip>
 #include <sstream>
-#include <functional>
 
 #if __has_include(<filesystem>)
 #include <filesystem>
@@ -637,15 +636,9 @@ const std::vector<OSCParameterDistribution::ParameterValueEntry>& OSCParameterDi
         return stochastic_sample_;
     }
 
-    // Seed per run index so that each run is reproducible independently of execution order
-    int64_t       seed = static_cast<int64_t>(stochastic_.random_seed);
-    std::seed_seq seq{static_cast<uint32_t>(seed & 0xffffffff), static_cast<uint32_t>((seed >> 32) & 0xffffffff), static_cast<uint32_t>(index_)};
-    std::vector<uint32_t> run_seed(1);
-    seq.generate(run_seed.begin(), run_seed.end());
-
     // Dedicated generator, not SE_Env::Inst().GetRand(), to not interfere with the global --seed controlled sequence
     SE_Rand rand;
-    rand.SetSeed(run_seed[0]);
+    rand.SetSeedForRun(stochastic_.random_seed, static_cast<unsigned int>(index_));
 
     stochastic_sample_.clear();
     for (const auto& dist : stochastic_.distributions)
@@ -659,75 +652,33 @@ const std::vector<OSCParameterDistribution::ParameterValueEntry>& OSCParameterDi
 
 std::string OSCParameterDistribution::SampleDistribution(const StochasticDistribution& dist, SE_Rand& rand)
 {
-    std::mt19937& gen = rand.GetGenerator();
-
-    // Draw from a continuous distribution, rejecting samples outside optional range (truncated distribution)
-    // There's no built in "sample between these 2 values" in C++, so we resample until we get value inside the defined range. If we are not inside
-    // range at max_attempts, we clamp to nearest range limit
-    auto sample_truncated = [&](const std::function<double()>& draw) -> double
-    {
-        const int max_attempts = 1000;
-        double    v            = draw();
-        // Allowed range is lowerLimit <= value <= upperLimit, below we check if sample is outside that
-        for (int i = 0; dist.range.is_set && (v < dist.range.lower_limit || v > dist.range.upper_limit); i++)
-        {
-            if (i >= max_attempts)
-            {
-                LOG_WARN("{}: failed to sample within range {:.2f}..{:.2f}, clamping",
-                         dist.parameter_name,
-                         dist.range.lower_limit,
-                         dist.range.upper_limit);
-                return CLAMP(v, dist.range.lower_limit, dist.range.upper_limit);
-            }
-            v = draw();
-        }
-        return v;
-    };
-
+    bool        clamped = false;
+    std::string value;
     switch (dist.type)
     {
         case StochasticDistributionType::PROBABILITY_DISTRIBUTION_SET:
         {
-            // Get the weights of each bin specified in the param dist
             std::vector<double> weights;
             for (const auto& e : dist.elements)
             {
                 weights.push_back(e.weight);
             }
-            // Create a distribution to sample from based on the weights (P(i) = weight_i / sum(weights))
-            std::discrete_distribution<size_t> d(weights.begin(), weights.end());
-            // Get a value based on a randomly sampled index in discrete distribution
-            return dist.elements[d(gen)].value;
+            return dist.elements[rand.GetWeightedIndex(weights)].value;
         }
         case StochasticDistributionType::NORMAL:
         {
-            // Create a normal distribution and sample from it until we hit a value inside the range
-            // The resulting truncated distribution will be a rescaled normal distribution
-            if (dist.variance < SMALL_NUMBER)
-            {
-                // Degenerate distribution, std::normal_distribution requires expectedValue > 0
-                return std::to_string(dist.expected_value);
-            }
-            std::normal_distribution<double> d(dist.expected_value, sqrt(dist.variance));
-            return std::to_string(sample_truncated([&]() { return d(gen); }));
+            value = std::to_string(rand.GetNormal(dist.expected_value, dist.variance, dist.range, clamped));
+            break;
         }
         case StochasticDistributionType::LOG_NORMAL:
         {
-            // expectedValue and variance refer to the log-normal distribution itself, convert to underlying normal parameters
             if (dist.expected_value < SMALL_NUMBER)
             {
                 LOG_ERROR("{}: LogNormalDistribution requires expectedValue > 0", dist.parameter_name);
                 return "";
             }
-            if (dist.variance < SMALL_NUMBER)
-            {
-                // Degenerate distribution, std::lognormal_distribution requires expectedValue > 0
-                return std::to_string(dist.expected_value);
-            }
-            double                              sigma2 = log(1.0 + dist.variance / (dist.expected_value * dist.expected_value));
-            double                              mu     = log(dist.expected_value) - 0.5 * sigma2;
-            std::lognormal_distribution<double> d(mu, sqrt(sigma2));
-            return std::to_string(sample_truncated([&]() { return d(gen); }));
+            value = std::to_string(rand.GetLogNormal(dist.expected_value, dist.variance, dist.range, clamped));
+            break;
         }
         case StochasticDistributionType::UNIFORM:
         {
@@ -735,23 +686,12 @@ std::string OSCParameterDistribution::SampleDistribution(const StochasticDistrib
         }
         case StochasticDistributionType::POISSON:
         {
-            std::poisson_distribution<int> d(dist.expected_value);
-            return std::to_string(static_cast<int>(sample_truncated([&]() { return static_cast<double>(d(gen)); })));
+            value = std::to_string(rand.GetPoisson(dist.expected_value, dist.range, clamped));
+            break;
         }
         case StochasticDistributionType::HISTOGRAM:
         {
-            // Get the weights of each bin specified in the param dist
-            std::vector<double> weights;
-            for (const auto& b : dist.bins)
-            {
-                weights.push_back(b.weight);
-            }
-            // Create a distribution to sample from based on the weights (P(i) = weight_i / sum(weights))
-            std::discrete_distribution<size_t> bin_d(weights.begin(), weights.end());
-            // Get a histogram bin based on a randomly sampled index in discrete distribution
-            const HistogramBin& bin = dist.bins[bin_d(gen)];
-            // Pick uniformly inside the selected bin and return the value
-            return std::to_string(rand.GetRealBetween(bin.range.lower_limit, bin.range.upper_limit));
+            return std::to_string(rand.GetHistogram(dist.bins));
         }
         case StochasticDistributionType::USER_DEFINED:
             LOG_ERROR("{}: UserDefinedDistribution (type {}) not supported", dist.parameter_name, dist.user_defined_type);
@@ -760,6 +700,11 @@ std::string OSCParameterDistribution::SampleDistribution(const StochasticDistrib
             LOG_ERROR("{}: undefined stochastic distribution", dist.parameter_name);
             return "";
     }
+    if (clamped)
+    {
+        LOG_WARN("{}: failed to sample within range {:.2f}..{:.2f}, clamping", dist.parameter_name, dist.range.lower_limit, dist.range.upper_limit);
+    }
+    return value;
 }
 
 std::string OSCParameterDistribution::GetParamName(unsigned int param_index)

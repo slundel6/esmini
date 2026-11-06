@@ -16,8 +16,7 @@
 #include <string>
 #include <vector>
 #include "pugixml.hpp"
-
-class SE_Rand;
+#include "CommonMini.hpp"
 
 namespace scenarioengine
 {
@@ -30,12 +29,7 @@ namespace scenarioengine
         };
 
     public:
-        struct DistributionRange
-        {
-            bool   is_set      = false;
-            double lower_limit = 0.0;
-            double upper_limit = 0.0;
-        };
+        using DistributionRange = SE_Rand::DistributionRange;
 
         struct ProbabilityDistributionSetElement
         {
@@ -43,11 +37,7 @@ namespace scenarioengine
             double      weight = 0.0;
         };
 
-        struct HistogramBin
-        {
-            DistributionRange range;
-            double            weight = 0.0;
-        };
+        using HistogramBin = SE_Rand::HistogramBin;
 
         enum class StochasticDistributionType
         {
