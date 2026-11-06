@@ -77,7 +77,7 @@ namespace scenarioengine
         struct Stochastic
         {
             unsigned int                        number_of_test_runs = 0;
-            bool                                random_seed_set     = false;
+            bool                                random_seed_set     = false;  // randomSeed supplied in XML
             unsigned int                        random_seed         = 0;
             std::vector<StochasticDistribution> distributions;
         };

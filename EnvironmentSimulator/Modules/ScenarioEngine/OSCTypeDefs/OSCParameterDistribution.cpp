@@ -273,8 +273,8 @@ int OSCParameterDistribution::Parse()
             isDeterministic = false;
             if (!stochastic_.random_seed_set)
             {
-                // Retain one generated seed for the entire parameter set.
-                stochastic_.random_seed = SE_Rand().GetSeed();
+                // Retain the global seed for the entire parameter set.
+                stochastic_.random_seed = SE_Env::Inst().GetRand().GetSeed();
             }
         }
     }
@@ -627,8 +627,7 @@ void OSCParameterDistribution::SetStochasticSeed(unsigned int seed)
         stochastic_sample_.clear();
         stochastic_sample_index_ = -1;
     }
-    stochastic_.random_seed     = seed;
-    stochastic_.random_seed_set = true;
+    stochastic_.random_seed = seed;
 }
 
 const std::vector<OSCParameterDistribution::ParameterValueEntry>& OSCParameterDistribution::GetStochasticSample()
