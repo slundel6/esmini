@@ -22,22 +22,23 @@ namespace scenarioengine
 {
     class OSCParameterDistribution
     {
+    public:
+        // Parameter values exposed by both deterministic permutations and stochastic runs.
         struct ParameterValueEntry
         {
             std::string name;
             std::string value;
         };
 
-    public:
+        // Stochastic distribution definitions.
         using DistributionRange = SE_Rand::DistributionRange;
+        using HistogramBin      = SE_Rand::HistogramBin;
 
         struct ProbabilityDistributionSetElement
         {
             std::string value;
             double      weight = 0.0;
         };
-
-        using HistogramBin = SE_Rand::HistogramBin;
 
         enum class StochasticDistributionType
         {
@@ -72,27 +73,7 @@ namespace scenarioengine
             std::vector<StochasticDistribution> distributions;
         };
 
-    private:
-        int ParseStochastic(pugi::xml_node stochastic);
-        int ParseStochasticDistribution(pugi::xml_node node, StochasticDistribution& dist);
-        int ParseRange(pugi::xml_node node, DistributionRange& range, bool required);
-
-        // Stochastic sampling. Samples for a given run index are deterministic (seeded by randomSeed + index),
-        // so any run can be reproduced in isolation, e.g. via --param_permutation
-        const std::vector<ParameterValueEntry>& GetStochasticSample();
-        std::string                             SampleDistribution(const StochasticDistribution& dist, SE_Rand& rand);
-
-        std::vector<std::vector<std::vector<ParameterValueEntry>>> param_list_;
-        Stochastic                                                 stochastic_;
-        std::vector<ParameterValueEntry>                           stochastic_sample_;             // values for current run
-        int                                                        stochastic_sample_index_ = -1;  // run index of stochastic_sample_
-        std::string                                                filename_;
-        std::string                                                scenario_filename_;
-        int                                                        index_;
-        int                                                        requested_index_;
-        pugi::xml_document                                         doc_;
-
-    public:
+        // Shared lifecycle and input.
         OSCParameterDistribution()
         {
             Reset();
@@ -100,17 +81,18 @@ namespace scenarioengine
         ~OSCParameterDistribution();
         static OSCParameterDistribution& Inst();
 
-        int          Load(std::string filename);
-        int          Load(pugi::xml_document& doc);
-        int          Parse();
-        unsigned int GetNumPermutations();
-        unsigned int GetNumParameters();
-        void         Reset();
-        std::string  GetFilename() const
+        int         Load(std::string filename);
+        int         Load(pugi::xml_document& doc);
+        int         Parse();
+        void        Reset();
+        std::string GetFilename() const
         {
             return filename_;
         }
         std::string GetScenarioFileName() const;
+
+        // Shared run selection: deterministic permutations or stochastic test runs.
+        unsigned int GetNumPermutations();
         // Returns current permutation index
         int GetIndex() const
         {
@@ -122,18 +104,53 @@ namespace scenarioengine
         {
             return requested_index_;
         }
-        int                 IncrementIndex();
+        int IncrementIndex();
+
+        // Values for the selected run, regardless of distribution type.
+        unsigned int        GetNumParameters();
         ParameterValueEntry GetParameterEntry(unsigned int param_index);
         std::string         GetParamName(unsigned int param_index);
         std::string         GetParamValue(unsigned int param_index);
-        std::string         AddInfoToFilename(std::string filename);
-        std::string         AddInfoToFilepath(std::string filepath);
-        const Stochastic&   GetStochastic() const
+
+        // Shared output naming.
+        std::string AddInfoToFilename(std::string filename);
+        std::string AddInfoToFilepath(std::string filepath);
+
+        // Stochastic configuration.
+        const Stochastic& GetStochastic() const
         {
             return stochastic_;
         }
         void SetStochasticSeed(unsigned int seed);
+
+        // Shared distribution mode.
         bool IsParamDist     = true;
         bool isDeterministic = true;
+
+    private:
+        // Deterministic alternatives: choose one value set per parameter distribution.
+        using ParameterValueSet         = std::vector<ParameterValueEntry>;
+        using DeterministicDistribution = std::vector<ParameterValueSet>;
+        std::vector<DeterministicDistribution> param_list_;
+
+        // Stochastic parsing and cached values for the selected run.
+        int ParseStochastic(pugi::xml_node stochastic);
+        int ParseStochasticDistribution(pugi::xml_node node, StochasticDistribution& dist);
+        int ParseRange(pugi::xml_node node, DistributionRange& range, bool required);
+
+        // Samples are reproducible from the seed and run index, independently of execution order.
+        const std::vector<ParameterValueEntry>& GetStochasticSample();
+        std::string                             SampleDistribution(const StochasticDistribution& dist, SE_Rand& rand);
+
+        Stochastic                       stochastic_;
+        std::vector<ParameterValueEntry> stochastic_sample_;
+        int                              stochastic_sample_index_ = -1;
+
+        // Shared input and run state.
+        std::string        filename_;
+        std::string        scenario_filename_;
+        int                index_;
+        int                requested_index_;
+        pugi::xml_document doc_;
     };
 }  // namespace scenarioengine
