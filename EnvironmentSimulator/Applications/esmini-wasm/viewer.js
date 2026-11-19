@@ -4,14 +4,16 @@ import { OrbitControls } from "three/addons/controls/OrbitControls.js";
 import { clone as cloneSkinned } from "three/addons/utils/SkeletonUtils.js";
 
 const RESOURCE_ROOT_URL = new URL("./resources/", import.meta.url);
-const EXAMPLE_XODR_URL = new URL("xodr/example.xodr", RESOURCE_ROOT_URL).href;
-const EXAMPLE_XOSC_URL = new URL("xosc/example.xosc", RESOURCE_ROOT_URL).href;
+const EXAMPLE_XODR_URL = new URL("xodr/wasm-example.xodr", RESOURCE_ROOT_URL).href;
+const EXAMPLE_XOSC_URL = new URL("xosc/wasm-example.xosc", RESOURCE_ROOT_URL).href;
 const EXAMPLE_SCENARIO_DIR = "/scenario";
-const EXAMPLE_CATALOGS_URL = new URL("catalogs/", RESOURCE_ROOT_URL);
-const EXAMPLE_XOSC_VIRTUAL_PATH = `${EXAMPLE_SCENARIO_DIR}/xosc/example.xosc`;
-const EXAMPLE_XODR_VIRTUAL_PATH = `${EXAMPLE_SCENARIO_DIR}/xodr/example.xodr`;
+const EXAMPLE_CATALOGS_URL = new URL("xosc/Catalogs/Vehicles/", RESOURCE_ROOT_URL);
+const EXAMPLE_XOSC_VIRTUAL_PATH = `${EXAMPLE_SCENARIO_DIR}/xosc/wasm-example.xosc`;
+const EXAMPLE_XODR_VIRTUAL_PATH = `${EXAMPLE_SCENARIO_DIR}/xodr/wasm-example.xodr`;
 const SCENARIO_ASSET_URL_SCHEME = "esmini://scenario/";
 const ROAD_MARK_Z_OFFSET = 0.035;
+const DEFAULT_GROUND_HEIGHT = -0.05;
+const GROUND_CLEARANCE_METERS = 1.0;
 const MAX_CONSOLE_LINES = 400;
 const MODEL_UP_AXIS_ROTATION_X = Math.PI / 2;
 const SCENARIO_FILE_PATTERN = /\.(xosc|xodr|gltf|glb|osgb|png|jpg|jpeg|bin)$/i;
@@ -114,7 +116,7 @@ const ground = new THREE.Mesh(
     new THREE.PlaneGeometry(40000, 40000),
     new THREE.MeshStandardMaterial({ color: "#c8c0aa", roughness: 1.0, metalness: 0.0 })
 );
-ground.position.z = -0.05;
+ground.position.z = DEFAULT_GROUND_HEIGHT;
 scene.add(ground);
 
 const roadGroup = new THREE.Group();
@@ -158,7 +160,7 @@ function setScenarioOverlayVisibility(visible) {
 let esminiModule = null;
 let scenario = null;
 let isPlaying = false;
-let followEgo = false;
+let followEgo = ui.followEgoToggle.checked;
 let playbackSpeed = 1.0;
 let accumulator = 0;
 const fixedStep = 1 / 60;
@@ -2101,8 +2103,25 @@ function initializeScenarioState() {
     return;
   }
 
-  const frame = scenario.step_frame(0);
-  refreshScenarioView(frame.object_states, frame.simulation_time, true);
+  const objectStates = scenario.get_object_states();
+  refreshScenarioView(objectStates, scenario.get_simulation_time(), true);
+}
+
+function positionGroundBelowRoads(laneSurfaces) {
+  let minimumRoadHeight = Infinity;
+  for (const laneSurface of laneSurfaces) {
+    for (const boundary of [laneSurface.left_boundary, laneSurface.right_boundary]) {
+      for (const point of boundary) {
+        if (Number.isFinite(point.z)) {
+          minimumRoadHeight = Math.min(minimumRoadHeight, point.z);
+        }
+      }
+    }
+  }
+
+  ground.position.z = Number.isFinite(minimumRoadHeight)
+    ? minimumRoadHeight - GROUND_CLEARANCE_METERS
+    : DEFAULT_GROUND_HEIGHT;
 }
 
 function buildRoadScene(roadGeometry, renderProceduralRoads = true) {
@@ -2115,6 +2134,7 @@ function buildRoadScene(roadGeometry, renderProceduralRoads = true) {
         left_boundary: vectorToArray(surface.left_boundary),
         right_boundary: vectorToArray(surface.right_boundary),
     }));
+    positionGroundBelowRoads(laneSurfaces);
     const roadMarks = vectorToArray(roadGeometry.road_marks).map((mark) => ({
         ...mark,
         points: vectorToArray(mark.points),

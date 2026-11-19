@@ -3,15 +3,15 @@
     <FileHeader description="dsc_scenario" author="blender_dsc" revMajor="1" revMinor="3" date="2026-05-20T17:52:33.219232"/>
     <CatalogLocations>
         <VehicleCatalog>
-            <Directory path="../catalogs/VehicleCatalog"/>
+            <Directory path="../xosc/Catalogs/Vehicles"/>
         </VehicleCatalog>
     </CatalogLocations>
     <RoadNetwork>
-        <LogicFile filepath="../xodr/example.xodr"/>
+        <LogicFile filepath="../xodr/wasm-example.xodr"/>
     </RoadNetwork>
     <Entities>
         <ScenarioObject name="car_0">
-            <CatalogReference catalogName="VehicleCatalog" entryName="car_0"/>
+            <CatalogReference catalogName="VehicleCatalog" entryName="car_blue"/>
         </ScenarioObject>
     </Entities>
     <Storyboard>

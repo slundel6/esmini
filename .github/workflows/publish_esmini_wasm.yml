@@ -1,73 +1,28 @@
-name: Publish esmini WASM app
+name: Dispatch esmini WASM publishing
 
 on:
   push:
-    branches:
-      - master
-    paths:
-      - .github/workflows/publish_esmini_wasm.yml
-      - EnvironmentSimulator/Applications/esmini-wasm/**
-      - EnvironmentSimulator/Libraries/esminiJS/**
-      - EnvironmentSimulator/Modules/**
-      - externals/**
-      - scripts/patches/**
+    tags:
+      - v[0-9]+.[0-9]+.[0-9]+ # Run on esmini version tags
   workflow_dispatch:
 
 permissions:
   contents: read
-  pages: write
-  id-token: write
-
-concurrency:
-  group: publish-esmini-wasm
-  cancel-in-progress: false
 
 jobs:
-  build:
-    if: github.ref == 'refs/heads/master'
+  dispatch:
+    if: github.event_name != 'push' || !github.event.deleted # Manual dispatch is not a push || not ran on tag deletion
     runs-on: ubuntu-22.04
 
     steps:
-      - name: Check out esmini
-        uses: actions/checkout@v6
-        with:
-          submodules: true
-          lfs: false
-
-      - name: Install build tools
+      - name: Dispatch Pages workflow in esmini-wasm
+        env:
+          GH_TOKEN: ${{ secrets.ESMINI_WASM_DISPATCH_TOKEN }}
         run: |
-          sudo apt-get update
-          sudo apt-get install -y bzip2 cmake ninja-build
-
-      - name: Install Emscripten
-        run: |
-          git clone https://github.com/emscripten-core/emsdk.git "$RUNNER_TEMP/emsdk"
-          "$RUNNER_TEMP/emsdk/emsdk" install 6.0.10
-          "$RUNNER_TEMP/emsdk/emsdk" activate 6.0.10
-
-      - name: Build esminiJS
-        working-directory: EnvironmentSimulator/Libraries/esminiJS
-        run: |
-          source "$RUNNER_TEMP/emsdk/emsdk_env.sh"
-          ./build.sh
-          test -s ../../Applications/esmini-wasm/esmini.js
-
-      - name: Configure GitHub Pages
-        uses: actions/configure-pages@v5
-
-      - name: Upload Pages artifact
-        uses: actions/upload-pages-artifact@v3
-        with:
-          path: EnvironmentSimulator/Applications/esmini-wasm
-
-  deploy:
-    if: github.ref == 'refs/heads/master'
-    needs: build
-    runs-on: ubuntu-22.04
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
-    steps:
-      - name: Deploy to GitHub Pages
-        id: deployment
-        uses: actions/deploy-pages@v4
+          if [[ -z "$GH_TOKEN" ]]; then
+            echo "::error::Set the ESMINI_WASM_DISPATCH_TOKEN Actions secret."
+            exit 1
+          fi
+          # Use github CLI to start workflow from target repos main branch, and build esminis master branch
+          gh workflow run publish_esmini_wasm.yml \
+            --repo slundel6/esmini-wasm --ref main -f esmini_branch=master

@@ -63,4 +63,11 @@ if [[ -f esmini.wasm ]]; then
     cp -f esmini.wasm "$app_dir/"
 fi
 
-echo "Built esminiJS artifacts in $build_dir and copied runtime files to $app_dir"
+# Create example structure
+mkdir -p "$app_dir/resources/xosc/Catalogs/Vehicles" "$app_dir/resources/xodr"
+cp -f "$repo_root/resources/xosc/wasm-example.xosc" "$app_dir/resources/xosc/"
+cp -f "$repo_root/resources/xodr/wasm-example.xodr" "$app_dir/resources/xodr/"
+cp -f "$repo_root/resources/xosc/Catalogs/Vehicles/VehicleCatalog.xosc" \
+    "$app_dir/resources/xosc/Catalogs/Vehicles/"
+
+echo "Built esminiJS artifacts in $build_dir and copied runtime and sample assets to $app_dir"

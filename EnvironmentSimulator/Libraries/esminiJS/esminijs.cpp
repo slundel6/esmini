@@ -573,6 +573,7 @@ namespace esmini
         }
 
         player_->InitControllersPostPlayer();
+        player_->Frame(0.0, true);
     }
 
     double OpenScenario::resolve_time_step(double requested_time_step)
