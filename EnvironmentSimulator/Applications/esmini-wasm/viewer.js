@@ -160,7 +160,7 @@ function setScenarioOverlayVisibility(visible) {
 let esminiModule = null;
 let scenario = null;
 let isPlaying = false;
-let followEgo = true;
+let followEgo = ui.followEgoToggle.checked;
 let playbackSpeed = 1.0;
 let accumulator = 0;
 const fixedStep = 1 / 60;
