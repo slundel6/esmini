@@ -3,7 +3,7 @@ name: Dispatch esmini WASM publishing
 on:
   push:
     tags:
-      - '**'
+      - v[0-9]+.[0-9]+.[0-9]+ # Run on esmini version tags
   workflow_dispatch:
 
 permissions:
@@ -11,31 +11,11 @@ permissions:
 
 jobs:
   dispatch:
-    if: >-
-      github.repository == 'slundel6/esmini' &&
-      ((github.event_name == 'push' && github.event.created) ||
-       (github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/pr852'))
+    if: github.event_name != 'push' || !github.event.deleted # Manual dispatch is != push || not ran on tag deletion
     runs-on: ubuntu-22.04
 
     steps:
-      - name: Check out esmini
-        uses: actions/checkout@v6
-        with:
-          fetch-depth: 0
-          persist-credentials: false
-
-      - name: Check that the source commit is on pr852
-        id: source
-        run: |
-          sha=$(git rev-parse 'HEAD^{commit}')
-          if ! git merge-base --is-ancestor "$sha" refs/remotes/origin/pr852; then
-            echo "::notice::Skipping ${GITHUB_REF}: ${sha} is not on pr852."
-            exit 0
-          fi
-          echo "dispatch=true" >> "$GITHUB_OUTPUT"
-
       - name: Dispatch Pages workflow in esmini-wasm
-        if: steps.source.outputs.dispatch == 'true'
         env:
           GH_TOKEN: ${{ secrets.ESMINI_WASM_DISPATCH_TOKEN }}
         run: |
@@ -43,5 +23,6 @@ jobs:
             echo "::error::Set the ESMINI_WASM_DISPATCH_TOKEN Actions secret."
             exit 1
           fi
+          # Use github CLI to start workflow from target repos main branch, and build esminis master branch
           gh workflow run publish_esmini_wasm.yml \
             --repo slundel6/esmini-wasm --ref main -f esmini_branch=pr852
