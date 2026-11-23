@@ -7,7 +7,7 @@
         </VehicleCatalog>
     </CatalogLocations>
     <RoadNetwork>
-        <LogicFile filepath="../xodr/example.xodr"/>
+        <LogicFile filepath="../xodr/wasm-example.xodr"/>
     </RoadNetwork>
     <Entities>
         <ScenarioObject name="car_0">

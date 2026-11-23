@@ -4,12 +4,12 @@ import { OrbitControls } from "three/addons/controls/OrbitControls.js";
 import { clone as cloneSkinned } from "three/addons/utils/SkeletonUtils.js";
 
 const RESOURCE_ROOT_URL = new URL("./resources/", import.meta.url);
-const EXAMPLE_XODR_URL = new URL("xodr/e6mini.xodr", RESOURCE_ROOT_URL).href;
-const EXAMPLE_XOSC_URL = new URL("xosc/cut-in.xosc", RESOURCE_ROOT_URL).href;
+const EXAMPLE_XODR_URL = new URL("xodr/wasm-example.xodr", RESOURCE_ROOT_URL).href;
+const EXAMPLE_XOSC_URL = new URL("xosc/wasm-example.xosc", RESOURCE_ROOT_URL).href;
 const EXAMPLE_SCENARIO_DIR = "/scenario";
-const EXAMPLE_CATALOGS_URL = new URL("Catalogs/", RESOURCE_ROOT_URL);
-const EXAMPLE_XOSC_VIRTUAL_PATH = `${EXAMPLE_SCENARIO_DIR}/xosc/cut-in.xosc`;
-const EXAMPLE_XODR_VIRTUAL_PATH = `${EXAMPLE_SCENARIO_DIR}/xodr/e6mini.xodr`;
+const EXAMPLE_CATALOGS_URL = new URL("xosc/Catalogs/VehicleCatalog/", RESOURCE_ROOT_URL);
+const EXAMPLE_XOSC_VIRTUAL_PATH = `${EXAMPLE_SCENARIO_DIR}/xosc/wasm-example.xosc`;
+const EXAMPLE_XODR_VIRTUAL_PATH = `${EXAMPLE_SCENARIO_DIR}/xodr/wasm-example.xodr`;
 const SCENARIO_ASSET_URL_SCHEME = "esmini://scenario/";
 const ROAD_MARK_Z_OFFSET = 0.035;
 const DEFAULT_GROUND_HEIGHT = -0.05;
