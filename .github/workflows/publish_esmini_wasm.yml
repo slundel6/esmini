@@ -24,7 +24,7 @@ jobs:
           fetch-depth: 0
           persist-credentials: false
 
-      - name: Select a commit from pr852
+      - name: Check that the source commit is on pr852
         id: source
         run: |
           sha=$(git rev-parse 'HEAD^{commit}')
@@ -32,17 +32,16 @@ jobs:
             echo "::notice::Skipping ${GITHUB_REF}: ${sha} is not on pr852."
             exit 0
           fi
-          echo "sha=$sha" >> "$GITHUB_OUTPUT"
+          echo "dispatch=true" >> "$GITHUB_OUTPUT"
 
       - name: Dispatch Pages workflow in esmini-wasm
-        if: steps.source.outputs.sha != ''
+        if: steps.source.outputs.dispatch == 'true'
         env:
           GH_TOKEN: ${{ secrets.ESMINI_WASM_DISPATCH_TOKEN }}
-          ESMINI_SHA: ${{ steps.source.outputs.sha }}
         run: |
           if [[ -z "$GH_TOKEN" ]]; then
             echo "::error::Set the ESMINI_WASM_DISPATCH_TOKEN Actions secret."
             exit 1
           fi
           gh workflow run publish_esmini_wasm.yml \
-            --repo slundel6/esmini-wasm --ref main -f "esmini_sha=$ESMINI_SHA"
+            --repo slundel6/esmini-wasm --ref main -f esmini_branch=pr852
