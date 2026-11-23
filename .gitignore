@@ -41,3 +41,4 @@ CMakeUserPresets.json
 .DS_Store
 EnvironmentSimulator/Applications/esmini-wasm/esmini.js
 EnvironmentSimulator/Applications/esmini-wasm/esmini.wasm
+EnvironmentSimulator/Applications/esmini-wasm/resources/

@@ -3,7 +3,7 @@
     <FileHeader description="dsc_scenario" author="blender_dsc" revMajor="1" revMinor="3" date="2026-05-20T17:52:33.219232"/>
     <CatalogLocations>
         <VehicleCatalog>
-            <Directory path="../xosc/Catalogs/VehicleCatalog"/>
+            <Directory path="../xosc/Catalogs/Vehicles"/>
         </VehicleCatalog>
     </CatalogLocations>
     <RoadNetwork>

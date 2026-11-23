@@ -1,10 +1,9 @@
 # esmini WASM web app
 
 This application is published at <https://esmini.github.io/esmini/>. Its HTML,
-JavaScript, styles, and bundled sample assets live in this directory. The
-Emscripten wrapper lives in `EnvironmentSimulator/Libraries/esminiJS`; its
-build script places the generated runtime here so the application stays
-self-contained without duplicating the WASM build logic.
+JavaScript and styles live in this directory. The Emscripten wrapper lives in
+`EnvironmentSimulator/Libraries/esminiJS`; its build script places the generated
+runtime and copies the sample assets here so the application stays self-contained.
 
 ## Publish flow
 
@@ -31,9 +30,9 @@ is loaded from unpkg as configured in the viewer's import map.
 Build esminiJS using the instructions in
 `EnvironmentSimulator/Libraries/esminiJS/README.md`, then serve this directory
 over HTTP. From the repository root, run
-`python3 EnvironmentSimulator/Applications/esmini-wasm/serve.py`
-and open <http://127.0.0.1:8080/>. The server serves the sample scenario,
-road, and vehicle catalog directly from the repository's `resources`
-directory, without copying them. Use `--bind` and `--port` to choose another
-IP address and port, for example `--bind 0.0.0.0 --port 8000`. Binding to
-`0.0.0.0` exposes the app to other hosts on the network.
+`python3 -m http.server 8080 --directory EnvironmentSimulator/Applications/esmini-wasm`
+or
+`cd EnvironmentSimulator/Applications/esmini-wasm`
+`python3 -m http.server 8080`
+and open <localhost:8080/>. The build script copies the sample scenario,
+road, and vehicle catalog from the repository's `resources` directory.
