@@ -31,5 +31,9 @@ is loaded from unpkg as configured in the viewer's import map.
 Build esminiJS using the instructions in
 `EnvironmentSimulator/Libraries/esminiJS/README.md`, then serve this directory
 over HTTP. From the repository root, run
-`python3 -m http.server 8080 --directory EnvironmentSimulator/Applications/esmini-wasm`
-and open <http://localhost:8080/>.
+`python3 EnvironmentSimulator/Applications/esmini-wasm/serve.py`
+and open <http://127.0.0.1:8080/>. The server serves the sample scenario,
+road, and vehicle catalog directly from the repository's `resources`
+directory, without copying them. Use `--bind` and `--port` to choose another
+IP address and port, for example `--bind 0.0.0.0 --port 8000`. Binding to
+`0.0.0.0` exposes the app to other hosts on the network.
