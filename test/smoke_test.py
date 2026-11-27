@@ -635,7 +635,7 @@ class TestSuite(unittest.TestCase):
         # osg viewer, which replayer depends on, fails on CI headless mac system
         if sys.platform != "darwin":
             if check_config_bool_true("USE_OSG"):
-                log = run_replayer(COMMON_REPLAYER_ARGS + '--collision continue')
+                log = run_replayer(COMMON_REPLAYER_ARGS + '--collision continue --time_scale 100')
                 self.assertTrue(re.search('Collision between Ego \\(id 0\\) and NPC2 \\(id 2\\) at time 5.30.', log, re.MULTILINE)  is not None)
                 self.assertTrue(re.search('Relative speed 14.40 km/h', log, re.MULTILINE)  is not None)
                 self.assertTrue(re.search('Angle -180.00 degrees \\(ego to target\\)', log, re.MULTILINE)  is not None)
