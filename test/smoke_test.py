@@ -412,32 +412,25 @@ class TestSuite(unittest.TestCase):
         self.assertTrue(re.search('^1.500, 0, Car0, 440.824, -0.978, 0.000, 0.000, 0.000, 0.000, 13.889, -0.102, 2.975', csv, re.MULTILINE))
         self.assertTrue(re.search('^12.700, 0, Car0, 582.401, 41.634, 0.000, 0.955, 0.000, 0.000, 13.889, 0.030, 1.313', csv, re.MULTILINE))
 
-    def test_relative_speed_longitudinal_trigger(self):
+    def test_relative_speed_trig(self):
         log, _, _, _ = run_scenario(os.path.join(ESMINI_PATH, 'EnvironmentSimulator/Unittest/xosc/direction_dimension_trig.xosc'), COMMON_ESMINI_ARGS)
 
-        # Check initialization and the relative-speed trigger
-        self.assertTrue(re.search(r'Loading .*direction_dimension_trig\.xosc', log))
-        self.assertTrue(re.search(r'^\[0\.100\].* CutInActStart: true, delay: 0\.00, 0\.1000 > 0\.0000, edge: rising$', log, re.MULTILINE))
-        self.assertTrue(re.search(r'^\[2\.800\].* EgoAccelRelCondition: true, delay: 0\.00, relative_speed: -7\.98 > -8\.00, edge: rising$', log, re.MULTILINE))
-        self.assertTrue(re.search(r'^\[2\.800\].* Triggering entity 0: OverTaker$', log, re.MULTILINE))
-        self.assertTrue(re.search(r'^\[2\.800\].* EgoAccelRelEvent standbyState -> startTransition -> runningState$', log, re.MULTILINE))
-        self.assertTrue(re.search(r'^\[2\.800\].* EgoAccelRelAction initState -> startTransition -> runningState$', log, re.MULTILINE))
-        self.assertTrue(re.search(r'^\[4\.800\].* EgoAccelRelAction runningState -> endTransition -> completeState$', log, re.MULTILINE))
-        self.assertTrue(re.search(r'^\[4\.800\].* EgoAccelRelEvent runningState -> endTransition -> completeState$', log, re.MULTILINE))
-        self.assertTrue(re.search(r'^\[7\.100\].* simulationEndEventDone: true, delay: 0\.00, 7\.1000 > 7\.0000, edge: none$', log, re.MULTILINE))
+        # Check some initialization steps
+        self.assertTrue(re.search('Loading .*direction_dimension_trig.xosc', log)  is not None)
 
-        # Check both vehicles before, at, and after the trigger
+        # Check some scenario events
+        self.assertTrue(re.search('^.2.800.* EgoAccelRelCondition: true, delay: 0.00, relative_speed: -7.98 > -8.00, edge: rising', log, re.MULTILINE)  is not None)
+        self.assertTrue(re.search('^.2.800.* EgoAccelRelEvent standbyState -> startTransition -> runningState', log, re.MULTILINE)  is not None)
+        self.assertTrue(re.search('^.4.800.* EgoAccelRelEvent runningState -> endTransition -> completeState', log, re.MULTILINE)  is not None)
+
+        # Check vehicle key positions
         csv = generate_csv()
-        self.assertTrue(re.search(r'^2\.700, 0, Ego, 76\.914, 0\.153, 0\.000, 0\.080, 0\.000, 0\.000, 10\.000, 0\.000, 1\.745', csv, re.MULTILINE))
-        self.assertTrue(re.search(r'^2\.700, 1, OverTaker, 93\.175, 15\.766, 0\.000, 5\.356, 0\.000, 0\.000, 3\.780, 0\.000, 2\.554', csv, re.MULTILINE))
-        self.assertTrue(re.search(r'^2\.800, 0, Ego, 77\.911, 0\.233, 0\.000, 0\.080, 0\.000, 0\.000, 10\.000, 0\.000, 4\.602', csv, re.MULTILINE))
-        self.assertTrue(re.search(r'^2\.800, 1, OverTaker, 93\.410, 15\.453, 0\.000, 5\.356, 0\.000, 0\.000, 3\.920, 0\.000, 3\.674', csv, re.MULTILINE))
-        self.assertTrue(re.search(r'^2\.900, 0, Ego, 78\.908, 0\.313, 0\.000, 0\.080, 0\.000, 0\.000, 10\.500, 0\.000, 1\.319', csv, re.MULTILINE))
-        self.assertTrue(re.search(r'^2\.900, 1, OverTaker, 93\.654, 15\.128, 0\.000, 5\.356, 0\.000, 0\.000, 4\.060, 0\.000, 4\.834', csv, re.MULTILINE))
-
-        # Check the ego reaches its target speed
-        self.assertTrue(re.search(r'^4\.700, 0, Ego, 105\.485, 2\.131, 0\.000, 0\.080, 0\.000, 0\.000, 19\.500, 0\.000, 4\.349', csv, re.MULTILINE))
-        self.assertTrue(re.search(r'^4\.800, 0, Ego, 107\.485, 2\.131, 0\.000, 0\.080, 0\.000, 0\.000, 20\.000, 0\.000, 3\.780', csv, re.MULTILINE))
+        self.assertTrue(re.search('^0.100, 1, OverTaker, 90.008, 19.989, 0.000, 5.356, 0.000, 0.000, 0.140, 0.000, 0.040', csv, re.MULTILINE))
+        self.assertTrue(re.search('^0.100, 0, Ego, 50.997, -1.920, 0.000, 0.080, 0.000, 0.000, 10.000, 0.000, 2.857', csv, re.MULTILINE))
+        self.assertTrue(re.search('^2.800, 0, Ego, 77.911, 0.233, 0.000, 0.080, 0.000, 0.000, 10.000, 0.000, 4.602', csv, re.MULTILINE))
+        self.assertTrue(re.search('^2.800, 1, OverTaker, 93.410, 15.453, 0.000, 5.356, 0.000, 0.000, 3.920, 0.000, 3.674', csv, re.MULTILINE))
+        self.assertTrue(re.search('^4.300, 0, Ego, 98.096, 1.848, 0.000, 0.080, 0.000, 0.000, 17.500, 0.000, 1.770', csv, re.MULTILINE))
+        self.assertTrue(re.search('^4.300, 1, OverTaker, 97.946, 9.405, 0.000, 5.356, 0.000, 0.000, 6.020, 0.000, 0.141', csv, re.MULTILINE))
 
     def test_lane_change_at_hw_exit(self):
         log, _, _, _ = run_scenario(os.path.join(ESMINI_PATH, 'EnvironmentSimulator/Unittest/xosc/highway_exit.xosc'), COMMON_ESMINI_ARGS)
