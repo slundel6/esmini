@@ -862,7 +862,7 @@ class TestSuite(unittest.TestCase):
         self.assertTrue(re.search('^5.100, 0, Car, 66.109, -1.535, 0.000, 6.283, 0.000, 0.000, 6.168, 0.000, 1.556', csv, re.MULTILINE))
         self.assertTrue(re.search('^5.100, 1, Car2, 68.086, 1.535, 0.000, 6.283, 0.000, 0.000, 4.071, 0.000, 5.441', csv, re.MULTILINE))
         self.assertTrue(re.search('^5.100, 2, Car_ghost, 71.969, -1.535, 0.000, 6.283, 0.000, 0.000, 0.000, 0.000, 0.428', csv, re.MULTILINE))
-        self.assertTrue(re.search('^8.100, 0, Car, 67.710, -1.535, 0.000, 6.283, 0.000, 0.000, 0.000, 0.000, 4.367', csv, re.MULTILINE))
+        self.assertTrue(re.search('^8.100, 0, Car, 67.710, -1.535, 0.000, 6.283, 0.000, 0.000, (-0.000|0.000), 0.000, 4.367', csv, re.MULTILINE))
         self.assertTrue(re.search('^8.100, 1, Car2, 71.750, 1.535, 0.000, 6.283, 0.000, 0.000, 0.000, 0.000, 3.344', csv, re.MULTILINE))
         self.assertTrue(re.search('^8.100, 2, Car_ghost, 71.969, -1.535, 0.000, 6.283, 0.000, 0.000, 0.000, 0.000, 0.428', csv, re.MULTILINE))
 
